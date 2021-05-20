@@ -8,7 +8,7 @@
     "start:offline": "sls offline start",
     "build:serverless": "sls package",
     "build:browser": "webpack --config webpack.browser.config.js --mode production",
-    "deploy": "sls deploy",
+    "deploy": "aws s3 sync dist/ s3://sports-exchange-bucket --profile sports-exchange",
     "test": "jest"
   },
   "jest": {
@@ -18,9 +18,19 @@
     }
   },
   "dependencies": {
+    "@apollo/client": "^3.3.19",
+    "auth0-js": "^9.16.0",
+    "graphql": "^15.5.0",
+    "html-loader": "^2.1.2",
+    "html-webpack-plugin": "^5.3.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "source-map-support": "^0.5.19"
+    "react-router-dom": "^5.2.0",
+    "sass": "^1.32.13",
+    "sass-loader": "^11.1.1",
+    "source-map-support": "^0.5.19",
+    "style-loader": "^2.0.0",
+    "terser": "^5.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",

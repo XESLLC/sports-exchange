@@ -2,8 +2,11 @@ const path = require("path");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { StatsWriterPlugin } = require("webpack-stats-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const HtmlWebPackPlugin = require("html-webpack-plugin");
+
 
 const isOffline = !!process.env.IS_OFFLINE;
+console.log("isOffline ", isOffline)
 
 const babelOptions = {
   // Don't use .babelrc here but web browser optimized settings
@@ -22,7 +25,7 @@ const babelOptions = {
 
 module.exports = {
   entry: {
-    main: path.join(__dirname, "src/browser/index.tsx"),
+    main: path.join(__dirname, "src/browser/index.js"),
   },
   target: "web",
   mode: isOffline ? "development" : "production",
@@ -40,7 +43,14 @@ module.exports = {
   },
   devtool: "nosources-source-map",
   plugins: [
-    new CleanWebpackPlugin(),
+    new HtmlWebPackPlugin({
+      template: "./public/index.html",
+      filename: "./index.html"
+    }),
+    new CleanWebpackPlugin({
+      dry: true,
+      verbose: true
+    }),
     new MiniCssExtractPlugin({
       filename: isOffline ? "index.css" : "index.[contenthash:8].css",
     }),
@@ -61,6 +71,14 @@ module.exports = {
   ],
   module: {
     rules: [
+      {
+        test: /\.html$/,
+        use: [
+          {
+            loader: "html-loader"
+          }
+        ]
+      },
       {
         test: /\.jsx?$/,
         exclude: /node_modules/, // we shouldn't need processing `node_modules`
@@ -85,8 +103,15 @@ module.exports = {
         ],
       },
       {
-        test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader"],
+        test: /\.(scss|css)$/,
+        use: [
+          "style-loader",
+          {
+            loader: "css-loader",
+            options: { sourceMap: true, importLoaders: 1 },
+          },
+          { loader: "sass-loader", options: { sourceMap: true } },
+        ],
       },
       {
         test: /\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$/,
@@ -98,7 +123,8 @@ module.exports = {
     extensions: [".ts", ".tsx", ".js", ".jsx"],
   },
   output: {
-    path: path.join(__dirname, "dist"),
+    path: path.join(__dirname, "./dist"),
     filename: isOffline ? "index.js" : "index.[contenthash:8].js",
+    clean: true
   },
 };

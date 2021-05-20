@@ -1,0 +1,19 @@
+type League {
+  id: ID!
+  name: String
+  teams: [Team]
+  tournaments: [Tournament]
+}
+
+input CreateLeagueInput {
+  name: String!
+}
+
+type Query {
+  leagues: [League]
+  league(id: ID!): League
+}
+
+type Mutation {
+  createLeague(input: CreateLeagueInput!): League
+}

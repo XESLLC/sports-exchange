@@ -1,0 +1,15 @@
+type User {
+  id: ID!
+  name: String
+  stocks: [Int]
+}
+
+input IPOPurchaseInput {
+  teamId: ID!
+  tournamentId: ID!
+  quantity: Int!
+}
+
+type Mutation {
+  ipoPurchase(input: IPOPurchaseInput!): Boolean
+}

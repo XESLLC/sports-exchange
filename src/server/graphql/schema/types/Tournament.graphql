@@ -1,0 +1,36 @@
+type Tournament {
+  id: ID!
+  name: String!
+  leagueId: ID!
+}
+
+
+input TournamentInput {
+  name: String!
+  leagueId: String!
+}
+
+input UpdateTournamentInput {
+  id: ID!
+  name: String!
+  leagueId: String!
+}
+
+input DeleteTournamentInput {
+  id: ID!
+}
+
+
+type Query {
+  tournaments: [Tournament]
+  tournament(id: ID!): Tournament
+}
+
+
+type Mutation {
+  createTournament(input: TournamentInput!): ID!
+
+  updateTournament(input: UpdateTournamentInput!): ID!
+
+  deleteTournament(input: DeleteTournamentInput!): ID
+}

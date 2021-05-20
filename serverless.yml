@@ -1,16 +1,17 @@
 ---
-service: serverless-react-boilerplate
+service: serverless-react-sports-exchange
 configValidationMode: off
 
 provider:
   name: aws
   runtime: nodejs12.x
-  region: ${opt:region, 'us-east-1'}
+  region: ${opt:region, 'us-west-2'}
   stage: ${opt:stage, 'dev'}
   memorySize: 512
   timeout: 6
   logRetentionInDays: 7
   lambdaHashingVersion: 20201221 # for upcoming Serverless 3.0.0
+  profile: sports-exchange
 
   apiGateway:
     shouldStartNameWithService: true # for upcoming Serverless 3.0.0
@@ -54,12 +55,6 @@ functions:
 
 custom:
   distBucketUrl:
-    us-east-1:
-      # us-east-1 uses a different URL format than the other regions
-      Fn::Join:
-        - ""
-        - - https://s3.amazonaws.com/
-          - Ref: DistBucket
     default:
       # All other regions
       Fn::Join:
@@ -68,34 +63,14 @@ custom:
           - Ref: AWS::Region
           - .amazonaws.com/
           - Ref: DistBucket
-
   scripts:
     hooks:
       # Build the client-side script before packaging backend code
       package:initialize: "npm run build:browser"
-      deploy:finalize: "npx sls s3deploy"
+      #deploy:finalize: "npx sls s3deploy"
 
   webpack:
     webpackConfig: "webpack.server.config.js"
-
-  assets:
-    # Automatically copying public folder and distribution to S3 stopped working; we do it manually now
-    auto: false
-    targets:
-      - bucket:
-          Ref: DistBucket
-        acl: public-read
-        files:
-          - source: public/
-            globs:
-              - "**/*"
-          - source: dist/
-            headers:
-              CacheControl: max-age=31104000 # 1 year
-            globs:
-              - "**/*.js"
-              - "**/*.css"
-              - "**/*.map"
 
 resources:
   Resources:
@@ -118,13 +93,7 @@ resources:
               AllowedMethods:
                 - "GET"
               AllowedOrigins:
-                - Fn::Join:
-                    - ""
-                    - - https://
-                      - Ref: ApiGatewayRestApi
-                      - .execute-api.
-                      - Ref: AWS::Region
-                      - .amazonaws.com
+                - "*"
               MaxAge: 3000
 
   Outputs:

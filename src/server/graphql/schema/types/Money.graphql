@@ -1,0 +1,4 @@
+type Money {
+  dollars: Int!
+  cents: Int!
+}

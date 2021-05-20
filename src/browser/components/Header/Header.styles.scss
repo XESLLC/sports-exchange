@@ -1,0 +1,51 @@
+.header {
+  width: 100%;
+
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 10px;
+
+  .logo {
+    width: 30px;
+    height: 30px;
+    border: 2px solid #777;
+    background-color: #EEE;
+    border-radius: 50%;
+  }
+
+  .name {
+    width: 160px;
+    margin: 7px;
+  }
+
+  .menu {
+    width: 30px;
+    flex: 1;
+    height: 30px;
+
+    ul, li {
+      margin-bottom: 10px;
+      padding: 9px 0 20px 10px;
+      display: inline;
+      list-style-type: none;
+    }
+    
+    a:link, a:visited {
+      float: left;
+      line-height: 14px;
+      margin: 9px 10px;
+      text-decoration: none;
+      color: #999;
+    }
+    
+    a:link#current, a:visited#current, a:hover {
+      border-bottom: 2px solid #F90;
+      padding-bottom: 2px;
+    }
+    
+    a:hover {
+      color: #000;
+    }
+
+  }
+}

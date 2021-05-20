@@ -1,0 +1,25 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "app.js",
+  "author": "Andy Engle & David Abramowitz",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@apollo/client": "~3.2.5",
+    "apollo-server": "^2.24.1",
+    "dotenv": "^9.0.2",
+    "express": "^4.17.1",
+    "express-openid-connect": "^2.0.0",
+    "graphql": "^14.5.0",
+    "graphql-subscriptions": "1.1.0",
+    "graphql-tools": "^7.0.5",
+    "jsonwebtoken": "^8.5.1",
+    "jwks-rsa": "^1.12.3",
+    "mysql": "^2.18.1",
+    "mysql2": "^2.2.5",
+    "request": "^2.88.2",
+    "sequelize": "^6.3.5",
+    "uuid": "^8.3.1"
+  }
+}
