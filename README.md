@@ -245,3 +245,13 @@ npx sls remove
 ```
 
 This will delete all resources but the distribution S3 bucket. As it still contains the bundles you will have to delete it manually for now.
+
+
+Local remove and re install mysql
+```sh
+brew remove mysql
+rm -rf /opt/homebrew/var/mysql
+brew install mysql
+mysql.server start
+mysql -uroot
+```
