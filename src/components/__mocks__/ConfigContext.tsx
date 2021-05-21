@@ -2,7 +2,7 @@ import React from "react";
 
 import manifest from "../../../public/manifest.json";
 import { Config } from "../../server/config";
-
+// TODO: Review Local vs AWS Deploy configuration
 const ConfigContext = React.createContext<Config>({
   app: {
     TITLE: `${manifest.short_name} Mock`,

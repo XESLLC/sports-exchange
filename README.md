@@ -1,9 +1,14 @@
 # ♨️ sports-exchange
 
 [![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
-[![dependencies](https://img.shields.io/david/arabold/serverless-react-boilerplate.svg)](https://github.com/arabold/serverless-react-boilerplate)
+[![dependencies](https://img.shields.io/david/arabold/serverless-react-boilerplate.svg)]https://github.com/XESLLC/sports-exchange
 
 Lightweight boilerplate project to setup a React 16 web application on AWS Lambda using the Serverless Framework.
+This has been modified with -
+https://medium.com/bcgdv-engineering/production-ready-react-js-web-app-on-aws-lambda-in-15-minutes-or-less-f9d5c6a36ea8
+and
+https://www.ordinarycoders.com/blog/article/deploy-reactjs-webpack-aws-s3
+
 
 ## Key Features
 
@@ -57,6 +62,11 @@ The project is based on the [Serverless Framework](https://serverless.com) and m
 - [Offline Plugin](https://github.com/dherault/serverless-offline) - The Serverless Offline Plugin allows you to run Serverless applications locally as if they would be deployed on AWS. This is especially helpful for testing web applications and APIs without having to deploy them anywhere.
 - [Scripts Plugin](https://github.com/mvila/serverless-plugin-scripts#readme) - Run shell scripts as part of your Serverless workflow
 - [S3 Deploy Plugin](https://github.com/funkybob/serverless-s3-deploy) - Deploy files to S3 buckets. This is used for uploading static content like images and the generated `index.js`.
+
+### Current AWS Config
+Server graphql endpoint url -  https://o4qfzdpgx0.execute-api.us-west-2.amazonaws.com/dev/graphql
+Browser endpoint url - http://serverless-react-sports-serverlessdeploymentbuck-kj23yr3zm351.s3-website-us-west-2.amazonaws.com
+
 
 ### Webpack
 

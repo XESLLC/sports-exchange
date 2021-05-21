@@ -1,15 +1,16 @@
 require("dotenv").config();
 const fs = require('fs');
 const { auth } = require('express-openid-connect');
-// const { ApolloServer as ApolloServerLambda } = require('apollo-server-lambda');
 const { applyMiddleware } = require('graphql-middleware');
 const { makeExecutableSchema } = require('graphql-tools') ;
-const { ApolloServer, gql, AuthenticationError } = require('apollo-server');
 const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 const resolvers = require('./graphql/resolvers');
 
 const { initModels } = require('./models');
+
+isNotLocal = (process.env.ENV !== 'local')
+const { ApolloServer, gql, AuthenticationError } = isNotLocal? require('apollo-server-lambda') : require('apollo-server');
 
 const { AUTH0_CLIENT_ID, AUTH0_DOMAIN } = process.env;
 
@@ -23,7 +24,7 @@ const getKey = (header, cb) => {
     cb(null, signingKey);
   });
 }
-process.env.ENV = 'local'
+//process.env.ENV = 'local'
 console.log('process.env.ENV ',process.env.ENV)
 const options = {
   audience: AUTH0_CLIENT_ID,
@@ -45,21 +46,40 @@ const getUser = async token => {
 
 let typeDefs;
 if(process.env.ENV !== 'local') {
-    typeDefs = require('./graphql/schema');
+  typeDefs = require('./graphql/schema');
 } else {
-    typeDefs = require('./graphql/schema');
+  typeDefs = require('./graphql/schema'); // this may change with TS
 }
 
-if (process.env.ENV === 'local') {
-    const server = new ApolloServer({
-      typeDefs,
-      resolvers,
-      context: async ({ req }) => ({
-        user: await getUser(req.headers.authorization)
-      })
-    });
+if (process.env.ENV !=== 'local') {
+  //aws setup
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers: resolvers,
+    context: async ({event, context }) => ({
+      user: await getUser(event.headers.authorization),
+      context,
+      event
+    }),
+  });
 
-  console.log("Using Auth0 client domain: ", AUTH0_DOMAIN);
+  exports.graphqlHandler = server.createHandler({
+    cors: {
+      origin: '*',
+      credentials: true
+    }
+  });
+} else {
+  // local setup
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: async ({ req }) => ({
+      user: await getUser(req.headers.authorization)
+    })
+  });
+
+  console.log("Using Auth0 client domain: ", AUTH0_DOMAIN); // for paid account only
 
   initModels().then(() => {
     // The `listen` method launches a web server.
@@ -67,22 +87,4 @@ if (process.env.ENV === 'local') {
       console.log(`🚀  Server ready at ${url}`);
     });
   });
-
-} else {
-  // const server = new ApolloServerLambda({
-  //   typeDefs,
-  //   resolvers: resolvers,
-  //   context: async ({event, context }) => ({
-  //     user: await getUser(event.headers.authorization),
-  //     context,
-  //     event
-  //   }),
-  // });
-  //
-  // exports.graphqlHandler = server.createHandler({
-  //   cors: {
-  //     origin: '*',
-  //     credentials: true
-  //   }
-  // });
 }

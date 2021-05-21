@@ -8,7 +8,7 @@ class Client {
   constructor() {
     if (!Client.instance) {
       const httpLink = createHttpLink({
-        uri: 'http://localhost:4000/graphql',
+        uri: 'https://o4qfzdpgx0.execute-api.us-west-2.amazonaws.com/dev/graphql',
       });
 
       const authLink = setContext((_, { headers }) => {

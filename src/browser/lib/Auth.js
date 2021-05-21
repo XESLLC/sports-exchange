@@ -1,7 +1,7 @@
 import auth0 from 'auth0-js';
-
-const domain = "ae-dev.us.auth0.com";
-const clientID = "bWBD0eGU2Wwti8bZP5krthcW5MtgQGni";
+// TODO: secrets manager aws
+const domain = "dev-8duzx03a.us.auth0.com"; //account - david abramowitz
+const clientID = "undvcjb2Ky8Kt4byZegdWY4V5OoYhEWA";
 
 const ACCESS_TOKEN = "access_token";
 const ID_TOKEN = "id_token";
@@ -14,7 +14,7 @@ export default class Auth {
       this.auth0 = new auth0.WebAuth({
         domain,
         clientID,
-        redirectUri: 'http://localhost:8080/callback',
+          redirectUri: 'http://serverless-react-sports-serverlessdeploymentbuck-kj23yr3zm351.s3-website-us-west-2.amazonaws.com/callback',
         responseType: "token id_token",
         scope: "openid profile email"
       });
@@ -70,7 +70,7 @@ export default class Auth {
 
     this.auth0.logout({
       clientID,
-      returnTo: "http://localhost:8080"
+      returnTo: "http://serverless-react-sports-serverlessdeploymentbuck-kj23yr3zm351.s3-website-us-west-2.amazonaws.com"
     });
   };
 

@@ -79,8 +79,8 @@ custom:
       #package:initialize: "npm run build:browser"
       #deploy:finalize: "npm run deploy"
 
-  webpack:
-    webpackConfig: "webpack.browser.config.js"
+  #webpack:
+    #webpackConfig: "webpack.browser.config.js"
 
 resources:
   Resources:
