@@ -39,7 +39,7 @@ export default class Auth {
         this.setSession(authResult);
         this.history.push("/");
       } else if (err) {
-        console.log(err);  
+        console.log(err);
       }
     })
   };

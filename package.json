@@ -1,5 +1,5 @@
 {
-  "name": "serverless-react-boilerplate",
+  "name": "sports-exchange",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,8 +7,8 @@
     "start:devserver": "webpack serve --config webpack.browser.config.js --mode development",
     "start:offline": "sls offline start",
     "build:serverless": "sls package",
-    "build:browser": "webpack --config webpack.browser.config.js --mode production",
-    "deploy": "aws s3 sync dist/ s3://sports-exchange-bucket --profile sports-exchange",
+    "build:browser": "webpack --config webpack.browser.config.js --mode development",
+    "deploy": "aws s3 sync dist/ s3://serverless-react-sports-serverlessdeploymentbuck-kj23yr3zm351 --profile sports-exchange",
     "test": "jest"
   },
   "jest": {
@@ -19,17 +19,34 @@
   },
   "dependencies": {
     "@apollo/client": "^3.3.19",
+    "@graphql-tools/load-files": "^6.3.2",
+    "@graphql-tools/merge": "^6.2.14",
+    "apollo-server": "^2.24.1",
+    "apollo-server-express": "^2.18.0-rc.1",
+    "apollo-server-lambda": "^2.24.1",
     "auth0-js": "^9.16.0",
+    "babel": "^6.23.0",
+    "copy-webpack-plugin": "^8.1.1",
+    "express-openid-connect": "^2.4.0",
     "graphql": "^15.5.0",
+    "graphql-middleware": "^6.0.10",
     "html-loader": "^2.1.2",
     "html-webpack-plugin": "^5.3.1",
+    "jwks-rsa": "^2.0.3",
+    "mysql": "^2.18.1",
+    "mysql2": "^2.2.5",
+    "pg": "^8.6.0",
+    "pg-hstore": "^2.3.3",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-router-dom": "^5.2.0",
     "sass": "^1.32.13",
     "sass-loader": "^11.1.1",
+    "sequelize": "^6.6.2",
     "source-map-support": "^0.5.19",
+    "sqlite3": "^5.0.2",
     "style-loader": "^2.0.0",
+    "tedious": "^11.0.8",
     "terser": "^5.7.0"
   },
   "devDependencies": {

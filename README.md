@@ -1,4 +1,4 @@
-# ♨️ serverless-react-boilerplate
+# ♨️ sports-exchange
 
 [![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
 [![dependencies](https://img.shields.io/david/arabold/serverless-react-boilerplate.svg)](https://github.com/arabold/serverless-react-boilerplate)
@@ -26,7 +26,7 @@ This combination makes our app fast and incredibly scalable. AWS will spin up ne
 All resources, including the S3 bucket for hosting static content, are created and configured automatically when your app is deployed the first time. You can make changes to the default setup by updating your `serverless.yml` to your linking.
 
 ### Folder Structure
-
+todo // update
 ```
 serverless-react-boilerplate/
 │
@@ -225,7 +225,7 @@ The whole application can be deployed with a single command:
 ```sh
 npx sls deploy
 ```
-
+todo// update these instructions
 For local testing run the following command and open your web browser at http://localhost:3000/dev (with `dev` being the `stage` name configured in your `serverless.yml`). Static content such as images will be served via the [Webpack DevServer](https://webpack.js.org/configuration/dev-server/) running on http://localhost:8080. Note that the app has to be deployed first before you will be able to run locally.
 
 ```sh

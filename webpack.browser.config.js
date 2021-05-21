@@ -1,107 +1,79 @@
-const path = require("path");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const { StatsWriterPlugin } = require("webpack-stats-plugin");
+const paths = require("./paths");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
-const HtmlWebPackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const webpack = require("webpack");
+const { merge } = require("webpack-merge");
 
+const devWebBrowser = {
+  // Set the mode to development or production
+  mode: "development",
 
-const isOffline = !!process.env.IS_OFFLINE;
-console.log("isOffline ", isOffline)
+  // Control how source maps are generated
+  devtool: "inline-source-map",
 
-const babelOptions = {
-  // Don't use .babelrc here but web browser optimized settings
-  presets: [
-    [
-      "@babel/preset-env",
-      {
-        targets: { browsers: ["last 2 versions"] },
-        // debug: isOffline,
-      },
-    ],
-    "@babel/preset-typescript",
-    "@babel/preset-react",
-  ],
+  // Spin up a server for quick development - local only
+  devServer: {
+    historyApiFallback: true,
+    contentBase: paths.build,
+    open: true,
+    compress: true,
+    hot: true,
+    port: 8080,
+  },
+
+  plugins: [
+    // Only update what has changed on hot reload
+    new webpack.HotModuleReplacementPlugin()
+  ]
 };
 
-module.exports = {
-  entry: {
-    main: path.join(__dirname, "src/browser/index.js"),
+module.exports = merge(devWebBrowser, {
+  // Where webpack looks to start building the bundle
+  entry: [paths.src + "/index.js"],
+
+  // Where webpack outputs the assets and bundles
+  output: {
+    path: paths.build,
+    filename: "[name].bundle.js",
+    publicPath: "/",
   },
-  target: "web",
-  mode: isOffline ? "development" : "production",
-  devServer: {
-    contentBase: path.join(__dirname, "public"),
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
-    },
-  },
-  performance: {
-    // Turn off size warnings for entry points
-    hints: false,
-  },
-  devtool: "nosources-source-map",
+
+  // Customize the webpack build process
   plugins: [
-    new HtmlWebPackPlugin({
-      template: "./public/index.html",
-      filename: "./index.html"
-    }),
-    new CleanWebpackPlugin({
-      dry: true,
-      verbose: true
-    }),
-    new MiniCssExtractPlugin({
-      filename: isOffline ? "index.css" : "index.[contenthash:8].css",
-    }),
-    new StatsWriterPlugin({
-      transform(data, opts) {
-        const assets = data.assetsByChunkName.main;
-        const stats = JSON.stringify(
-          {
-            main: assets.find((path) => path.endsWith(".js")),
-            css: assets.find((path) => path.endsWith(".css")),
+    // Removes/cleans build folders and unused assets when rebuilding
+    new CleanWebpackPlugin(),
+
+    // Copies files from target to destination folder
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: paths.src + "/assets",
+          to: "assets",
+          globOptions: {
+            ignore: ["*.DS_Store"],
           },
-          null,
-          2,
-        );
-        return stats;
-      },
+        },
+      ],
+    }),
+
+    // Generates an HTML file from a template
+    // Generates deprecation warning: https://github.com/jantimon/html-webpack-plugin/issues/1501
+    new HtmlWebpackPlugin({
+      title: "Exchange",
+      favicon: paths.src + "/assets/icons/favicon.png",
+      template: paths.public + "/index.html", // template file
+      filename: "index.html", // output file
     }),
   ],
+
+  // Determine how modules within the project are treated
   module: {
     rules: [
-      {
-        test: /\.html$/,
-        use: [
-          {
-            loader: "html-loader"
-          }
-        ]
-      },
-      {
-        test: /\.jsx?$/,
-        exclude: /node_modules/, // we shouldn't need processing `node_modules`
-        use: [
-          {
-            loader: "babel-loader",
-            options: babelOptions,
-          },
-        ],
-      },
-      {
-        test: /\.ts(x?)$/,
-        exclude: /node_modules/,
-        use: [
-          {
-            loader: "babel-loader",
-            options: babelOptions,
-          },
-          {
-            loader: "ts-loader",
-          },
-        ],
-      },
+      // JavaScript: Use Babel to transpile JavaScript files
+      { test: /\.(js|jsx)$/, exclude: /node_modules/, use: ["babel-loader"] },
+
+      // Styles: Inject CSS into the head with source maps
       {
         test: /\.(scss|css)$/,
         use: [
@@ -113,18 +85,12 @@ module.exports = {
           { loader: "sass-loader", options: { sourceMap: true } },
         ],
       },
-      {
-        test: /\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$/,
-        use: "url-loader",
-      },
+
+      // Images: Copy image files to build folder
+      { test: /\.(?:ico|gif|png|jpg|jpeg)$/i, type: "asset/resource" },
+
+      // Fonts and SVGs: Inline files
+      { test: /\.(woff(2)?|eot|ttf|otf|svg|)$/, type: "asset/inline" },
     ],
   },
-  resolve: {
-    extensions: [".ts", ".tsx", ".js", ".jsx"],
-  },
-  output: {
-    path: path.join(__dirname, "./dist"),
-    filename: isOffline ? "index.js" : "index.[contenthash:8].js",
-    clean: true
-  },
-};
+});

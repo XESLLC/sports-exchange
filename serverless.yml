@@ -34,24 +34,34 @@ provider:
           - ${self:provider.stage}
 
 plugins:
-  - serverless-webpack
+  #- serverless-webpack
   - serverless-plugin-scripts
   - serverless-offline
   - serverless-s3-deploy
 
 functions:
-  serve:
+  graphql:
     # Any web request regardless of path or method will be handled by a single Lambda function
-    handler: handler.serve
+    handler: src/server/app.graphqlHandler
     events:
       - http:
-          path: /
-          method: any
-          cors: true
+          path: graphql
+          method: get
+          cors:
+            allowOrigins: '*'
+            enabled: true
+            origin: '*'
+            headers: ['*']
+            allowCredentials: true
       - http:
-          path: /{any+}
-          method: any
-          cors: true
+          path: graphql
+          method: post
+          cors:
+            allowOrigins: '*'
+            enabled: true
+            origin: '*'
+            headers: ['*']
+            allowCredentials: true
 
 custom:
   distBucketUrl:
@@ -66,11 +76,11 @@ custom:
   scripts:
     hooks:
       # Build the client-side script before packaging backend code
-      package:initialize: "npm run build:browser"
-      #deploy:finalize: "npx sls s3deploy"
+      #package:initialize: "npm run build:browser"
+      #deploy:finalize: "npm run deploy"
 
   webpack:
-    webpackConfig: "webpack.server.config.js"
+    webpackConfig: "webpack.browser.config.js"
 
 resources:
   Resources:
@@ -86,6 +96,7 @@ resources:
       Type: AWS::S3::Bucket
       DeletionPolicy: Delete
       Properties:
+        AccessControl: PublicRead
         CorsConfiguration:
           CorsRules:
             - AllowedHeaders:
@@ -102,6 +113,6 @@ resources:
       Value:
         Ref: ApiGatewayRestApi
     DistBucket:
-      Description: Distribution S3 Bucket
+      Description: Browser Distribution S3 Bucket
       Value:
         Ref: DistBucket

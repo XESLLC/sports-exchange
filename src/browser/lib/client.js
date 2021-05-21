@@ -48,7 +48,7 @@ class Client {
           }
         }
       }`;
-  
+
       this.apolloClient
         .query({
           query
@@ -73,7 +73,7 @@ class Client {
     //       }
     //     }
     //   }`;
-  
+
     //   this.apolloClient
     //     .mutate({
     //       query
