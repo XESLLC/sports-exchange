@@ -21,8 +21,8 @@ provider:
     SERVERLESS_REGION: ${self:provider.region}
     SERVERLESS_STAGE: ${self:provider.stage}
 
-    APP_DIST_URL: ${self:custom.distBucketUrl.${self:provider.region}, self:custom.distBucketUrl.default}
-    APP_PUBLIC_URL: ${self:custom.distBucketUrl.${self:provider.region}, self:custom.distBucketUrl.default}
+    #APP_DIST_URL: ${self:custom.distBucketUrl.${self:provider.region}, self:custom.distBucketUrl.default}
+    #APP_PUBLIC_URL: ${self:custom.distBucketUrl.${self:provider.region}, self:custom.distBucketUrl.default}
     APIGATEWAY_URL:
       Fn::Join:
         - ""
@@ -43,6 +43,10 @@ functions:
   graphql:
     # Any web request regardless of path or method will be handled by a single Lambda function
     handler: src/server/app.graphqlHandler
+    package:
+      individually: true
+      exclude:
+        - "src/browser/**"
     events:
       - http:
           path: graphql
@@ -64,15 +68,15 @@ functions:
             allowCredentials: true
 
 custom:
-  distBucketUrl:
-    default:
+  #distBucketUrl:
+  #  default:
       # All other regions
-      Fn::Join:
-        - ""
-        - - https://s3-
-          - Ref: AWS::Region
-          - .amazonaws.com/
-          - Ref: DistBucket
+  #    Fn::Join:
+  #      - ""
+  #      - - https://s3-
+  #        - Ref: AWS::Region
+  #        - .amazonaws.com/
+  #        - Ref: DistBucket
   scripts:
     hooks:
       # Build the client-side script before packaging backend code
@@ -92,27 +96,27 @@ resources:
         MinimumCompressionSize: 1000
 
     # S3 Bucket for the distribution bundles
-    DistBucket:
-      Type: AWS::S3::Bucket
-      DeletionPolicy: Delete
-      Properties:
-        AccessControl: PublicRead
-        CorsConfiguration:
-          CorsRules:
-            - AllowedHeaders:
-                - "*"
-              AllowedMethods:
-                - "GET"
-              AllowedOrigins:
-                - "*"
-              MaxAge: 3000
+    #DistBucket:
+      #Type: AWS::S3::Bucket
+      #DeletionPolicy: Delete
+      #Properties:
+      #  AccessControl: PublicRead
+      #  CorsConfiguration:
+      #    CorsRules:
+      #      - AllowedHeaders:
+      #          - "*"
+      #        AllowedMethods:
+      #          - "GET"
+      #        AllowedOrigins:
+      #          - "*"
+      #        MaxAge: 3000
 
   Outputs:
     ApiGatewayRestApi:
       Description: API Gateway Endpoint
       Value:
         Ref: ApiGatewayRestApi
-    DistBucket:
-      Description: Browser Distribution S3 Bucket
-      Value:
-        Ref: DistBucket
+    #DistBucket:
+    #  Description: Browser Distribution S3 Bucket
+    #  Value:
+    #    Ref: DistBucket

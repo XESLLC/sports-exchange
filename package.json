@@ -27,6 +27,7 @@
     "auth0-js": "^9.16.0",
     "babel": "^6.23.0",
     "copy-webpack-plugin": "^8.1.1",
+    "dotenv": "^10.0.0",
     "express-openid-connect": "^2.4.0",
     "graphql": "^15.5.0",
     "graphql-middleware": "^6.0.10",
