@@ -1,7 +1,7 @@
 # ♨️ Sports Exchange Online Version
 
 [![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
-[![dependencies][(https://github.com/apollographql/apollo-server/tree/main/packages/apollo-server-lambda)](https://github.com/XESLLC/)
+
 
 Lightweight boilerplate project to setup a React 16 web application on AWS Lambda using the Serverless Framework.
 This has been modified with -
