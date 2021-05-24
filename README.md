@@ -1,4 +1,4 @@
-# ♨️ sports-exchange
+# ♨️ Sports Exchange Online Version
 
 [![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
 [![dependencies](https://img.shields.io/david/arabold/serverless-react-boilerplate.svg)]https://github.com/XESLLC/sports-exchange
@@ -255,3 +255,13 @@ npx sls remove
 ```
 
 This will delete all resources but the distribution S3 bucket. As it still contains the bundles you will have to delete it manually for now.
+
+
+Local remove and re install mysql
+```sh
+brew remove mysql
+rm -rf /opt/homebrew/var/mysql
+brew install mysql
+mysql.server start
+mysql -uroot
+```
