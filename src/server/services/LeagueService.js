@@ -1,4 +1,4 @@
-const League = require('../models/League');
+  const League = require('../models/League');
 const { v4: uuidv4 } = require('uuid');
 
 const LeagueService = {
@@ -23,11 +23,11 @@ const LeagueService = {
           name
         }
       });
-  
+
       if (league !== null) {
         throw new Error("League already exists: " + name);
       }
-      
+
       id = uuidv4();
 
       await League.create({

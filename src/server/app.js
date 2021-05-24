@@ -31,7 +31,7 @@ const getKey = (header, cb) => {
 }
 
 const options = {
-  audience: AUTH0_CLIENT_ID,
+  audience: 'undvcjb2Ky8Kt4byZegdWY4V5OoYhEWA',
   issuer: `https://${AUTH0_DOMAIN}/`,
   algorithms: ['RS256']
 };
@@ -49,37 +49,43 @@ const getUser = async token => {
 };
 
 let typeDefs;
-if(process.env.ENV !== 'local') {
+if(isNotLocal) {
   typeDefs = require('./graphql/schema');
 } else {
   typeDefs = require('./graphql/schema'); // this may change with TS
 }
 
-if (process.env.ENV !== 'local') {
+if (isNotLocal) {
   //aws setup
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers: resolvers,
-    context: async ({event, context }) => ({
-      user: await getUser(event.headers.authorization),
-      context,
-      event
-    }),
-  });
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      context: async ({event, context }) => ({
+          user: await getUser(event.headers.Authorization),
+          context,
+          event
+      })
+    });
 
-  exports.graphqlHandler = server.createHandler({
-    cors: {
-      origin: '*',
-      credentials: true
-    }
-  });
+    const graphqlHandler = server.createHandler();
+
+    module.exports.graphqlHandler = (event, context, callback) => {
+      context.callbackWaitsForEmptyEventLoop = false;
+      function callbackFilter(error, output) {
+        output.headers['Access-Control-Allow-Origin'] = '*';
+        callback(error, output);
+      }
+
+      graphqlHandler(event, context, callbackFilter);
+
+    };
 } else {
   // local setup
   const server = new ApolloServer({
     typeDefs,
     resolvers,
     context: async ({ req }) => ({
-      user: await getUser(req.headers.authorization)
+      user: await getUser(req.headers.Authorization)
     })
   });
 
