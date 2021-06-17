@@ -10,9 +10,8 @@ const StockUser = SequelizeInstance.define('StockUser', {
     type: DataTypes.UUID,
     allowNull: false,
     primaryKey: true,
-    defaultValue: uuidv4()
+    defaultValue:  DataTypes.UUIDV4
   },
-
   stockId: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -21,7 +20,6 @@ const StockUser = SequelizeInstance.define('StockUser', {
       key: 'id'
     }
   },
-
   userId: {
     type: DataTypes.UUID,
     allowNull: false,

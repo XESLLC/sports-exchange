@@ -1,5 +1,4 @@
-  const League = require('../models/League');
-const { v4: uuidv4 } = require('uuid');
+const League = require('../models/League');
 
 const LeagueService = {
   leagues: async (_, input, ctx) => {
@@ -15,31 +14,17 @@ const LeagueService = {
   },
 
   createLeague: async name => {
-    let id;
+    let league;
 
     try {
-      const league = await League.findOne({
-        where: {
-          name
-        }
-      });
-
-      if (league !== null) {
-        throw new Error("League already exists: " + name);
-      }
-
-      id = uuidv4();
-
-      await League.create({
-        id,
-        name
-      });
+        [league, created] = await League.findOrCreate({
+            where: { name: name },
+        });
+        // TODO: handle the already created Leage 
     } catch (error) {
-      console.error("Error creating team: ", error);
-      id = null;
+        console.error("Error creating team: ", error);
     }
-
-    return id;
+    return league;
   }
 };
 

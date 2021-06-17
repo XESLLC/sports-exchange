@@ -8,20 +8,26 @@ const User = SequelizeInstance.define('User', {
     type: DataTypes.UUID,
     allowNull: false,
     primaryKey: true,
-    defaultValue: uuidv4()
+    defaultValue:  DataTypes.UUIDV4
   },
-
-  firstName: {
+  firstname: {
     type: DataTypes.STRING,
     allowNull: false
   },
 
-  lastName: {
+  lastname: {
     type: DataTypes.STRING,
     allowNull: false
   },
-
-  emailAddr: {
+  tournamentId: {
+      type: DataTypes.STRING,
+      allowNull: false
+  },
+  cash: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true
+  },
+  email: {
     type: DataTypes.STRING,
     allowNull: false
   }

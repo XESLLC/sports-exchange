@@ -23,36 +23,35 @@ const TeamService = {
       }
     });
   },
-
+  deleteTeam: async(name, leagueId) => {
+      try {
+          await Team.destroy({
+             where: {
+               name: name,
+               leagueId: leagueId
+             }
+          })
+      } catch (error) {
+         console.error("Error deleting team: ", error);
+         throw new Error('Error deleting team.')
+      }
+      return 'Success'
+  },
   createTeam: async (name, leagueId) => {
-    let id;
+    let team;
 
     try {
-      const team = await Team.findOne({
-        where: {
-          name
-        }
-      });
-  
-      if (team !== null) {
-        throw new Error("Team already exists: " + name);
-      }
-      
-      id = uuidv4();
-
-      await Team.create({
-        id,
-        name,
-        leagueId
+       [team, created] = await Team.findOrCreate({
+          where: {
+              name: name,
+              leagueId: leagueId
+          }
       });
     } catch (error) {
       console.error("Error creating team: ", error);
-      id = null;
     }
-
-    return id;
+    return team;
   },
-
   addTeamToTournament: async (teamId, tournamentId) => {
     try {
       let tournamentTeam = await TournamentTeam.create({

@@ -1,7 +1,7 @@
 const LeagueService = require('../../../services/LeagueService');
 const TeamService = require('../../../services/TeamService');
 const TournamentService = require('../../../services/TournamentService');
-const { tournament } = require('../../../services/TournamentService');
+
 
 const League = {
   Query: {

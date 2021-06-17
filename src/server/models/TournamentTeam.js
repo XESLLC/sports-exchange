@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-
+const { v4: uuidv4 } = require('uuid');
 const SequelizeInstance = require('./SequelizeInstance');
 const Team = require('./Team');
 const Tournament = require('./Tournament');
@@ -8,7 +8,8 @@ const TournamentTeam = SequelizeInstance.define('TournamentTeam', {
   id: {
     type: DataTypes.UUID,
     allowNull: false,
-    primaryKey: true
+    primaryKey: true,
+    defaultValue:  DataTypes.UUIDV4
   },
 
   tournamentId: {
@@ -36,7 +37,7 @@ const TournamentTeam = SequelizeInstance.define('TournamentTeam', {
   price: {
     type: DataTypes.FLOAT,
     allowNull: false
-  },
+  }, //IPO price only
   seed: {
     type: DataTypes.INTEGER,
     allowNull: false

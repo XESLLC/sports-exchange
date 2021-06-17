@@ -1,5 +1,7 @@
 const { transformCommentsToDescriptions } = require('graphql-tools');
 const Tournament = require('../models/Tournament');
+const TournamentTeam = require('../models/TournamentTeam')
+const Stock = require('../models/Stock')
 const { v4: uuidv4 } = require('uuid');
 
 const TournamentService = {
@@ -22,36 +24,40 @@ const TournamentService = {
       }
     });
   },
-
   createTournament: async (name, leagueId) => {
-    let id;
-
+    let tournament;
     try {
-      const tournament = await Tournament.findOne({
-        where: {
-          name
-        }
-      });
-    
-      if (tournament !== null) {
-        throw new Error("Tournament already exists: " + name);
-      }
-
-      id = uuidv4();
-
-      await Tournament.create({
-        id,
-        name,
-        leagueId
+       [tournament, created] = await Tournament.findOrCreate({
+            where: {
+                name: name,
+                leagueId: leagueId
+            }
       });
     } catch (error) {
-      console.error("Error creating team: ", error);
+      console.error("Error creating Tournament: ", error);
       throw new Error("Failed to create tournament.");
     }
-
-    return id;
+    return tournament;
   },
-
+  createTournamentTeam: async (price, seed, teamId, tournamentId) => {
+      let tournamentTeam
+      try {
+          [tournamentTeam, created] = await TournamentTeam.findOrCreate({
+            where: {
+                teamId: teamId,
+                tournamentId: tournamentId
+            },
+            defaults: {
+                price: price,
+                seed: seed
+            }
+          })
+      } catch (error) {
+          console.error("Failed to create tournamentTeam.", error);
+          throw new Error("Failed to create tournamentTeam.");
+      }
+      return tournamentTeam.id
+  },
   updateTournament: async (id, name, leagueId) => {
     let tournament;
 

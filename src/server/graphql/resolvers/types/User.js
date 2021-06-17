@@ -1,5 +1,6 @@
-// const StockService = require('../../../services/StockService');
-// const { tournament } = require('../../../services/TournamentService');
+const UserService = require('../../../services/UserService');
+const TournamentService = require('../../../services/TournamentService');
+
 
 const User = {
   // Query: {
@@ -7,19 +8,25 @@ const User = {
   // },
 
   Mutation: {
-    // In the context of a specific user
-    ipoPurchase: async (_, input) => {
-      console.log('ipoPurchase input: ', input);
-      return true;
-    }
-  },
-
-  User: {
-    // Return list of stocks owned by a user
-    stocks: User => {
-      return [1, 2, 3];
-      // return StockService.getStocksByUserId(User.id);
-    }
+      ipoPurchase: async (_, { input }, context ) => {
+          const authUser = context.user
+          const { tournamentTeamId, quantity } = input;
+          const tournamentTeamStock = await UserService.ipoPurchase(tournamentTeamId, quantity, authUser);
+          return tournamentTeamStock;
+      },
+      createTournamentUser: async (_, { input }, context ) => {
+          const authUser = context.user
+          const email = authUser.email
+          const {firstname, lastname, tournamentId } = input; // TODO: camel case names
+          const user = await UserService.createTournamentUser(tournamentId, firstname, lastname, email);
+          return user;
+      },
+      updateUserCash: async (_, { userId, cash }, context ) => {
+          const authUser = context.user // TODO: check permissions
+          const email = authUser.email
+          const isUpdated = await UserService.updateUserCash(userId, cash);
+          return isUpdated;
+      },
   }
 };
 

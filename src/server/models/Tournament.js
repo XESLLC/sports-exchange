@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
 
 const SequelizeInstance = require('./SequelizeInstance');
 const League = require('./League');
@@ -7,7 +8,8 @@ const Tournament = SequelizeInstance.define('Tournament', {
   id: {
     type: DataTypes.UUID,
     allowNull: false,
-    primaryKey: true
+    primaryKey: true,
+    defaultValue:  DataTypes.UUIDV4
   },
 
   name: {

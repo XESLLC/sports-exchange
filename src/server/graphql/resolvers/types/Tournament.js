@@ -10,8 +10,13 @@ const Tournament = {
   Mutation: {
     createTournament: async (_, { input }) => {
       const { name, leagueId } = input;
-      const id = await TournamentService.createTournament(name, leagueId);
-      return id;
+      const tournament = await TournamentService.createTournament(name, leagueId);
+      return tournament;
+    },
+    createTournamentTeam: async (_, { input }) => {
+      const { price, seed, teamId, tournamentId } = input;
+      const tournamentTeamId = await TournamentService.createTournamentTeam(price, seed, teamId, tournamentId);
+      return tournamentTeamId;
     },
 
     updateTournament: async (_, { input }) => {

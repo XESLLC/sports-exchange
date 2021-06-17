@@ -8,7 +8,7 @@ const League = SequelizeInstance.define('League', {
     type: DataTypes.UUID,
     allowNull: false,
     primaryKey: true,
-    defaultValue: uuidv4()
+    defaultValue:  DataTypes.UUIDV4
   },
 
   name: {

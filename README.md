@@ -265,3 +265,18 @@ brew install mysql
 mysql.server start
 mysql -uroot
 ```
+
+## Migrations
+for AWS
+in the server directory
+```
+npx sequelize db:migrate --env staging
+
+npx sequelize-cli db:migrate:undo --env staging
+```
+
+## SLS deploy
+just aws graphql lambda function
+```
+sls deploy function -f graphql
+```

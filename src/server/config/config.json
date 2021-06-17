@@ -1,0 +1,30 @@
+{
+  "development": {
+    "username": "root",
+    "password": null,
+    "database": "database_development",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "staging": {
+    "username": "admin",
+    "password": "sports-exchange",
+    "database": "sports_exchange_db",
+    "host": "sports-exchange-db.cg3onfdtaa7j.us-west-2.rds.amazonaws.com",
+    "dialect": "mysql"
+  }
+}

@@ -9,7 +9,7 @@ const Team = SequelizeInstance.define('Team', {
     type: DataTypes.UUID,
     allowNull: false,
     primaryKey: true,
-    defaultValue: uuidv4()
+    defaultValue:  DataTypes.UUIDV4
   },
 
   // It is possible to create foreign keys:

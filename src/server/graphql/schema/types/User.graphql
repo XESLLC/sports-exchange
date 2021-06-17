@@ -1,15 +1,29 @@
 type User {
   id: ID!
-  name: String
-  stocks: [Int]
+  firstname: String
+  lastname: String
+  cash: Int
+}
+
+type TournamentTeamStock {
+    teamName: String!
+    price: Int! #is null initially ... when being sold it will have a price
+    quantity: Int!
 }
 
 input IPOPurchaseInput {
-  teamId: ID!
-  tournamentId: ID!
+  tournamentTeamId: ID!
   quantity: Int!
 }
 
+input UserInput {
+  firstname: String!
+  lastname: String
+  tournamentId: ID!
+}
+
 type Mutation {
-  ipoPurchase(input: IPOPurchaseInput!): Boolean
+  ipoPurchase(input: IPOPurchaseInput!): TournamentTeamStock!
+  createTournamentUser(input: UserInput!): User!
+  updateUserCash(userId: ID!, cash: Int!): Boolean!
 }
