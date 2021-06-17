@@ -1,7 +1,7 @@
 # ♨️ Sports Exchange Online Version
 
 [![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
-[![dependencies](https://img.shields.io/david/arabold/serverless-react-boilerplate.svg)]https://github.com/XESLLC/sports-exchange
+
 
 Lightweight boilerplate project to setup a React 16 web application on AWS Lambda using the Serverless Framework.
 This has been modified with -
