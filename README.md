@@ -265,6 +265,15 @@ brew install mysql
 mysql.server start
 mysql -uroot
 ```
+##Local Server
+in command line navigate to server directory and run:
+```
+ ENV=local node app.js
+ ```
+ then
+ http://localhost:4000/graphql
+
+
 
 ## Migrations
 for AWS

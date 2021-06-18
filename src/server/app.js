@@ -13,9 +13,9 @@ console.log('process.env.ENV ',process.env.ENV)
 isNotLocal = (process.env.ENV !== 'local')
 const { ApolloServer, gql, AuthenticationError } = isNotLocal? require('apollo-server-lambda') : require('apollo-server');
 
-const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID? process.env.AUTH0_CLIENT_ID : 'undvcjb2Ky8Kt4byZegdWY4V5OoYhEWA'
-const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN? process.env.AUTH0_DOMAIN : 'dev-8duzx03a.us.auth0.com'
-
+const AUTH0_CLIENT_ID = !!process.env.AUTH0_CLIENT_ID? process.env.AUTH0_CLIENT_ID : 'undvcjb2Ky8Kt4byZegdWY4V5OoYhEWA'
+const AUTH0_DOMAIN = !!process.env.AUTH0_DOMAIN? process.env.AUTH0_DOMAIN : 'dev-8duzx03a.us.auth0.com'
+console.log('AUTH0_CLIENT_ID -', AUTH0_CLIENT_ID, "AUTH0_DOMAIN -", AUTH0_DOMAIN)
 //Auth Obj on server
 const client = jwksClient({
   jwksUri: `https://${AUTH0_DOMAIN}/.well-known/jwks.json`
@@ -85,15 +85,14 @@ if (isNotLocal) {
     typeDefs,
     resolvers,
     context: async ({ req }) => ({
-      user: await getUser(req.headers.Authorization)
-    })
+      user: await getUser(req.headers.authorization)
+    }),
   });
-
-  console.log("Using Auth0 client domain: ", AUTH0_DOMAIN); // for paid account only
 
   initModels().then(() => {
     // The `listen` method launches a web server.
     server.listen().then(({ url }) => {
+      console.log("Using Auth0 client domain: ", AUTH0_DOMAIN); // for paid account only
       console.log(`🚀  Server ready at ${url}`);
     });
   });

@@ -11,7 +11,6 @@ const TournamentTeam = SequelizeInstance.define('TournamentTeam', {
     primaryKey: true,
     defaultValue:  DataTypes.UUIDV4
   },
-
   tournamentId: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -24,7 +23,6 @@ const TournamentTeam = SequelizeInstance.define('TournamentTeam', {
       key: 'id'
     }
   },
-
   teamId: {
     type: DataTypes.UUID,
     allowNull: false,

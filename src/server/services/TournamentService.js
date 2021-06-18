@@ -2,13 +2,13 @@ const { transformCommentsToDescriptions } = require('graphql-tools');
 const Tournament = require('../models/Tournament');
 const TournamentTeam = require('../models/TournamentTeam')
 const Stock = require('../models/Stock')
+const Team = require('../models/Team')
 const { v4: uuidv4 } = require('uuid');
 
 const TournamentService = {
   tournaments: async () => {
     return await Tournament.findAll();
   },
-
   tournament: async id => {
     return await Tournament.findOne({
       where: {
@@ -16,7 +16,6 @@ const TournamentService = {
       }
     });
   },
-
   getTournamentsByLeagueId: async leagueId => {
     return await Tournament.findAll({
       where: {

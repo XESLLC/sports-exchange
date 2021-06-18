@@ -2,7 +2,6 @@ const LeagueService = require('../../../services/LeagueService');
 const TeamService = require('../../../services/TeamService');
 const TournamentService = require('../../../services/TournamentService');
 
-
 const League = {
   Query: {
     leagues: (obj, input, ctx) => LeagueService.leagues(obj, input, ctx),

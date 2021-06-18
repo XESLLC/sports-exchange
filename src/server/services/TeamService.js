@@ -1,9 +1,41 @@
 const { transformCommentsToDescriptions } = require('graphql-tools');
 const Team = require('../models/Team');
+const Tournament = require('../models/Tournament');
 const TournamentTeam = require('../models/TournamentTeam');
 const { v4: uuidv4 } = require('uuid');
 
 const TeamService = {
+  getTournamentTeams: async (tournamentId) => {
+      const tournamentTeams = await TournamentTeam.findAll({
+          where: {
+            tournamentId: tournamentId
+          }
+      });
+
+      const tournamentTeamsMap = tournamentTeams.map(async (tournamentTeam) => {
+
+          const team = await Team.findOne({
+              where: {
+                id: tournamentTeam.teamId
+              }
+          })
+
+          const tournament = await Tournament.findOne({
+              where: {
+                  id: tournamentId
+              }
+          })
+
+          return {
+              id: tournamentTeam.id,
+              teamName: team.name,
+              seed: tournamentTeam.seed,
+              ipoPrice: tournamentTeam.price,
+              tournament: tournament.name
+          }
+      })
+      return tournamentTeamsMap
+  },
   teams: async () => {
     return await Team.findAll();
   },

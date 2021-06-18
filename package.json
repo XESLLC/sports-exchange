@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "cross-env IS_OFFLINE=1 concurrently --kill-others \"npm run start:devserver\" \"npm run start:offline\"",
-    "start:devserver": "webpack serve --config webpack.browser.config.js --mode development",
+    "start:devserver": "webpack serve --config webpack.server.config.js --mode development",
     "start:offline": "sls offline start",
     "build:serverless": "sls package",
     "build:browser": "webpack --config webpack.browser.config.js --mode development",
