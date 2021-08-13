@@ -2,9 +2,16 @@ const TournamentService = require('../../../services/TournamentService');
 
 const Tournament = {
   Query: {
-    tournaments: () => TournamentService.tournaments(),
-
-    tournament: (obj, { id }) => TournamentService.tournament(id)
+    tournaments: async (_, input) => {
+      const leagueId = input.leagueId;
+      const tournaments = await TournamentService.tournaments(leagueId);
+      return tournaments;
+    },
+    tournament: async (_, input) => {
+      const id = input.id;
+      const tournament = await TournamentService.tournament(id);
+      return tournament;
+    }
   },
 
   Mutation: {
@@ -15,10 +22,9 @@ const Tournament = {
     },
     createTournamentTeam: async (_, { input }) => {
       const { price, seed, teamId, tournamentId } = input;
-      const tournamentTeamId = await TournamentService.createTournamentTeam(price, seed, teamId, tournamentId);
-      return tournamentTeamId;
+      const tournamentTeam = await TournamentService.createTournamentTeam(price, seed, teamId, tournamentId);
+      return tournamentTeam;
     },
-
     updateTournament: async (_, { input }) => {
       const { id, name, leagueId } = input;
       const updateId = await TournamentService.updateTournament(id, name, leagueId);

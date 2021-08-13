@@ -4,7 +4,6 @@ const SequelizeInstance = require('./SequelizeInstance');
 const Team = require('./Team');
 const TournamentTeam = require('./TournamentTeam');
 const Tournament = require('./Tournament');
-const StockUser = require('./StockUser')
 
 const Stock = SequelizeInstance.define('Stock', {
   id: {

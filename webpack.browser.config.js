@@ -13,14 +13,14 @@ const devWebBrowser = {
   devtool: "inline-source-map",
 
   // Spin up a server for quick development - local only
-  // devServer: {
-  //   historyApiFallback: true,
-  //   contentBase: paths.build,
-  //   open: true,
-  //   compress: true,
-  //   hot: true,
-  //   port: 8080,
-  // },
+  devServer: {
+    historyApiFallback: true,
+    contentBase: paths.build,
+    open: true,
+    compress: true,
+    hot: true,
+    port: 8081,
+  },
 
   plugins: [
     // Only update what has changed on hot reload

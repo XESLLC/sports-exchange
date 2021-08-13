@@ -5,7 +5,7 @@ const TournamentTeam = require('../models/TournamentTeam');
 const { v4: uuidv4 } = require('uuid');
 
 const TeamService = {
-  getTournamentTeams: async (tournamentId) => {
+  tournamentTeams: async (tournamentId) => {
       const tournamentTeams = await TournamentTeam.findAll({
           where: {
             tournamentId: tournamentId
@@ -28,6 +28,7 @@ const TeamService = {
 
           return {
               id: tournamentTeam.id,
+              teamId: team.id,
               teamName: team.name,
               seed: tournamentTeam.seed,
               ipoPrice: tournamentTeam.price,
@@ -86,11 +87,20 @@ const TeamService = {
   },
   addTeamToTournament: async (teamId, tournamentId) => {
     try {
-      let tournamentTeam = await TournamentTeam.create({
-        teamId,
-        tournamentId
+      const team = await Team.findOne({
+        where: {
+          id: teamId
+        }
       });
-      return tournamentTeam.id;
+
+      // TODO what are the default values for price and seed
+      await TournamentTeam.create({
+        teamId,
+        tournamentId,
+        price: 0,
+        seed: 0
+      });
+      return team;
     } catch (error) {
       console.error("Failed to create TournamentTeam entry: " + error);
       return null;

@@ -6,8 +6,12 @@ const Team = require('../models/Team')
 const { v4: uuidv4 } = require('uuid');
 
 const TournamentService = {
-  tournaments: async () => {
-    return await Tournament.findAll();
+  tournaments: async (leagueId) => {
+    return await Tournament.findAll({
+      where: {
+        leagueId
+      }
+    });
   },
   tournament: async id => {
     return await Tournament.findOne({
@@ -55,7 +59,7 @@ const TournamentService = {
           console.error("Failed to create tournamentTeam.", error);
           throw new Error("Failed to create tournamentTeam.");
       }
-      return tournamentTeam.id
+      return tournamentTeam
   },
   updateTournament: async (id, name, leagueId) => {
     let tournament;

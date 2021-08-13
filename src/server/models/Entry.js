@@ -1,35 +1,34 @@
 const { DataTypes } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
-
 const SequelizeInstance = require('./SequelizeInstance');
-const Stock = require('./Stock');
-const User = require('./User');
+const Tournament = require('./Tournament');
 
-const StockUser = SequelizeInstance.define('StockUser', {
+const Entry = SequelizeInstance.define('Entry', {
   id: {
     type: DataTypes.UUID,
     allowNull: false,
     primaryKey: true,
     defaultValue:  DataTypes.UUIDV4
   },
-  stockId: {
+  tournamentId: {
     type: DataTypes.UUID,
     allowNull: false,
+    unique: 'compositeIndex',
     references: {
-      model: Stock,
+      model: Tournament,
       key: 'id'
     }
   },
-  userId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: User,
-      key: 'id'
-    }
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  cash: {
+    type: DataTypes.FLOAT,
+    allowNull: false
   }
 }, {
   freezeTableName: true
 });
 
-module.exports = StockUser;
+module.exports = Entry;

@@ -3,19 +3,20 @@ const Tournament = require('../models/Tournament');
 const TournamentTeam = require('../models/TournamentTeam')
 const Team = require('../models/Team')
 const Stock = require('../models/Stock')
-const StockUser = require('../models/StockUser')
+const StockUser = require('../models/StockEntry')
 const User = require('../models/User')
 const { v4: uuidv4 } = require('uuid');
+const UserEntry = require('../models/UserEntry');
+const Entry = require('../models/Entry');
 
 const UserService = {
   users: async () => {
     return await User.findAll();
   },
-
-  user: async id => {
+  user: async email => {
     return await User.findOne({
       where: {
-        id
+        email
       }
     });
   },
@@ -33,70 +34,57 @@ const UserService = {
       }
       return !!isUpdated
   },
-  createTournamentUser: async (tournamentId, firstname, lastname, email) => {
-      let user
-      let created
-      try {
-          [user, created] = await User.findOrCreate({
-              where: {
-                  email: email,
-                  tournamentId: tournamentId
-              },
-              defaults: {
-                  firstname: firstname,
-                  lastname: lastname
-              }
-          });
-      } catch (error) {
-          console.error("User for Tournament was not created.", error);
-          throw new Error("User for Tournament was not created.");
+  createUser: async (firstname, lastname, cash, email, username, phoneNumber) => {
+    let user;
+    let created;
+
+    [user, created] = await User.findOrCreate({
+      where: {
+        email
+      },
+      defaults: {
+        firstname,
+        lastname,
+        cash,
+        email,
+        username,
+        phoneNumber
       }
-      return user
+    });
+
+    const result = user ? user : created;
+
+    return result;
   },
-  ipoPurchase: async (tournamentTeamId, quantity, authUser) => {
-      let tournamentTeamStock = {}
-      console.log('here')
-      try {
-          // TODO: setup transaction roll backs
-          const tournamentTeam = await TournamentTeam.findByPk(tournamentTeamId)
-          const ipoPrice = tournamentTeam.price
-          const team = await Team.findByPk(tournamentTeam.teamId)
-
-          tournamentTeamStock.teamName = team.name;
-          tournamentTeamStock.price = ipoPrice;
-          tournamentTeamStock.quantity = quantity;
-console.log('here2')
-          const user = await User.findOne({
-              where: {
-                 email: authUser.email,
-                 tournamentId: tournamentTeam.tournamentId
-              }
-          })
-          console.log('here3')
-          console.log(user, ipoPrice*quantity)
-          if (user.cash < ipoPrice*quantity) {
-              console.error("User does not have enough cash.", error);
-              throw new Error("User does not have enough cash.");
-          }
-          user.cash -= (ipoPrice*quantity)
-          await user.save();
-
-          for (let i = 0; i < quantity; i++) {
-              const stock = await Stock.create({
-                  price: null,
-                  tournamentTeamId: tournamentTeamId
-              })
-              const stockUser = await StockUser.create({
-                  userId: user.id,
-                  stockId: stock.id
-              })
-          }
-      } catch (error) {
-          console.error("Failed to purchase IPO.", error);
-          throw new Error("Failed to purchase IPO.");
+  usersByEntryId: async (entryId) => {
+    const entry = await Entry.findOne({
+      where: {
+        id: entryId
       }
-      return tournamentTeamStock
-  }
+    });
+    if(!entry) {
+      throw new Error("Entry not found");
+    }
+
+    const userEntries = await UserEntry.findAll({
+      where: {
+        entryId: entry.id
+      }
+    });
+    if(!userEntries) {
+      throw new Error("User entries not found");
+    }
+
+    const userIds = userEntries.map(entry => entry.userId);
+
+    const users = await User.findAll({
+      where: {
+        id: userIds
+      }
+    });
+
+    return users;
+  },
 };
 
 module.exports = UserService;

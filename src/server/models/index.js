@@ -1,6 +1,6 @@
 const League = require('./League');
 const Stock = require('./Stock');
-const StockUser = require('./StockUser');
+const StockUser = require('./StockEntry');
 const Team = require('./Team');
 const Tournament = require('./Tournament');
 const Transaction = require('./Transaction');

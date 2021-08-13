@@ -2,8 +2,16 @@ type Tournament {
   id: ID!
   name: String!
   leagueId: ID!
+  createdAt: String!
 }
 
+type TournamentTeam {
+  id: ID!
+  tournamentId: ID!
+  teamId: ID!
+  price: Float!
+  seed: Int!
+}
 
 input TournamentInput {
   name: String!
@@ -21,25 +29,20 @@ input DeleteTournamentInput {
 }
 
 input TournamentTeamInput {
-    price: Int!
+    price: Float!
     teamId: ID!
     seed: Int!
     tournamentId: ID!
 }
 
 type Query {
-  tournaments: [Tournament]
+  tournaments(leagueId: ID!): [Tournament]
   tournament(id: ID!): Tournament
 }
 
-
-
 type Mutation {
   createTournament(input: TournamentInput!): Tournament!
-
-  createTournamentTeam(input: TournamentTeamInput!): ID!
-
+  createTournamentTeam(input: TournamentTeamInput!): TournamentTeam!
   updateTournament(input: UpdateTournamentInput!): ID!
-
   deleteTournament(input: DeleteTournamentInput!): ID
 }

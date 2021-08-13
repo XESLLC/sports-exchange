@@ -2,24 +2,19 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    return queryInterface.createTable('User', {
+    return queryInterface.createTable('Entry', {
       id: {
         type: Sequelize.UUID,
         primaryKey: true,
         defaultValue: Sequelize.UUIDV4,
         allowNull: false
       },
-      cash: {
-        type: Sequelize.INTEGER,
-        defaultValue: 0,
-        allowNull: false
+      tournamentId: {
+        type: Sequelize.UUID,
+        references: { model: 'Tournament', key: 'id' }
       },
-      // tournamentId: Sequelize.STRING,
-      email: Sequelize.STRING, // same as auth email
-      firstname: Sequelize.STRING,
-      lastname: Sequelize.STRING,
-      username: Sequelize.STRING,
-      phoneNumber: Sequelize.STRING,
+      name: Sequelize.STRING,
+      cash: Sequelize.FLOAT,
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -32,6 +27,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('User');
+    return queryInterface.dropTable('Entry');
   }
 };

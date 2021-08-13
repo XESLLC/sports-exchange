@@ -5,7 +5,12 @@ const TournamentService = require('../../../services/TournamentService');
 const League = {
   Query: {
     leagues: (obj, input, ctx) => LeagueService.leagues(obj, input, ctx),
-    league: (obj, input, ctx) => LeagueService.league(id)
+    // league: (obj, input, ctx) => LeagueService.league(id)
+    league: async (_, input) => {
+      const id = input.id;
+      const league = await LeagueService.league(id);
+      return league;
+    }
   },
 
   Mutation: {

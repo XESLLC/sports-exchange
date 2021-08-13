@@ -1,0 +1,36 @@
+type Entry {
+  id: ID!
+  tournamentId: ID!
+  name: String!
+  cash: Float!
+}
+
+type TournamentTeamStock {
+  teamName: String!
+  ipoPrice: Float!
+  quantity: Int!
+}
+
+input EntryInput {
+  name: String!
+  userEmails: [String!]
+  tournamentId: ID!
+}
+
+input IPOPurchaseInput {
+  tournamentTeamId: ID!
+  quantity: Int!
+  userEmail: String!
+  entryId: ID!
+}
+
+type Query {
+  entry(id: ID!): Entry
+  entriesByTournamentId(tournamentId: ID!): [Entry]
+  userEntries(email: String!): [Entry]
+}
+
+type Mutation {
+  createEntry(input: EntryInput!): Entry
+  ipoPurchase(input: IPOPurchaseInput!): TournamentTeamStock!
+}

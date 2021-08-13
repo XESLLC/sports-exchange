@@ -9,7 +9,7 @@ module.exports = {
         defaultValue: Sequelize.UUIDV4,
         allowNull: false
       },
-      price: Sequelize.INTEGER,
+      price: Sequelize.FLOAT,
       seed: Sequelize.INTEGER,
       teamId: {
         type: Sequelize.UUID,
