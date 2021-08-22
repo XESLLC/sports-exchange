@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const SequelizeInstance = require('./SequelizeInstance');
 const Stock = require('./Stock');
-const User = require('./User');
+const Entry = require('./Entry');
 
 const Transaction = SequelizeInstance.define('Transaction', {
   id: {
@@ -13,11 +13,11 @@ const Transaction = SequelizeInstance.define('Transaction', {
     defaultValue:  DataTypes.UUIDV4
   },
 
-  userId: {
+  entryId: {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: User,
+      model: Entry,
       key: 'id'
     }
   },
@@ -37,7 +37,7 @@ const Transaction = SequelizeInstance.define('Transaction', {
   },
 
   cost: {
-    type: DataTypes.DECIMAL(10, 2),
+    type: DataTypes.FLOAT,
     allowNull: false
   }
 }, {

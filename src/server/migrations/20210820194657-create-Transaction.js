@@ -10,14 +10,14 @@ module.exports = {
         allowNull: false
       },
       quantity: Sequelize.INTEGER,
-      cost: Sequelize.INTEGER,
+      cost: Sequelize.FLOAT,
       stockId: {
         type: Sequelize.UUID,
         references: { model: 'Stock', key: 'id' }
       },
-      userId: {
+      entryId: {
         type: Sequelize.UUID,
-        references: { model: 'User', key: 'id' }
+        references: { model: 'Entry', key: 'id' }
       },
       createdAt: {
         allowNull: false,

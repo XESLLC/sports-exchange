@@ -1,16 +1,24 @@
 const { DataTypes } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const SequelizeInstance = require('./SequelizeInstance');
-const Team = require('./Team');
+const Entry = require('./Entry');
 const TournamentTeam = require('./TournamentTeam');
-const Tournament = require('./Tournament');
 
-const Stock = SequelizeInstance.define('Stock', {
+const EntryBid = SequelizeInstance.define('EntryBid', {
   id: {
     type: DataTypes.UUID,
     allowNull: false,
     primaryKey: true,
-    defaultValue: DataTypes.UUIDV4
+    defaultValue:  DataTypes.UUIDV4
+  },
+  entryId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    unique: 'compositeIndex',
+    references: {
+      model: Entry,
+      key: 'id'
+    }
   },
   tournamentTeamId: {
     type: DataTypes.UUID,
@@ -24,11 +32,13 @@ const Stock = SequelizeInstance.define('Stock', {
   price: {
     type: DataTypes.FLOAT,
     allowNull: true
-  }// negative numbers represent a bid price // can only be set to 0 by admin when out of tourn. // set to null when not being traded. bid is deleted after stock purchase. ask user Id changed after purchase and price set to null.
+  },
+  quantity: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  }
 }, {
   freezeTableName: true
 });
 
-
-
-module.exports = Stock;
+module.exports = EntryBid;

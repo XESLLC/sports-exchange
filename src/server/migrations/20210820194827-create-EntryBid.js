@@ -2,21 +2,23 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Stock', {
+    return queryInterface.createTable('EntryBid', {
       id: {
         type: Sequelize.UUID,
         primaryKey: true,
         defaultValue: Sequelize.UUIDV4,
         allowNull: false
       },
-      price: {
-          type: Sequelize.FLOAT,
-          allowNull: true // negative numbers represent a bid price // can only be set to 0 by admin when out of tourn. // set to null when not being traded.
+      entryId: {
+        type: Sequelize.UUID,
+        references: { model: 'Entry', key: 'id' }
       },
       tournamentTeamId: {
         type: Sequelize.UUID,
         references: { model: 'TournamentTeam', key: 'id' }
       },
+      price: Sequelize.FLOAT,
+      quantity: Sequelize.INTEGER,
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -29,6 +31,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('Stock');
+    return queryInterface.dropTable('EntryBid');
   }
 };

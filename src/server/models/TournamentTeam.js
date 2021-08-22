@@ -23,6 +23,7 @@ const TournamentTeam = SequelizeInstance.define('TournamentTeam', {
       key: 'id'
     }
   },
+  // TODO think about adding a roundData json column to hold relevant data
   teamId: {
     type: DataTypes.UUID,
     allowNull: false,

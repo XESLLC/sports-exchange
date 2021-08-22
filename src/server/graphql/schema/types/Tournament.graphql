@@ -5,6 +5,14 @@ type Tournament {
   createdAt: String!
 }
 
+type TournamentWithLeagueName {
+  id: ID!
+  name: String!
+  leagueId: ID!
+  leagueName: String
+  createdAt: String!
+}
+
 type TournamentTeam {
   id: ID!
   tournamentId: ID!
@@ -36,7 +44,9 @@ input TournamentTeamInput {
 }
 
 type Query {
-  tournaments(leagueId: ID!): [Tournament]
+  getTournamentsByLeagueId(leagueId: ID!): [Tournament]
+  getTournamentTransactions(tournamentId: ID!): [Transaction]
+  tournaments: [TournamentWithLeagueName]
   tournament(id: ID!): Tournament
 }
 

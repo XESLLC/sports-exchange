@@ -10,7 +10,7 @@ module.exports = {
         allowNull: false
       },
       cash: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.FLOAT,
         defaultValue: 0,
         allowNull: false
       },

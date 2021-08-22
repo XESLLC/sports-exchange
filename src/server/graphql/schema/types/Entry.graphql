@@ -5,12 +5,6 @@ type Entry {
   cash: Float!
 }
 
-type TournamentTeamStock {
-  teamName: String!
-  ipoPrice: Float!
-  quantity: Int!
-}
-
 input EntryInput {
   name: String!
   userEmails: [String!]
@@ -24,13 +18,33 @@ input IPOPurchaseInput {
   entryId: ID!
 }
 
+input NewEntryBidInput {
+  entryId: ID!
+  tournamentTeamId: ID!
+  price: Float!
+  quantity: Int!
+}
+
+type EntryBid {
+  id: ID!
+  entryId: ID!
+  tournamentTeamId: ID!
+  teamName: String!
+  price: Float!
+  quantity: Int!
+  trades: [Transaction]
+}
+
 type Query {
   entry(id: ID!): Entry
   entriesByTournamentId(tournamentId: ID!): [Entry]
+  getBidsForEntry(entryId: ID!): [EntryBid]
   userEntries(email: String!): [Entry]
 }
 
 type Mutation {
   createEntry(input: EntryInput!): Entry
+  createEntryBid(input: NewEntryBidInput!): EntryBid
+  deleteEntryBid(id: ID!): Entry
   ipoPurchase(input: IPOPurchaseInput!): TournamentTeamStock!
 }

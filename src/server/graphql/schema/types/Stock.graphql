@@ -1,3 +1,50 @@
+type TournamentTeamStock {
+  teamName: String!
+  teamId: ID!
+  tournamentTeamId: ID!
+  ipoPrice: Float!
+  quantity: Int!
+}
+
+input SellStockInput {
+  email: String!
+  entryId: ID!
+  tournamentTeamId: ID!
+  quantity: Int!
+}
+
+input StockPriceInput {
+  email: String!
+  entryId: ID!
+  tournamentTeamId: ID!
+  quantity: Int!
+  newPrice: Float!
+}
+
+type EntryStockData {
+  tournamentTeamId: ID!
+  teamName: String!
+  numStocksForSale: Int!
+  currentAskPrice: Float!
+}
+
+type Transaction {
+  id: ID!
+  entry: Entry
+  teamName: String!
+  tournamentTeamId: ID!
+  quantity: Int!
+  cost: Float!
+  createdAt: String!
+}
+
 type Query {
+  getOfferedStocksForEntry(entryId: ID!): [EntryStockData]!
   stocksByEntryId(entryId: ID!): [TournamentTeamStock]
+}
+
+type Mutation {
+  sellEntryStocks(input: SellStockInput!): [TournamentTeamStock]!
+  setStockAskPrice(input: StockPriceInput!): [TournamentTeamStock]!
+  setTournamentTeamStockPriceToNull(tournamentTeamId: ID!, entryId: ID!): Entry
 }

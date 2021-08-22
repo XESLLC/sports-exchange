@@ -85,6 +85,24 @@ const UserService = {
 
     return users;
   },
+  updateUser: async (firstname, lastname, email, username, phoneNumber) => {
+    const user = await User.findOne({
+      where: {
+        email
+      }
+    });
+    if(!user) {
+      throw new Error("User not found");
+    }
+
+    user.firstname = firstname;
+    user.lastname = lastname;
+    user.username = username;
+    user.phoneNumber = phoneNumber;
+    await user.save();
+
+    return user;
+  }
 };
 
 module.exports = UserService;

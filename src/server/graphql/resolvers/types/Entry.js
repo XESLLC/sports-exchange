@@ -12,6 +12,11 @@ const Entry = {
       const entries = await EntryService.entriesByTournamentId(tournamentId);
       return entries;
     },
+    getBidsForEntry: async (_, input) => {
+      const entryId = input.entryId;
+      const entryBids = await EntryService.getBidsForEntry(entryId);
+      return entryBids;
+    },
     userEntries: async (_, input) => {
       const email = input.email;
       const userEntries = await EntryService.userEntries(email);
@@ -23,6 +28,16 @@ const Entry = {
     createEntry: async (_, { input }) => {
       const { name, userEmails, tournamentId } = input;
       const entry = await EntryService.createEntry(name, userEmails, tournamentId);
+      return entry;
+    },
+    createEntryBid: async (_, { input }) => {
+      const { entryId, tournamentTeamId, price, quantity } = input;
+      const entryBid = await EntryService.createEntryBid(entryId, tournamentTeamId, price, quantity);
+      return entryBid;
+    },
+    deleteEntryBid: async (_, input) => {
+      const id = input.id;
+      const entry = await EntryService.deleteEntryBid(id);
       return entry;
     },
     ipoPurchase: async (_, { input }) => {

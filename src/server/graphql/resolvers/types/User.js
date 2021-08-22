@@ -25,6 +25,11 @@ const User = {
           const { firstname, lastname, cash, email, username, phoneNumber } = input;
           const user = await UserService.createUser(firstname, lastname, cash, email, username, phoneNumber);
           return user;
+      },
+      updateUser: async (_, { input }) => {
+          const {firstname, lastname, email, username, phoneNumber} = input;
+          const user = await UserService.updateUser(firstname, lastname, email, username, phoneNumber);
+          return user;
       }
   }
 };

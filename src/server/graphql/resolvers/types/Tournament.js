@@ -2,9 +2,18 @@ const TournamentService = require('../../../services/TournamentService');
 
 const Tournament = {
   Query: {
-    tournaments: async (_, input) => {
+    getTournamentsByLeagueId: async (_, input) => {
       const leagueId = input.leagueId;
       const tournaments = await TournamentService.tournaments(leagueId);
+      return tournaments;
+    },
+    getTournamentTransactions: async (_, input) => {
+      const tournamentId = input.tournamentId;
+      const transactions = await TournamentService.getTournamentTransactions(tournamentId);
+      return transactions;
+    },
+    tournaments: async () => {
+      const tournaments = await TournamentService.tournaments();
       return tournaments;
     },
     tournament: async (_, input) => {
