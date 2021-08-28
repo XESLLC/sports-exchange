@@ -23,7 +23,8 @@ module.exports = {
         type: Sequelize.JSON
       },
       isEliminated: {
-        type: Sequelize.BOOLEAN
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
       },
       createdAt: {
         allowNull: false,
