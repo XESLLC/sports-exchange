@@ -2,14 +2,20 @@ const StockService = require('../../../services/StockService');
 
 const Stock = {
   Query: {
-    getOfferedStocksForEntry: async (_, input) => {
+    getOfferedStocksForTournament: async (_, input) => {
+      const tournamentId = input.tournamentId;
       const entryId = input.entryId;
-      const stocks = await StockService.getOfferedStocksForEntry(entryId);
-      return stocks;
+      const offeredStocks = await StockService.getOfferedStocksForTournament(tournamentId, entryId);
+      return offeredStocks;
     },
     stocksByEntryId: async (_, input) => {
       const entryId = input.entryId;
       const stocks = await StockService.stocksByEntryId(entryId);
+      return stocks;
+    },
+    getOriginallyPurchasedStocks: async (_, input) => {
+      const entryId = input.entryId;
+      const stocks = await StockService.getOriginallyPurchasedStocks(entryId);
       return stocks;
     }
   },

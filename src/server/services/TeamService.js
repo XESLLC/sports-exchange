@@ -12,6 +12,8 @@ const TeamService = {
           }
       });
 
+      console.log("team: " + JSON.stringify(tournamentTeams[0]))
+
       const tournamentTeamsMap = tournamentTeams.map(async (tournamentTeam) => {
 
           const team = await Team.findOne({
@@ -32,10 +34,43 @@ const TeamService = {
               teamName: team.name,
               seed: tournamentTeam.seed,
               ipoPrice: tournamentTeam.price,
-              tournament: tournament.name
+              tournament: tournament.name,
+              isEliminated: tournamentTeam.isEliminated,
+              milestoneData: tournamentTeam.milestoneData
           }
       })
       return tournamentTeamsMap
+  },
+  tournamentTeamByTeamId: async (tournamentId, teamId) => {
+    const tournamentTeam = await TournamentTeam.findOne({
+      where: {
+        tournamentId,
+        teamId
+      }
+    });
+
+    const team = await Team.findOne({
+      where: {
+        id: tournamentTeam.teamId
+      }
+    });
+
+    const tournament = await Tournament.findOne({
+      where: {
+        id: tournamentId
+      }
+    });
+
+    return {
+      id: tournamentTeam.id,
+      teamId: team.id,
+      teamName: team.name,
+      seed: tournamentTeam.seed,
+      ipoPrice: tournamentTeam.price,
+      tournament: tournament.name,
+      isEliminated: tournamentTeam.isEliminated,
+      milestoneData: tournamentTeam.milestoneData
+    }
   },
   teams: async () => {
     return await Team.findAll();
@@ -98,7 +133,8 @@ const TeamService = {
         teamId,
         tournamentId,
         price: 0,
-        seed: 0
+        seed: 0,
+        isEliminated: false
       });
       return team;
     } catch (error) {

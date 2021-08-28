@@ -4,7 +4,9 @@ const TournamentService = require('../../../services/TournamentService');
 
 const League = {
   Query: {
-    leagues: (obj, input, ctx) => LeagueService.leagues(obj, input, ctx),
+    leagues: async () => {
+      return await LeagueService.leagues();
+    },
     // league: (obj, input, ctx) => LeagueService.league(id)
     league: async (_, input) => {
       const id = input.id;
@@ -17,6 +19,11 @@ const League = {
     createLeague: async (_, { input }) => {
       const { name } = input;
       const league = await LeagueService.createLeague(name);
+      return league;
+    },
+    importLeague: async (_, input) => {
+      const leagueName = input.leagueName;
+      const league = await LeagueService.importLeague(leagueName);
       return league;
     }
   },

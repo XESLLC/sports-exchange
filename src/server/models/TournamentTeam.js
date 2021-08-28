@@ -40,6 +40,12 @@ const TournamentTeam = SequelizeInstance.define('TournamentTeam', {
   seed: {
     type: DataTypes.INTEGER,
     allowNull: false
+  },
+  milestoneData: {
+    type: DataTypes.JSON
+  },
+  isEliminated: {
+    type: DataTypes.BOOLEAN
   }
 }, {
   freezeTableName: true

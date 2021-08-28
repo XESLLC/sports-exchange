@@ -4,6 +4,15 @@ type TournamentTeamStock {
   tournamentTeamId: ID!
   ipoPrice: Float!
   quantity: Int!
+  trades: [Transaction]
+}
+
+type Stock {
+  id: ID!
+  tournamentTeamId: ID!
+  price: Float
+  originalIpoEntryId: ID!
+  offerExpiresAt: String
 }
 
 input SellStockInput {
@@ -19,6 +28,11 @@ input StockPriceInput {
   tournamentTeamId: ID!
   quantity: Int!
   newPrice: Float!
+}
+
+type OfferedStocks {
+  myStockOffers: [EntryStockData]
+  leagueStockOffers: [EntryStockData]
 }
 
 type EntryStockData {
@@ -39,8 +53,9 @@ type Transaction {
 }
 
 type Query {
-  getOfferedStocksForEntry(entryId: ID!): [EntryStockData]!
+  getOfferedStocksForTournament(tournamentId: ID!, entryId: ID!): OfferedStocks!
   stocksByEntryId(entryId: ID!): [TournamentTeamStock]
+  getOriginallyPurchasedStocks(entryId: ID!): [Stock]
 }
 
 type Mutation {

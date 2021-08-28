@@ -10,6 +10,17 @@ type TournamentTeam {
   seed: Int!
   ipoPrice: Float!
   tournament: String!
+  milestoneData: [MilestoneData]
+  isEliminated: Boolean!
+}
+
+type MilestoneData {
+  milestoneId: String
+  milestoneName: String
+  dividendPrice: Float
+  wins: Int
+  losses: Int
+  ties: Int
 }
 
 input CreateTeamInput {
@@ -30,6 +41,7 @@ input TeamTournamentInput {
 type Query {
   getTeamsByLeagueId(leagueId: ID!): [Team]
   tournamentTeams(tournamentId: ID!): [TournamentTeam]!
+  tournamentTeamByTeamId(tournamentId: ID!, teamId: ID!): TournamentTeam!
   teams: [Team]
   team(id: ID!): Team
 }

@@ -19,6 +19,9 @@ module.exports = {
       },
       price: Sequelize.FLOAT,
       quantity: Sequelize.INTEGER,
+      expiresAt: {
+        type: Sequelize.DATE
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

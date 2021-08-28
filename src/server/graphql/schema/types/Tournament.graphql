@@ -2,6 +2,8 @@ type Tournament {
   id: ID!
   name: String!
   leagueId: ID!
+  isIpoOpen: Boolean!
+  settings: LeagueSettings
   createdAt: String!
 }
 
@@ -37,10 +39,24 @@ input DeleteTournamentInput {
 }
 
 input TournamentTeamInput {
-    price: Float!
-    teamId: ID!
-    seed: Int!
-    tournamentId: ID!
+  price: Float!
+  teamId: ID!
+  seed: Int!
+  tournamentId: ID!
+}
+
+input TournamentTeamMilestoneInput {
+  id: ID!
+  milestoneInput: MilestoneDataInput
+}
+
+input MilestoneDataInput {
+  milestoneId: String!
+  milestoneName: String!
+  dividendPrice: Float!
+  wins: Int
+  losses: Int
+  ties: Int
 }
 
 type Query {
@@ -51,8 +67,12 @@ type Query {
 }
 
 type Mutation {
+  createOrUpdateMilestoneData(input: TournamentTeamMilestoneInput!): Team
   createTournament(input: TournamentInput!): Tournament!
   createTournamentTeam(input: TournamentTeamInput!): TournamentTeam!
   updateTournament(input: UpdateTournamentInput!): ID!
   deleteTournament(input: DeleteTournamentInput!): ID
+  toggleIsIpoOpen(tournamentId: ID!, isIpoOpen: Boolean!): Tournament
+  updateTournamentTeam(input: TournamentTeamInput!): TournamentTeam
+  toggleTournamentTeamEliminated(tournamentTeamId: ID!, isEliminated: Boolean!): TournamentTeam
 }

@@ -2,7 +2,8 @@ type Entry {
   id: ID!
   tournamentId: ID!
   name: String!
-  cash: Float!
+  ipoCashSpent: Float!
+  secondaryMarketCashSpent: Float!
 }
 
 input EntryInput {
@@ -25,6 +26,11 @@ input NewEntryBidInput {
   quantity: Int!
 }
 
+type OfferedBids {
+  myBids: [EntryBid]
+  leagueBids: [EntryBid]
+}
+
 type EntryBid {
   id: ID!
   entryId: ID!
@@ -33,12 +39,13 @@ type EntryBid {
   price: Float!
   quantity: Int!
   trades: [Transaction]
+  expiresAt: String
 }
 
 type Query {
   entry(id: ID!): Entry
   entriesByTournamentId(tournamentId: ID!): [Entry]
-  getBidsForEntry(entryId: ID!): [EntryBid]
+  getBidsForEntry(entryId: ID!): OfferedBids
   userEntries(email: String!): [Entry]
 }
 

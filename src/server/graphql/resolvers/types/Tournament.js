@@ -24,6 +24,11 @@ const Tournament = {
   },
 
   Mutation: {
+    createOrUpdateMilestoneData: async (_, { input }) => {
+      const { id, milestoneInput } = input;
+      const tournamentTeam = await TournamentService.createOrUpdateMilestoneData(id, milestoneInput);
+      return tournamentTeam;
+    },
     createTournament: async (_, { input }) => {
       const { name, leagueId } = input;
       const tournament = await TournamentService.createTournament(name, leagueId);
@@ -44,6 +49,23 @@ const Tournament = {
       const { id } = input;
       const deleteId = await TournamentService.deleteTournament(id);
       return deleteId;
+    },
+    toggleIsIpoOpen: async (_, input) => {
+      const tournamentId = input.tournamentId;
+      const isIpoOpen = input.isIpoOpen;
+      const tournament = await TournamentService.toggleIsIpoOpen(tournamentId, isIpoOpen);
+      return tournament;
+    },
+    updateTournamentTeam: async (_, { input }) => {
+      const { price, seed, teamId, tournamentId } = input;
+      const tournamentTeam = await TournamentService.updateTournamentTeam(price, seed, teamId, tournamentId);
+      return tournamentTeam;
+    },
+    toggleTournamentTeamEliminated: async (_, input) => {
+      const tournamentTeamId = input.tournamentTeamId;
+      const isEliminated = input.isEliminated;
+      const tournamentTeam = await TournamentService.toggleTournamentTeamEliminated(tournamentTeamId, isEliminated);
+      return tournamentTeam;
     }
   }
 };

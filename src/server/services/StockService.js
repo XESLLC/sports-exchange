@@ -9,25 +9,61 @@ const instance = require('../models/SequelizeInstance');
 const Transaction = require('../models/Transaction');
 const { Op } = require('sequelize');
 const EntryBid = require('../models/EntryBid');
+const { default: Tournament } = require('../models/Tournament');
 
 const StockService = {
-  getOfferedStocksForEntry: async (entryId) => {
+  getOfferedStocksForTournament: async (tournamentId, myEntryId) => {
+    const entries = await Entry.findAll({
+      where: {
+        tournamentId
+      }
+    });
+    if(!entries || entries.length < 1) {
+      throw new Error(`entries for tournamentId: ${tournamentId} not found`);
+    }
+    const entryIds = entries.map(entry => entry.id);
+
     const stockEntries = await StockEntry.findAll({
       where: {
-        entryId
+        entryId: entryIds
       }
     });
 
-    const stockIds = stockEntries.map(entry => entry.stockId);
-    const stocks = await Stock.findAll({
+    const myStockEntries = stockEntries.filter(stockEntry => stockEntry.entryId === myEntryId);
+    const leagueStockEntries = stockEntries.filter(stockEntry => stockEntry.entryId !== myEntryId);
+
+    const myStockIds = myStockEntries.map(entry => entry.stockId);
+    const leagueStockIds = leagueStockEntries.map(entry => entry.stockId);
+
+    const myStocks = await Stock.findAll({
       where: {
-        id: stockIds
+        id: myStockIds
+      }
+    });
+    const leagueStocks = await Stock.findAll({
+      where: {
+        id: leagueStockIds
       }
     });
 
-    const offeredStocks = stocks.filter(stock => stock.price !== null);
+    const myOfferedStocks = myStocks.filter(stock => stock.price !== null);
+    const tournamentOfferedStocks = leagueStocks.filter(stock => stock.price !== null);
 
-    const stocksTournamentTeamFrequency = offeredStocks.reduce((_result, stock) => {
+    const myStocksTournamentTeamFrequency = myOfferedStocks.reduce((_result, stock) => {
+      const index = _result.findIndex(_stock => _stock.tournamentTeamId === stock.tournamentTeamId);
+      if(!_result || index < 0) {
+        _result.push({
+          tournamentTeamId: stock.tournamentTeamId,
+          numStocksForSale: 1,
+          currentAskPrice: stock.price
+        });
+      } else {
+        _result[index].numStocksForSale += 1;
+      }
+
+      return _result;
+    }, []);
+    const leagueStocksTournamentTeamFrequency = tournamentOfferedStocks.reduce((_result, stock) => {
       const index = _result.findIndex(_stock => _stock.tournamentTeamId === stock.tournamentTeamId);
       if(!_result || index < 0) {
         _result.push({
@@ -42,7 +78,16 @@ const StockService = {
       return _result;
     }, []);
 
-    const result = stocksTournamentTeamFrequency.map(async (stock) => {
+    const myStockOffers = myStocksTournamentTeamFrequency.map(async (stock) => {
+      const tournamentTeam = await TournamentTeam.findByPk(stock.tournamentTeamId);
+      const team = await Team.findByPk(tournamentTeam.teamId);
+
+      return {
+        ...stock,
+        teamName: team.name
+      }
+    });
+    const leagueStockOffers = leagueStocksTournamentTeamFrequency.map(async (stock) => {
       const tournamentTeam = await TournamentTeam.findByPk(stock.tournamentTeamId);
       const team = await Team.findByPk(tournamentTeam.teamId);
 
@@ -52,7 +97,10 @@ const StockService = {
       }
     });
 
-    return result;
+    return {
+      myStockOffers,
+      leagueStockOffers
+    };
   },
   stocksByEntryId: async (entryId) => {
     const stockEntries = await StockEntry.findAll({
@@ -94,6 +142,23 @@ const StockService = {
     });
     
     return result;
+  },
+  getOriginallyPurchasedStocks: async (entryId) => {
+    const stockEntries = await StockEntry.findAll({
+      where: {
+        entryId
+      }
+    });
+
+    const stockIds = stockEntries.map(entry => entry.stockId);
+    const stocks = await Stock.findAll({
+      where: {
+        id: stockIds,
+        originalIpoEntryId: entryId
+      }
+    });
+
+    return stocks;
   },
   sellEntryStocks: async (email, entryId, tournamentTeamId, quantity) => {
     const user = await User.findOne({
@@ -176,7 +241,7 @@ const StockService = {
     const tournamentTeam = await TournamentTeam.findByPk(tournamentTeamId)
     const ipoPrice = tournamentTeam.price
     const amountToCredit = ipoPrice * quantity;
-    entry.cash += amountToCredit;
+    entry.ipoCashSpent -= amountToCredit;
     await entry.save();
 
     const updatedStocks = await Stock.findAll({
@@ -326,15 +391,14 @@ const StockService = {
       // search for stocks available that i do not own
       let matchedBids = await EntryBid.findAll({
         where: {
-          price: {
-            [Op.gte]: newPrice
-          },
           entryId: {
             [Op.not]: entryId
           },
           tournamentTeamId
         }
       });
+      // this is a hack because [Op.gte] is not working correctly
+      matchedBids = matchedBids.filter(bid => bid.price >= newPrice)
       const totalQuantityOfMatchedBids = matchedBids.reduce((result, bid) => {
         return result += bid.quantity
       }, 0);
@@ -369,9 +433,9 @@ const StockService = {
         stockToTrade.price = null;
         await stockToTrade.save({transaction: t});
 
-        buyerEntry.cash -= tradePrice;
+        buyerEntry.secondaryMarketCashSpent += tradePrice;
         buyerEntry.save({transaction: t});
-        entry.cash += tradePrice;
+        entry.secondaryMarketCashSpent -= tradePrice;
         entry.save({transaction: t});
 
         const sellerTransaction = await Transaction.create({

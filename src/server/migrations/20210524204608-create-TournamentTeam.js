@@ -19,6 +19,12 @@ module.exports = {
         type: Sequelize.UUID,
         references: { model: 'Tournament', key: 'id' }
       },
+      milestoneData: {
+        type: Sequelize.JSON
+      },
+      isEliminated: {
+        type: Sequelize.BOOLEAN
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

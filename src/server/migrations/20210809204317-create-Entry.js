@@ -14,7 +14,8 @@ module.exports = {
         references: { model: 'Tournament', key: 'id' }
       },
       name: Sequelize.STRING,
-      cash: Sequelize.FLOAT,
+      ipoCashSpent: Sequelize.FLOAT,
+      secondaryMarketCashSpent: Sequelize.FLOAT,
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

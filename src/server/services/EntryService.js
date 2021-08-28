@@ -18,13 +18,14 @@ const EntryService = {
       }
     });
     if(!users || users.length < 1) {
-      throw new ApolloError("users not found");
+      throw new Error("users not found");
     }
 
     const entry = await Entry.create({
       tournamentId,
       name,
-      cash: 1000 // where does this default value come from? seems like it should be set on league
+      ipoCashSpent: 0,
+      secondaryMarketCashSpent: 0
     });
 
     for(let user of users) {
@@ -66,14 +67,13 @@ const EntryService = {
 
       // check for and execute matched trades
       // search for stocks available that i do not own
-      const matchedStocks = await Stock.findAll({
+      const tournamentTeamStocks = await Stock.findAll({
         where: {
-          price: {
-            [Op.lte]: price
-          },
           tournamentTeamId
         }
       });
+      // this is a hack because [Op.lte] is not working correctly
+      const matchedStocks = tournamentTeamStocks.filter(stock => stock.price === price);
       const matchedStockIds = matchedStocks.map(stock => stock.id);
 
       const matchedStockEntries = await StockEntry.findAll({
@@ -122,9 +122,9 @@ const EntryService = {
         stockToTrade.price = null;
         await stockToTrade.save({transaction: t});
 
-        entry.cash -= tradePrice;
+        entry.secondaryMarketCashSpent += tradePrice;
         entry.save({transaction: t});
-        sellerEntry.cash += tradePrice;
+        sellerEntry.secondaryMarketCashSpent -= tradePrice;
         sellerEntry.save({transaction: t});
 
         const sellerTransaction = await Transaction.create({
@@ -210,14 +210,47 @@ const EntryService = {
     return entry;
   },
   getBidsForEntry: async (entryId) => {
-    const entryBids = await EntryBid.findAll({
+    const entry = await Entry.findByPk(entryId);
+    if(!entry) {
+      throw new Error(`Entry for id: ${entryId} not found`);
+    }
+
+    const tournamentTeams = await TournamentTeam.findAll({
       where: {
-        entryId
+        tournamentId: entry.tournamentId
+      }
+    });
+    const tournamentTeamIds = tournamentTeams.map(tournamentTeam => tournamentTeam.id);
+
+    const tournamentBids = await EntryBid.findAll({
+      where: {
+        tournamentTeamId: tournamentTeamIds
       }
     });
 
-    const result = await Promise.all(
-      entryBids.map(async(entryBid) => {
+    const myTournamentBids = tournamentBids.filter(bid => bid.entryId === entryId);
+    const leagueTournamentBids = tournamentBids.filter(bid => bid.entryId !== entryId);
+
+    const myBids = await Promise.all(
+      myTournamentBids.map(async(entryBid) => {
+        const tournamentTeam = await TournamentTeam.findByPk(entryBid.tournamentTeamId);
+        if(!tournamentTeam) {
+          throw new Error("tournament team not found");
+        }
+
+        const team = await Team.findByPk(tournamentTeam.teamId);
+        if(!team) {
+          throw new Error("team not found");
+        }
+
+        return {
+          ...entryBid.toJSON(),
+          teamName: team.name
+        }
+      })
+    );
+    const leagueBids = await Promise.all(
+      leagueTournamentBids.map(async(entryBid) => {
         const tournamentTeam = await TournamentTeam.findByPk(entryBid.tournamentTeamId);
         if(!tournamentTeam) {
           throw new Error("tournament team not found");
@@ -235,7 +268,10 @@ const EntryService = {
       })
     );
 
-    return result;
+    return {
+      myBids,
+      leagueBids
+    }
   },
   ipoPurchase: async (tournamentTeamId, quantity, userEmail, entryId) => {
     const entry = await Entry.findOne({
@@ -271,16 +307,14 @@ const EntryService = {
     const team = await Team.findByPk(tournamentTeam.teamId)
     const totalPrice = ipoPrice * quantity;
 
-    if(entry.cash < totalPrice) {
-      throw new Error("You do not have enough cash to make this purchase");
-    }
-    entry.cash -= totalPrice;
+    entry.ipoCashSpent += totalPrice;
     await entry.save();
 
     for(let i = 0; i < quantity; i++) {
       const stock = await Stock.create({
         price: null,
-        tournamentTeamId
+        tournamentTeamId,
+        originalIpoEntryId: entryId
       });
       await StockEntry.create({
         entryId: entry.id,
@@ -303,7 +337,7 @@ const EntryService = {
       }
     });
     if(!user) {
-      throw new ApolloError("user not found");
+      throw new Error("user not found");
     }
 
     const userEntries = await UserEntry.findAll({

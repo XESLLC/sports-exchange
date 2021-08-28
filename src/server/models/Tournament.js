@@ -27,7 +27,12 @@ const Tournament = SequelizeInstance.define('Tournament', {
       key: 'id'
     }
   },
-
+  settings: {
+    type: DataTypes.JSON
+  },
+  isIpoOpen: {
+    type: DataTypes.BOOLEAN
+  }
 }, {
   freezeTableName: true
 });

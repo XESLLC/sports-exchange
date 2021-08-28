@@ -36,6 +36,9 @@ const EntryBid = SequelizeInstance.define('EntryBid', {
   quantity: {
     type: DataTypes.INTEGER,
     allowNull: false
+  },
+  expiresAt: {
+    type: DataTypes.DATE
   }
 }, {
   freezeTableName: true

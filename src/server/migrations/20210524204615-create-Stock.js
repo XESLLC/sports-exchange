@@ -17,6 +17,12 @@ module.exports = {
         type: Sequelize.UUID,
         references: { model: 'TournamentTeam', key: 'id' }
       },
+      originalIpoEntryId: {
+        type: Sequelize.UUID
+      },
+      offerExpiresAt: {
+        type: Sequelize.DATE
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

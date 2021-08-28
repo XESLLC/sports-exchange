@@ -23,10 +23,14 @@ const Entry = SequelizeInstance.define('Entry', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  cash: {
+  ipoCashSpent: {
     type: DataTypes.FLOAT,
     allowNull: false
-  }
+  },
+  secondaryMarketCashSpent: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
 }, {
   freezeTableName: true
 });

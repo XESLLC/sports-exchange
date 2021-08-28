@@ -9,6 +9,33 @@ const Entry = require('../models/Entry');
 const Transaction = require('../models/Transaction');
 
 const TournamentService = {
+  createOrUpdateMilestoneData: async (id, milestoneInput) => {
+    const tournamentTeam = await TournamentTeam.findByPk(id);
+    if(!tournamentTeam) {
+      throw new Error(`tournament team not found for id: ${id}`)
+    }
+    const team = await Team.findByPk(tournamentTeam.teamId);
+    if(!team) {
+      throw new Error(`team not found for id: ${tournamentTeam.teamId}`)
+    }
+
+    if(!tournamentTeam.milestoneData) {
+      tournamentTeam.milestoneData = [milestoneInput];
+    } else {
+      const index = parseInt(milestoneInput.milestoneId) - 1;
+      const temp = [...tournamentTeam.milestoneData];
+      if(tournamentTeam.milestoneData.length > index) {
+        temp.splice(index, 1, milestoneInput);
+        tournamentTeam.milestoneData = temp;
+      } else {
+        temp.splice(index, 0, milestoneInput);
+        tournamentTeam.milestoneData = temp;
+      }
+    }
+    await tournamentTeam.save();
+
+    return team;
+  },
   tournaments: async () => {
     const tournaments = await Tournament.findAll();
     const result = await Promise.all(
@@ -26,11 +53,14 @@ const TournamentService = {
     return result;
   },
   tournament: async id => {
-    return await Tournament.findOne({
+    const tournament = await Tournament.findOne({
       where: {
         id
       }
     });
+
+    console.log("tournament: " + JSON.stringify(tournament))
+    return tournament;
   },
   getTournamentsByLeagueId: async leagueId => {
     return await Tournament.findAll({
@@ -93,18 +123,18 @@ const TournamentService = {
     });
   },
   createTournament: async (name, leagueId) => {
-    let tournament;
-    try {
-       [tournament, created] = await Tournament.findOrCreate({
-            where: {
-                name: name,
-                leagueId: leagueId
-            }
-      });
-    } catch (error) {
-      console.error("Error creating Tournament: ", error);
-      throw new Error("Failed to create tournament.");
+    const league = await League.findByPk(leagueId);
+    if(!league) {
+      throw new Error(`Could not find league with id: ${leagueId}`);
     }
+
+    const tournament = await Tournament.create({
+      name,
+      leagueId,
+      isIpoOpen: true,
+      settings: league.defaultSettings
+    });
+    
     return tournament;
   },
   createTournamentTeam: async (price, seed, teamId, tournamentId) => {
@@ -143,6 +173,35 @@ const TournamentService = {
 
     return tournament;
   },
+  updateTournamentTeam: async (price, seed, teamId, tournamentId) => {
+    const tournamentTeam = await TournamentTeam.findOne({
+      where: {
+        teamId,
+        tournamentId
+      }
+    });
+    if(!tournamentTeam) {
+      throw new Error(`Could not find tournament team for teamId: ${teamId}`);
+    }
+
+    tournamentTeam.price = price;
+    tournamentTeam.seed = seed;
+
+    await tournamentTeam.save();
+
+    return tournamentTeam;
+  },
+  toggleTournamentTeamEliminated: async (tournamentTeamId, isEliminated) => {
+    const tournamentTeam = await TournamentTeam.findByPk(tournamentTeamId);
+    if(!tournamentTeam) {
+      throw new Error(`Could not find tournament team for id: ${tournamentTeamId}`);
+    }
+
+    tournamentTeam.isEliminated = isEliminated;
+    await tournamentTeam.save();
+
+    return tournamentTeam;
+  },
 
   deleteTournament: async id => {
     let tournament;
@@ -157,6 +216,17 @@ const TournamentService = {
       console.error("Failed to delete tournament: ", error);
       throw new Error("Failed to delete tournament.");
     }
+
+    return tournament;
+  },
+  toggleIsIpoOpen: async (tournamentId, isIpoOpen) => {
+    const tournament = await Tournament.findByPk(tournamentId);
+    if(!tournament) {
+      throw new Error(`tournament not found for id: ${tournamentId}`);
+    }
+
+    tournament.isIpoOpen = isIpoOpen;
+    await tournament.save();
 
     return tournament;
   }

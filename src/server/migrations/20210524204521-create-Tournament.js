@@ -14,6 +14,13 @@ module.exports = {
         type: Sequelize.UUID,
         references: { model: 'League', key: 'id' }
       },
+      settings: {
+        type: Sequelize.JSON
+      },
+      isIpoOpen: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
