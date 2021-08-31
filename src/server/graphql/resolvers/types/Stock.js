@@ -35,6 +35,11 @@ const Stock = {
       const entryId = input.entryId;
       const entry = await StockService.setTournamentTeamStockPriceToNull(tournamentTeamId, entryId);
       return entry;
+    },
+    removeExpiredBidsAndAsks: async (_, input) => {
+      const tournamentId = input.tournamentId;
+      const resultString = await StockService.removeExpiredBidsAndAsks(tournamentId);
+      return resultString;
     }
   }
 };

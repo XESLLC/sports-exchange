@@ -12,6 +12,32 @@ const EntryBid = require('../models/EntryBid');
 const { default: Tournament } = require('../models/Tournament');
 
 const StockService = {
+  removeExpiredBidsAndAsks:async (tournamentId) => {
+      // remove ask
+      await Stocks.update({ offerExpiresAt: null, price: null}, {
+          where: {
+              tournamentId: tournamentId,
+              price: {[Op.ne]: null},
+              offerExpiresAt: {[Op.lt]: new Date()}
+          }
+      });
+      const tournamentTeams = await TournamentTeam.findAll({
+        where: {tournamentId: tournamentId}
+      })
+      // remove bid
+      const tournamentTeamIds = tournamentTeams.map((tournamentTeam) => {
+          return tournamentTeam.id
+      })
+      await EntryBid.destroy({
+          where: {
+              tournamentTeamId: tournamentTeamIds,
+              expiresAt: {[Op.lt]: new Date()}
+          }
+      })
+
+      return 'sucess';
+  },
+
   getOfferedStocksForTournament: async (tournamentId, myEntryId) => {
     const entries = await Entry.findAll({
       where: {
@@ -142,7 +168,7 @@ const StockService = {
         quantity
       }
     });
-    
+
     return result;
   },
   getOriginallyPurchasedStocks: async (entryId) => {
@@ -276,7 +302,7 @@ const StockService = {
         quantity
       }
     });
-    
+
     return result;
   },
   setStockAskPrice: async (email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt) => {

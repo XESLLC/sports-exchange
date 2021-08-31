@@ -35,6 +35,8 @@ const Stock = SequelizeInstance.define('Stock', {
   freezeTableName: true
 });
 
+//get stocks on tourn id check for price not null and offers expires at then change all them to price null and offer expires at null. Check for bids, In entry bids table
+
 
 
 module.exports = Stock;

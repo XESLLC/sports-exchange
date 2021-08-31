@@ -64,4 +64,5 @@ type Mutation {
   sellEntryStocks(input: SellStockInput!): [TournamentTeamStock]!
   setStockAskPrice(input: StockPriceInput!): [TournamentTeamStock]!
   setTournamentTeamStockPriceToNull(tournamentTeamId: ID!, entryId: ID!): Entry
+  removeExpiredBidsAndAsks(tournamentTeamId: ID!): String
 }
