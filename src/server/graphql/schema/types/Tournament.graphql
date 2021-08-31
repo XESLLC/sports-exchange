@@ -5,6 +5,12 @@ type Tournament {
   isIpoOpen: Boolean!
   settings: LeagueSettings
   createdAt: String!
+  isActive: Boolean!
+  masterSheetUpload: String
+  pricingSheetUpload: String
+  rulesSheetUpload: String
+  projectedPayoutSheetUpload: String
+  stockPayoutSheetUpload: String
 }
 
 type TournamentWithLeagueName {
@@ -13,6 +19,12 @@ type TournamentWithLeagueName {
   leagueId: ID!
   leagueName: String
   createdAt: String!
+  isActive: Boolean!
+  masterSheetUpload: String
+  pricingSheetUpload: String
+  rulesSheetUpload: String
+  projectedPayoutSheetUpload: String
+  stockPayoutSheetUpload: String
 }
 
 type TournamentTeam {
@@ -73,6 +85,8 @@ type Mutation {
   updateTournament(input: UpdateTournamentInput!): ID!
   deleteTournament(input: DeleteTournamentInput!): ID
   toggleIsIpoOpen(tournamentId: ID!, isIpoOpen: Boolean!): Tournament
+  toggleIsTournamentActive(tournamentId: ID!, isActive: Boolean!): Tournament
   updateTournamentTeam(input: TournamentTeamInput!): TournamentTeam
   toggleTournamentTeamEliminated(tournamentTeamId: ID!, isEliminated: Boolean!): TournamentTeam
+  # uploadFile(tournamentId: ID!, sheetType: String!, file: Upload!): Tournament
 }

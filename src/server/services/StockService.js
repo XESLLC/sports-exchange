@@ -55,7 +55,8 @@ const StockService = {
         _result.push({
           tournamentTeamId: stock.tournamentTeamId,
           numStocksForSale: 1,
-          currentAskPrice: stock.price
+          currentAskPrice: stock.price,
+          offerExpiresAt: stock.offerExpiresAt
         });
       } else {
         _result[index].numStocksForSale += 1;
@@ -69,7 +70,8 @@ const StockService = {
         _result.push({
           tournamentTeamId: stock.tournamentTeamId,
           numStocksForSale: 1,
-          currentAskPrice: stock.price
+          currentAskPrice: stock.price,
+          offerExpiresAt: stock.offerExpiresAt
         });
       } else {
         _result[index].numStocksForSale += 1;
@@ -277,7 +279,7 @@ const StockService = {
     
     return result;
   },
-  setStockAskPrice: async (email, entryId, tournamentTeamId, quantity, newPrice) => {
+  setStockAskPrice: async (email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt) => {
     const result = await instance.transaction(async (t) => {
       const user = await User.findOne({
         where: {
@@ -344,6 +346,7 @@ const StockService = {
         stocksAvailableToUpdate.map(async (stock) => {
           try {
             stock.price = null;
+            stock.offerExpiresAt = null;
             await stock.save({transaction: t});
           } catch {
             throw new Error("Error updating stock prices");
@@ -363,6 +366,7 @@ const StockService = {
         stockToUpdate.map(async (stock) => {
           try {
             stock.price = newPrice;
+            stock.offerExpiresAt = offerExpiresAt;
             await stock.save({transaction: t});
           } catch {
             throw new Error("Could not set new stock price");

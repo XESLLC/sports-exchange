@@ -11,11 +11,6 @@ module.exports = {
       },
       name: Sequelize.STRING,
       defaultSettings: Sequelize.JSON,
-      isActive: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: true,
-        allowNull: false
-      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

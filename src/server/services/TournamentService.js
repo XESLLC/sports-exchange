@@ -229,7 +229,42 @@ const TournamentService = {
     await tournament.save();
 
     return tournament;
-  }
+  },
+  toggleIsTournamentActive: async (tournamentId, isActive) => {
+    const tournament = await Tournament.findByPk(tournamentId);
+    if(!tournament) {
+      throw new Error(`tournament not found for id: ${tournamentId}`);
+    }
+
+    tournament.isActive = isActive;
+    await tournament.save();
+
+    return tournament;
+  },
+  // uploadFile: async (tournamentId, sheetType, file) => {
+  //   aws.config.update({
+  //     accessKeyId: process.env.AWSAccessKeyId,
+  //     secretAccessKey: process.env.AWSSecretKey,
+  //     region: process.env.AWSRegion
+  //   });
+  //   const tournament = await Tournament.findByPk(tournamentId);
+  //   if(!tournament) {
+  //     throw new Error(`tournament not found for id: ${tournamentId}`);
+  //   }
+
+  //   const s3 = new aws.S3()
+
+  //   const { createReadStream, filename, mimetype, encoding } = file;
+
+  //   const { Location } = await s3.upload({
+  //     Body: createReadStream(),               
+  //     Key: Date.now().toString() + filename ,
+  //     ContentType: mimetype                   
+  //   });
+
+
+  //   return tournament;
+  // }
 };
 
 module.exports = TournamentService;

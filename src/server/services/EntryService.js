@@ -9,6 +9,7 @@ const EntryBid = require('../models/EntryBid');
 const instance = require('../models/SequelizeInstance');
 const Transaction = require('../models/Transaction');
 const { Op } = require('sequelize');
+const Tournament = require('../models/Tournament');
 
 const EntryService = {
   createEntry: async (name, userEmails, tournamentId) => {
@@ -37,7 +38,7 @@ const EntryService = {
 
     return entry;
   },
-  createEntryBid: async (entryId, tournamentTeamId, price, quantity) => {
+  createEntryBid: async (entryId, tournamentTeamId, price, quantity, expiresAt) => {
     const result = await instance.transaction(async (t) => {
       const entry = await Entry.findOne({
         where: {
@@ -62,7 +63,8 @@ const EntryService = {
         entryId,
         tournamentTeamId,
         price,
-        quantity
+        quantity,
+        expiresAt
       }, {transaction: t});
 
       // check for and execute matched trades
@@ -353,8 +355,19 @@ const EntryService = {
         id: entryIds
       }
     });
+    
+    const result = await Promise.all(
+      entries.map(async (entry) => {
+        const tournament = await Tournament.findByPk(entry.tournamentId);
 
-    return entries;
+        return {
+          ...entry.toJSON(),
+          tournament
+        }
+      })
+    )
+
+    return result;
   }
 };
 

@@ -31,8 +31,8 @@ const Entry = {
       return entry;
     },
     createEntryBid: async (_, { input }) => {
-      const { entryId, tournamentTeamId, price, quantity } = input;
-      const entryBid = await EntryService.createEntryBid(entryId, tournamentTeamId, price, quantity);
+      const { entryId, tournamentTeamId, price, quantity, expiresAt } = input;
+      const entryBid = await EntryService.createEntryBid(entryId, tournamentTeamId, price, quantity, expiresAt);
       return entryBid;
     },
     deleteEntryBid: async (_, input) => {

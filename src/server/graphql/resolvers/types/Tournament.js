@@ -56,6 +56,12 @@ const Tournament = {
       const tournament = await TournamentService.toggleIsIpoOpen(tournamentId, isIpoOpen);
       return tournament;
     },
+    toggleIsTournamentActive: async (_, input) => {
+      const tournamentId = input.tournamentId;
+      const isActive = input.isActive;
+      const tournament = await TournamentService.toggleIsTournamentActive(tournamentId, isActive);
+      return tournament;
+    },
     updateTournamentTeam: async (_, { input }) => {
       const { price, seed, teamId, tournamentId } = input;
       const tournamentTeam = await TournamentService.updateTournamentTeam(price, seed, teamId, tournamentId);
@@ -66,7 +72,14 @@ const Tournament = {
       const isEliminated = input.isEliminated;
       const tournamentTeam = await TournamentService.toggleTournamentTeamEliminated(tournamentTeamId, isEliminated);
       return tournamentTeam;
-    }
+    },
+    // uploadFile: async (_, input) => {
+    //   const tournamentId = input.tournamentId;
+    //   const sheetType = input.sheetType;
+    //   const file = input.file;
+    //   const tournament = await TournamentService.uploadFile(tournamentId, sheetType, file);
+    //   return tournament;
+    // }
   }
 };
 

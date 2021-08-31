@@ -21,6 +21,26 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         defaultValue: true
       },
+      isActive: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true,
+        allowNull: false
+      },
+      masterSheetUpload: {
+        type: Sequelize.STRING
+      },
+      pricingSheetUpload: {
+        type: Sequelize.STRING
+      },
+      rulesSheetUpload: {
+        type: Sequelize.STRING
+      },
+      projectedPayoutSheetUpload: {
+        type: Sequelize.STRING
+      },
+      stockPayoutSheetUpload: {
+        type: Sequelize.STRING
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

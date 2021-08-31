@@ -4,7 +4,6 @@ type League {
   teams: [Team]
   tournaments: [Tournament]
   defaultSettings: LeagueSettings
-  isActive: Boolean!
 }
 
 type LeagueSettings {

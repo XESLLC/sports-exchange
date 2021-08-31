@@ -28,6 +28,7 @@ input StockPriceInput {
   tournamentTeamId: ID!
   quantity: Int!
   newPrice: Float!
+  offerExpiresAt: Float
 }
 
 type OfferedStocks {
@@ -40,6 +41,7 @@ type EntryStockData {
   teamName: String!
   numStocksForSale: Int!
   currentAskPrice: Float!
+  offerExpiresAt: String
 }
 
 type Transaction {

@@ -1,6 +1,7 @@
 type Entry {
   id: ID!
   tournamentId: ID!
+  tournament: Tournament
   name: String!
   ipoCashSpent: Float!
   secondaryMarketCashSpent: Float!
@@ -24,6 +25,7 @@ input NewEntryBidInput {
   tournamentTeamId: ID!
   price: Float!
   quantity: Int!
+  expiresAt: Float
 }
 
 type OfferedBids {

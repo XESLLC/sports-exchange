@@ -26,8 +26,8 @@ const Stock = {
       return stocks;
     },
     setStockAskPrice: async (_, { input }) => {
-      const { email, entryId, tournamentTeamId, quantity, newPrice } = input;
-      const stocks = await StockService.setStockAskPrice(email, entryId, tournamentTeamId, quantity, newPrice);
+      const { email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt } = input;
+      const stocks = await StockService.setStockAskPrice(email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt);
       return stocks;
     },
     setTournamentTeamStockPriceToNull: async (_, input) => {
