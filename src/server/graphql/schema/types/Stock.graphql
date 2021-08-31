@@ -54,6 +54,10 @@ type Transaction {
   createdAt: String!
 }
 
+type RemoveExpiredBidsAndAsksResponse {
+  response: String
+}
+
 type Query {
   getOfferedStocksForTournament(tournamentId: ID!, entryId: ID!): OfferedStocks!
   stocksByEntryId(entryId: ID!): [TournamentTeamStock]
@@ -64,5 +68,5 @@ type Mutation {
   sellEntryStocks(input: SellStockInput!): [TournamentTeamStock]!
   setStockAskPrice(input: StockPriceInput!): [TournamentTeamStock]!
   setTournamentTeamStockPriceToNull(tournamentTeamId: ID!, entryId: ID!): Entry
-  removeExpiredBidsAndAsks(tournamentTeamId: ID!): String
+  removeExpiredBidsAndAsks(tournamentId: ID!): RemoveExpiredBidsAndAsksResponse
 }

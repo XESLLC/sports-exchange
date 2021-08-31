@@ -9,25 +9,24 @@ const instance = require('../models/SequelizeInstance');
 const Transaction = require('../models/Transaction');
 const { Op } = require('sequelize');
 const EntryBid = require('../models/EntryBid');
-const { default: Tournament } = require('../models/Tournament');
 
 const StockService = {
   removeExpiredBidsAndAsks:async (tournamentId) => {
+      const tournamentTeams = await TournamentTeam.findAll({
+        where: {tournamentId: tournamentId}
+      })
+      const tournamentTeamIds = tournamentTeams.map((tournamentTeam) => {
+        return tournamentTeam.id
+      })
       // remove ask
-      await Stocks.update({ offerExpiresAt: null, price: null}, {
+      await Stock.update({ offerExpiresAt: null, price: null}, {
           where: {
-              tournamentId: tournamentId,
+              tournamentTeamId: tournamentTeamIds,
               price: {[Op.ne]: null},
               offerExpiresAt: {[Op.lt]: new Date()}
           }
       });
-      const tournamentTeams = await TournamentTeam.findAll({
-        where: {tournamentId: tournamentId}
-      })
       // remove bid
-      const tournamentTeamIds = tournamentTeams.map((tournamentTeam) => {
-          return tournamentTeam.id
-      })
       await EntryBid.destroy({
           where: {
               tournamentTeamId: tournamentTeamIds,
