@@ -379,16 +379,16 @@ const StockService = {
         })
       );
 
-      let stockToUpdate = [];
+      let stocksToUpdate = [];
       for(let i = 0; i < quantity; i++) {
-        stockToUpdate.push(stocksAvailableToUpdate[i]);
+        stocksToUpdate.push(stocksAvailableToUpdate[i]);
       }
-      if(stockToUpdate.length < 1) {
+      if(stocksToUpdate.length < 1) {
         throw new Error("Something went wrong getting stock ids to delete");
       }
 
       await Promise.all(
-        stockToUpdate.map(async (stock) => {
+        stocksToUpdate.map(async (stock) => {
           try {
             stock.price = newPrice;
             stock.offerExpiresAt = offerExpiresAt;
@@ -399,7 +399,7 @@ const StockService = {
         })
       );
 
-      const updatedStocks = await Stock.findAll({
+      let updatedStocks = await Stock.findAll({
         where: {
           id: stockIds,
           tournamentTeamId
@@ -427,87 +427,99 @@ const StockService = {
         }
       });
       // this is a hack because [Op.gte] is not working correctly
-      matchedBids = matchedBids.filter(bid => bid.price >= newPrice)
+      matchedBids = matchedBids.filter(bid => bid.price >= newPrice);
       const totalQuantityOfMatchedBids = matchedBids.reduce((result, bid) => {
         return result += bid.quantity
       }, 0);
 
       const iteratorVal = Math.min(totalQuantityOfMatchedBids, quantity);
       let trades = [];
+      let transactionCounter = 0;
 
-      for(let i = 0; i < iteratorVal; i++) {
-        const stockToTrade = stockToUpdate[i];
-        const buyerEntry = await Entry.findOne({
-          where: {
-            id: matchedBids[0].entryId
+      if(transactionCounter < iteratorVal) {
+        for(let i = 0; i < matchedBids.length; i++) {
+          let stockToUpdate;
+          if(i === 0) {
+            stockToUpdate = stocksToUpdate.splice(0, matchedBids[i].quantity);
+          } else {
+            const alreadyUpdatedIndex = matchedBids.reduce((result, bid, _index) => {
+              if(_index < i) {
+                result += bid.quantity;
+              }
+            }, 1);
+            stockToUpdate = stocksToUpdate.splice(alreadyUpdatedIndex, matchedBids[i].quantity);
           }
-        });
-        if(!buyerEntry) {
-          throw new Error("Entry for buyer not found");
-        }
 
-        const stockEntryToTrade = await StockEntry.findOne({
-          where: {
-            stockId: stockToTrade.id
+          const buyerEntry = await Entry.findOne({
+            where: {
+              id: matchedBids[i].entryId
+            }
+          });
+          if(!buyerEntry) {
+            throw new Error("Entry for buyer not found");
           }
-        });
-        if(!stockEntryToTrade) {
-          throw new Error("Stock entry to trade not found");
-        }
 
-        stockEntryToTrade.entryId = buyerEntry.id;
-        await stockEntryToTrade.save({transaction: t});
+          await Promise.all(
+            stockToUpdate.map(async (stock) => {
+              const stockEntryToTrade = await StockEntry.findOne({
+                where: {
+                  stockId: stock.id
+                }
+              });
+              if(!stockEntryToTrade) {
+                throw new Error("Stock entry to trade not found");
+              }
+    
+              stockEntryToTrade.entryId = buyerEntry.id;
+              await stockEntryToTrade.save({transaction: t});
+    
+              const tradePrice = stock.price;
+              stock.price = null;
+              await stock.save({transaction: t});
+    
+              const sellerTransaction = await Transaction.create({
+                entryId,
+                stockId: stock.id,
+                quantity: 1,
+                cost: (tradePrice * -1)
+              }, {transaction: t});
+    
+              const buyerTransaction = await Transaction.create({
+                entryId: buyerEntry.id,
+                stockId: stock.id,
+                quantity: 1,
+                cost: tradePrice
+              }, {transaction: t});
+    
+              trades.push({
+                ...sellerTransaction.toJSON(),
+                teamName: team.name,
+                tournamentTeamId
+              });
+    
+              trades.push({
+                ...buyerTransaction.toJSON(),
+                teamName: team.name,
+                tournamentTeamId
+              });
+            })
+          );
 
-        const tradePrice = stockToTrade.price;
-        stockToTrade.price = null;
-        await stockToTrade.save({transaction: t});
+          buyerEntry.secondaryMarketCashSpent += (newPrice * stockToUpdate.length);
+          await buyerEntry.save({transaction: t});
+          entry.secondaryMarketCashSpent -= (newPrice * stockToUpdate.length);
+          await entry.save({transaction: t});
 
-        buyerEntry.secondaryMarketCashSpent += tradePrice;
-        buyerEntry.save({transaction: t});
-        entry.secondaryMarketCashSpent -= tradePrice;
-        entry.save({transaction: t});
-
-        const sellerTransaction = await Transaction.create({
-          entryId,
-          stockId: stockToTrade.id,
-          quantity: 1,
-          cost: (tradePrice * -1)
-        }, {transaction: t});
-
-        const buyerTransaction = await Transaction.create({
-          entryId: buyerEntry.id,
-          stockId: stockToTrade.id,
-          quantity: 1,
-          cost: tradePrice
-        }, {transaction: t});
-
-        trades.push({
-          ...sellerTransaction.toJSON(),
-          teamName: team.name,
-          tournamentTeamId
-        });
-
-        trades.push({
-          ...buyerTransaction.toJSON(),
-          teamName: team.name,
-          tournamentTeamId
-        });
-
-        matchedBids[0].quantity -= 1;
-        await matchedBids[0].save({transaction: t});
-        if(matchedBids[0].quantity === 0) {
-          matchedBids.shift();
+          matchedBids[i].quantity -= stockToUpdate.length;
+          await matchedBids[i].save({transaction: t});
+          transactionCounter += stockToUpdate.length;
         }
       }
 
-      const bidsToDelete = await EntryBid.findAll({
-        where: {
-          quantity: 0
+      for(let bid of matchedBids) {
+        if(bid.quantity === 0) {
+          await bid.destroy({transaction: t});
         }
-      });
-
-      for(let bid of bidsToDelete) {
-        await bid.destroy({transaction: t});
       }
 
       return Object.keys(stocksTournamentTeamFrequencyObj).map(async (tournamentTeamId) => {

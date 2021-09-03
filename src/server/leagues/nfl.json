@@ -296,23 +296,31 @@
         "milestones": [
             {
                 "id": 1,
-                "name": "Regular Season"
+                "name": "Reg Season Wins"
             },
             {
                 "id": 2,
-                "name": "Wild Card Playoffs"
+                "name": "Division Title"
             },
             {
                 "id": 3,
-                "name": "Divisional Playoffs"
+                "name": "Conf #1 Seed"
             },
             {
                 "id": 4,
-                "name": "Conference Championships"
+                "name": "Divisional Round"
             },
             {
                 "id": 5,
-                "name": "Super Bowl"
+                "name": "Conference Finals"
+            },
+            {
+                "id": 6,
+                "name": "Conference Champ"
+            },
+            {
+                "id": 7,
+                "name": "SB Champ"
             }
         ]
     }
