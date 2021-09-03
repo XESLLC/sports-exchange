@@ -76,7 +76,7 @@ const EntryService = {
         }
       });
       // this is a hack because [Op.lte] is not working correctly
-      const matchedStocks = tournamentTeamStocks.filter(stock => stock.price <= price);
+      const matchedStocks = tournamentTeamStocks.filter(stock => stock.price <= price && stock.price !== null);
       const matchedStockIds = matchedStocks.map(stock => stock.id);
 
       const matchedStockEntries = await StockEntry.findAll({
