@@ -171,16 +171,8 @@ const StockService = {
     return result;
   },
   getOriginallyPurchasedStocks: async (entryId) => {
-    const stockEntries = await StockEntry.findAll({
-      where: {
-        entryId
-      }
-    });
-
-    const stockIds = stockEntries.map(entry => entry.stockId);
     const stocks = await Stock.findAll({
       where: {
-        id: stockIds,
         originalIpoEntryId: entryId
       }
     });
