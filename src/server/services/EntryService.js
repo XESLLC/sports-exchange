@@ -88,84 +88,98 @@ const EntryService = {
       const availableStocks = matchedStockEntries.filter(stock => stock.entryId !== entryId);
       const iteratorVal = Math.min(availableStocks.length, quantity);
       let trades = [];
-      let transactionCounter = 0;
+      let entryStockQuantityObj = {};
+      for(let stock of availableStocks) {
+        const currentQuantityOfStocks = Object.keys(entryStockQuantityObj).reduce((result, entryId) => {
+          return result += entryStockQuantityObj[entryId];
+        }, 0);
 
-      if(transactionCounter < iteratorVal) {
-        for(let i = 0; i < availableStocks.length; i++) {
-          // set up transaction in case any of this shit fails
-          // capture the current stockentry entryId in order to credit the entry with cash later
-          // set the stockentry entryId to entryId
-          // get Stock where id === stockentry.stockId, capture the current price in order to decrement/increase cash to entries later
-          // set the stock price to null 
-          // credit the captured entry with the captured price
-          // decrement entryId with the captured price
-          // create two new transaction records in the db for seller and buyer, negative cash amount for seller
-          // return the transaction as a decorated object
-          let stockToUpdate = [availableStocks[i]];
-          const stockEntryToTrade = availableStocks[i];
-          const sellerEntry = await Entry.findOne({
-            where: {
-              id: stockEntryToTrade.entryId
+        if(currentQuantityOfStocks < iteratorVal) {
+          if(!entryStockQuantityObj[stock.entryId]) {
+            entryStockQuantityObj[stock.entryId] = 1;
+          } else {
+            if(entryStockQuantityObj[stock.entryId] + 1 <= iteratorVal) {
+              entryStockQuantityObj[stock.entryId] += 1;
             }
-          });
-          if(!sellerEntry) {
-            throw new Error("Entry for seller not found");
           }
-
-          await Promise.all(
-            stockToUpdate.map(async (_) => {
-              stockEntryToTrade.entryId = entryId;
-              await stockEntryToTrade.save({transaction: t});
-
-              const stockToTrade = await Stock.findOne({
-                where: {
-                  id: stockEntryToTrade.stockId
-                }
-              });
-              if(!stockToTrade) {
-                throw new Error("Stock to trade not found");
-              }
-
-              const tradePrice = stockToTrade.price;
-              stockToTrade.price = null;
-              await stockToTrade.save({transaction: t});
-
-              const sellerTransaction = await Transaction.create({
-                entryId: sellerEntry.id,
-                stockId: stockToTrade.id,
-                quantity: 1,
-                cost: (tradePrice * -1)
-              }, {transaction: t});
-
-              const buyerTransaction = await Transaction.create({
-                entryId,
-                stockId: stockToTrade.id,
-                quantity: 1,
-                cost: tradePrice
-              }, {transaction: t});
-
-              trades.push({
-                ...sellerTransaction.toJSON(),
-                teamName: team.name,
-                tournamentTeamId,
-              });
-
-              trades.push({
-                ...buyerTransaction.toJSON(),
-                teamName: team.name,
-                tournamentTeamId,
-              });
-            })
-          );
-
-          console.log("seller entry price before: " + sellerEntry.secondaryMarketCashSpent, price)
-          sellerEntry.secondaryMarketCashSpent -= price;
-          await sellerEntry.save({transaction: t});
-          console.log("seller entry price after: " + sellerEntry.secondaryMarketCashSpent, price)
-          entry.secondaryMarketCashSpent += price;
-          await entry.save({transaction: t});
-          transactionCounter += 1;
         }
+      }
+
+      for(const entryId in entryStockQuantityObj) {
+        const sellerEntry = await Entry.findOne({
+          where: {
+            id: entryId
+          }
+        });
+        if(!sellerEntry) {
+          throw new Error("Entry for seller not found");
+        }
+
+        sellerEntry.secondaryMarketCashSpent -= (price * entryStockQuantityObj[entryId]);
+        await sellerEntry.save({transaction: t});
+        entry.secondaryMarketCashSpent += (price * entryStockQuantityObj[entryId]);
+        await entry.save({transaction: t});
+      }
+
+      for(let i = 0; i < iteratorVal; i++) {
+        // set up transaction in case any of this shit fails
+        // capture the current stockentry entryId in order to credit the entry with cash later
+        // set the stockentry entryId to entryId
+        // get Stock where id === stockentry.stockId, capture the current price in order to decrement/increase cash to entries later
+        // set the stock price to null 
+        // credit the captured entry with the captured price
+        // decrement entryId with the captured price
+        // create two new transaction records in the db for seller and buyer, negative cash amount for seller
+        // return the transaction as a decorated object
+        const stockEntryToTrade = availableStocks[i];
+        stockEntryToTrade.entryId = entryId;
+        await stockEntryToTrade.save({transaction: t});
+
+        const stockToTrade = await Stock.findOne({
+          where: {
+            id: stockEntryToTrade.stockId
+          }
+        });
+        if(!stockToTrade) {
+          throw new Error("Stock to trade not found");
+        }
+        const sellerEntry = await Entry.findOne({
+          where: {
+            id: stockEntryToTrade.entryId
+          }
+        });
+        if(!sellerEntry) {
+          throw new Error("Entry for seller not found");
+        }
+        const tradePrice = stockToTrade.price;
+        stockToTrade.price = null;
+        await stockToTrade.save({transaction: t});
+
+        const sellerTransaction = await Transaction.create({
+          entryId: sellerEntry.id,
+          stockId: stockToTrade.id,
+          quantity: 1,
+          cost: (tradePrice * -1)
+        }, {transaction: t});
+
+        const buyerTransaction = await Transaction.create({
+          entryId,
+          stockId: stockToTrade.id,
+          quantity: 1,
+          cost: tradePrice
+        }, {transaction: t});
+
+        trades.push({
+          ...sellerTransaction.toJSON(),
+          teamName: team.name,
+          tournamentTeamId,
+        });
+
+        trades.push({
+          ...buyerTransaction.toJSON(),
+          teamName: team.name,
+          tournamentTeamId,
+        });
       }
       
       if(iteratorVal === entryBid.quantity) {

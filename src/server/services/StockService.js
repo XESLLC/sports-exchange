@@ -435,6 +435,34 @@ const StockService = {
       const iteratorVal = Math.min(totalQuantityOfMatchedBids, quantity);
       let trades = [];
       let transactionCounter = 0;
+      let entryBidQuantityObj = {};
+      for(let bid of matchedBids) {
+        const currentQuantityOfBids = Object.keys(entryBidQuantityObj).reduce((result, entryId) => {
+          return result += entryBidQuantityObj[entryId].quantity;
+        }, 0);
+
+        if(currentQuantityOfBids < iteratorVal) {
+          if(!entryBidQuantityObj[bid.entryId]) {
+            const quantityToAdd = Math.min(bid.quantity, iteratorVal);
+            entryBidQuantityObj[bid.entryId] = quantityToAdd;
+          }
+        }
+      }
+
+      await Promise.all(
+        Object.keys(entryBidQuantityObj).map(async (entryId) => {
+          const buyerEntry = await Entry.findOne({
+            where: {
+              id: entryId
+            }
+          });
+
+          buyerEntry.secondaryMarketCashSpent += (newPrice * entryBidQuantityObj[entryId]);
+          await buyerEntry.save({transaction: t});
+          entry.secondaryMarketCashSpent -= (newPrice * entryBidQuantityObj[entryId]);
+          await entry.save({transaction: t});
+        })
+      );
 
       if(transactionCounter < iteratorVal) {
         for(let i = 0; i < matchedBids.length; i++) {
@@ -504,11 +532,6 @@ const StockService = {
               });
             })
           );
-
-          buyerEntry.secondaryMarketCashSpent += (newPrice * stockToUpdate.length);
-          await buyerEntry.save({transaction: t});
-          entry.secondaryMarketCashSpent -= (newPrice * stockToUpdate.length);
-          await entry.save({transaction: t});
 
           matchedBids[i].quantity -= stockToUpdate.length;
           await matchedBids[i].save({transaction: t});
