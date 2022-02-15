@@ -3,6 +3,18 @@ type League {
   name: String
   teams: [Team]
   tournaments: [Tournament]
+  defaultSettings: LeagueSettings
+}
+
+type LeagueSettings {
+  ipoBudget: Float
+  milestones: [Milestone]
+  secondaryMarketBudget: Float
+}
+
+type Milestone {
+  id: String
+  name: String
 }
 
 input CreateLeagueInput {
@@ -16,4 +28,5 @@ type Query {
 
 type Mutation {
   createLeague(input: CreateLeagueInput!): League
+  importLeague(leagueName: String!): League
 }

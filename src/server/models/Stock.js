@@ -4,7 +4,6 @@ const SequelizeInstance = require('./SequelizeInstance');
 const Team = require('./Team');
 const TournamentTeam = require('./TournamentTeam');
 const Tournament = require('./Tournament');
-const StockUser = require('./StockUser')
 
 const Stock = SequelizeInstance.define('Stock', {
   id: {
@@ -23,12 +22,20 @@ const Stock = SequelizeInstance.define('Stock', {
     }
   },
   price: {
-    type: DataTypes.DECIMAL(10, 2),
+    type: DataTypes.FLOAT,
     allowNull: true
-  }// negative numbers represent a bid price // can only be set to 0 by admin when out of tourn. // set to null when not being traded. bid is deleted after stock purchase. ask user Id changed after purchase and price set to null.
+  },// bids are now being handled by the EntryBid table. Price set to a positive value represents the price the team is willing to accept in trade. Price set to null represents Stock not available for trade
+  originalIpoEntryId: {
+    type: DataTypes.UUID
+  },
+  offerExpiresAt: {
+    type: DataTypes.DATE
+  }
 }, {
   freezeTableName: true
 });
+
+//get stocks on tourn id check for price not null and offers expires at then change all them to price null and offer expires at null. Check for bids, In entry bids table
 
 
 

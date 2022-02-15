@@ -10,14 +10,16 @@ module.exports = {
         allowNull: false
       },
       cash: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.FLOAT,
         defaultValue: 0,
         allowNull: false
       },
-      tournamentId: Sequelize.STRING,
+      // tournamentId: Sequelize.STRING,
       email: Sequelize.STRING, // same as auth email
       firstname: Sequelize.STRING,
       lastname: Sequelize.STRING,
+      username: Sequelize.STRING,
+      phoneNumber: Sequelize.STRING,
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

@@ -1,0 +1,59 @@
+type Entry {
+  id: ID!
+  tournamentId: ID!
+  tournament: Tournament
+  name: String!
+  ipoCashSpent: Float!
+  secondaryMarketCashSpent: Float!
+}
+
+input EntryInput {
+  name: String!
+  userEmails: [String!]
+  tournamentId: ID!
+}
+
+input IPOPurchaseInput {
+  tournamentTeamId: ID!
+  quantity: Int!
+  userEmail: String!
+  entryId: ID!
+}
+
+input NewEntryBidInput {
+  entryId: ID!
+  tournamentTeamId: ID!
+  price: Float!
+  quantity: Int!
+  expiresAt: Float
+}
+
+type OfferedBids {
+  myBids: [EntryBid]
+  leagueBids: [EntryBid]
+}
+
+type EntryBid {
+  id: ID!
+  entryId: ID!
+  tournamentTeamId: ID!
+  teamName: String!
+  price: Float!
+  quantity: Int!
+  trades: [Transaction]
+  expiresAt: String
+}
+
+type Query {
+  entry(id: ID!): Entry
+  entriesByTournamentId(tournamentId: ID!): [Entry]
+  getBidsForEntry(entryId: ID!): OfferedBids
+  userEntries(email: String!): [Entry]
+}
+
+type Mutation {
+  createEntry(input: EntryInput!): Entry
+  createEntryBid(input: NewEntryBidInput!): EntryBid
+  deleteEntryBid(id: ID!): Entry
+  ipoPurchase(input: IPOPurchaseInput!): TournamentTeamStock!
+}

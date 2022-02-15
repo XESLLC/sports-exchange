@@ -2,12 +2,18 @@ const TeamService = require('../../../services/TeamService');
 
 const Team = {
   Query: {
+    getTeamsByLeagueId: async (_, { leagueId }) => TeamService.getTeamsByLeagueId(leagueId),
     tournamentTeams: async (_, { tournamentId } ) => {
-      const arrayOfTournamentTeams = await TeamService.getTournamentTeams(tournamentId);
+      const arrayOfTournamentTeams = await TeamService.tournamentTeams(tournamentId);
       return arrayOfTournamentTeams;
     },
+    tournamentTeamByTeamId: async (_, input) => {
+      const tournamentId = input.tournamentId;
+      const teamId = input.teamId;
+      const tournamentTeams = await TeamService.tournamentTeamByTeamId(tournamentId, teamId);
+      return tournamentTeams;
+    },
     teams: () => TeamService.teams(),
-
     team: (obj, { id }) => TeamService.team(id)
   },
 

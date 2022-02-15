@@ -1,47 +1,38 @@
 const { DataTypes } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
-
 const SequelizeInstance = require('./SequelizeInstance');
-const Stock = require('./Stock');
-const Entry = require('./Entry');
+const Tournament = require('./Tournament');
 
-const Transaction = SequelizeInstance.define('Transaction', {
+const Entry = SequelizeInstance.define('Entry', {
   id: {
     type: DataTypes.UUID,
     allowNull: false,
     primaryKey: true,
     defaultValue:  DataTypes.UUIDV4
   },
-
-  entryId: {
+  tournamentId: {
     type: DataTypes.UUID,
     allowNull: false,
+    unique: 'compositeIndex',
     references: {
-      model: Entry,
+      model: Tournament,
       key: 'id'
     }
   },
-
-  stockId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: Stock,
-      key: 'id'
-    }
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
   },
-
-  quantity: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-
-  cost: {
+  ipoCashSpent: {
     type: DataTypes.FLOAT,
     allowNull: false
-  }
+  },
+  secondaryMarketCashSpent: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
 }, {
   freezeTableName: true
 });
 
-module.exports = Transaction;
+module.exports = Entry;

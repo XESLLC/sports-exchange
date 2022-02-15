@@ -14,6 +14,9 @@ const League = SequelizeInstance.define('League', {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true
+  },
+  defaultSettings: {
+    type: DataTypes.JSON
   }
 }, {
   freezeTableName: true

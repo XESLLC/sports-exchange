@@ -5,10 +5,22 @@ type Team {
 
 type TournamentTeam {
   id: ID!
+  teamId: ID!
   teamName: String!
   seed: Int!
-  ipoPrice: Int!
+  ipoPrice: Float!
   tournament: String!
+  milestoneData: [MilestoneData]
+  isEliminated: Boolean!
+}
+
+type MilestoneData {
+  milestoneId: String
+  milestoneName: String
+  dividendPrice: Float
+  wins: Int
+  losses: Int
+  ties: Int
 }
 
 input CreateTeamInput {
@@ -27,7 +39,9 @@ input TeamTournamentInput {
 }
 
 type Query {
-  tournamentTeams(tournamentId: String!): [TournamentTeam]!
+  getTeamsByLeagueId(leagueId: ID!): [Team]
+  tournamentTeams(tournamentId: ID!): [TournamentTeam]!
+  tournamentTeamByTeamId(tournamentId: ID!, teamId: ID!): TournamentTeam!
   teams: [Team]
   team(id: ID!): Team
 }
@@ -35,5 +49,5 @@ type Query {
 type Mutation {
   createTeam(input: CreateTeamInput!): Team!
   deleteTeam(name: String!, leagueId: ID!): String
-  addTeamToTournament(input: TeamTournamentInput!): String
+  addTeamToTournament(input: TeamTournamentInput!): Team
 }

@@ -27,7 +27,30 @@ const Tournament = SequelizeInstance.define('Tournament', {
       key: 'id'
     }
   },
-
+  settings: {
+    type: DataTypes.JSON
+  },
+  isIpoOpen: {
+    type: DataTypes.BOOLEAN
+  },
+  isActive: {
+    type: DataTypes.BOOLEAN
+  },
+  masterSheetUpload: {
+    type: DataTypes.STRING
+  },
+  pricingSheetUpload: {
+    type: DataTypes.STRING
+  },
+  rulesSheetUpload: {
+    type: DataTypes.STRING
+  },
+  projectedPayoutSheetUpload: {
+    type: DataTypes.STRING
+  },
+  stockPayoutSheetUpload: {
+    type: DataTypes.STRING
+  }
 }, {
   freezeTableName: true
 });

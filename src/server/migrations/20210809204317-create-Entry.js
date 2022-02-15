@@ -2,30 +2,20 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    return queryInterface.createTable('TournamentTeam', {
+    return queryInterface.createTable('Entry', {
       id: {
         type: Sequelize.UUID,
         primaryKey: true,
         defaultValue: Sequelize.UUIDV4,
         allowNull: false
       },
-      price: Sequelize.FLOAT,
-      seed: Sequelize.INTEGER,
-      teamId: {
-        type: Sequelize.UUID,
-        references: { model: 'Team', key: 'id' }
-      },
       tournamentId: {
         type: Sequelize.UUID,
         references: { model: 'Tournament', key: 'id' }
       },
-      milestoneData: {
-        type: Sequelize.JSON
-      },
-      isEliminated: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false
-      },
+      name: Sequelize.STRING,
+      ipoCashSpent: Sequelize.FLOAT,
+      secondaryMarketCashSpent: Sequelize.FLOAT,
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -38,6 +28,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('TournamentTeam');
+    return queryInterface.dropTable('Entry');
   }
 };

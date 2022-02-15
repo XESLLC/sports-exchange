@@ -10,6 +10,7 @@ module.exports = {
         allowNull: false
       },
       name: Sequelize.STRING,
+      defaultSettings: Sequelize.JSON,
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

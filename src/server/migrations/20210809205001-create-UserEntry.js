@@ -2,18 +2,16 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Transaction', {
+    return queryInterface.createTable('UserEntry', {
       id: {
         type: Sequelize.UUID,
         primaryKey: true,
         defaultValue: Sequelize.UUIDV4,
         allowNull: false
       },
-      quantity: Sequelize.INTEGER,
-      cost: Sequelize.INTEGER,
-      stockId: {
+      entryId: {
         type: Sequelize.UUID,
-        references: { model: 'Stock', key: 'id' }
+        references: { model: 'Entry', key: 'id' }
       },
       userId: {
         type: Sequelize.UUID,
@@ -31,6 +29,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('Transaction');
+    return queryInterface.dropTable('UserEntry');
   }
 };

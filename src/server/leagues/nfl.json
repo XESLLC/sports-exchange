@@ -1,0 +1,327 @@
+{
+    "name": "NFL",
+    "teams": [
+        {
+            "city": "Arizona",
+            "name": "Cardinals",
+            "abr": "ARI",
+            "conf": "NFC",
+            "div": "West",
+            "colorPrimary": "#97233F",
+            "colorSecondary": "#FFB612"
+        },
+        {
+            "city": "Atlanta",
+            "name": "Falcons",
+            "abr": "ATL",
+            "conf": "NFC",
+            "div": "South",
+            "colorPrimary": "#A71930",
+            "colorSecondary": "#000000"
+        },
+        {
+            "city": "Baltimore",
+            "name": "Ravens",
+            "abr": "BAL",
+            "conf": "AFC",
+            "div": "North",
+            "colorPrimary": "#241773",
+            "colorSecondary": "#9E7C0C"
+        },
+        {
+            "city": "Buffalo",
+            "name": "Bills",
+            "abr": "BUF",
+            "conf": "AFC",
+            "div": "EAST",
+            "colorPrimary": "#00338D",
+            "colorSecondary": "#C60C30"
+        },
+        {
+            "city": "Carolina",
+            "name": "Panthers",
+            "abr": "CAR",
+            "conf": "NFC",
+            "div": "South",
+            "colorPrimary": "#0085CA",
+            "colorSecondary": "#101820"
+        },
+        {
+            "city": "Chicago",
+            "name": "Bears",
+            "abr": "CHI",
+            "conf": "NFC",
+            "div": "North",
+            "colorPrimary": "#0B162A",
+            "colorSecondary": "#C83803"
+        },
+        {
+            "city": "Cincinnati",
+            "name": "Bengals",
+            "abr": "CIN",
+            "conf": "AFC",
+            "div": "North",
+            "colorPrimary": "#FB4F14",
+            "colorSecondary": "#000000"
+        },
+        {
+            "city": "Cleveland",
+            "name": "Browns",
+            "abr": "CLE",
+            "conf": "AFC",
+            "div": "North",
+            "colorPrimary": "#FF3C00",
+            "colorSecondary": "#311D00"
+        },
+        {
+            "city": "Dallas",
+            "name": "Cowboys",
+            "abr": "DAL",
+            "conf": "NFC",
+            "div": "East",
+            "colorPrimary": "#041E42",
+            "colorSecondary": "#869397"
+        },
+        {
+            "city": "Denver",
+            "name": "Broncos",
+            "abr": "DEN",
+            "conf": "AFC",
+            "div": "West",
+            "colorPrimary": "#002244",
+            "colorSecondary": "#FB4F14"
+        },
+        {
+            "city": "Detroit",
+            "name": "Lions",
+            "abr": "DET",
+            "conf": "NFC",
+            "div": "North",
+            "colorPrimary": "#0076B6",
+            "colorSecondary": "#B0B7BC"
+        },
+        {
+            "city": "Green Bay",
+            "name": "Packers",
+            "abr": "GB",
+            "conf": "NFC",
+            "div": "North",
+            "colorPrimary": "#203731",
+            "colorSecondary": "#FFB612"
+        },
+        {
+            "city": "Houston",
+            "name": "Texans",
+            "abr": "HOU",
+            "conf": "AFC",
+            "div": "South",
+            "colorPrimary": "#03202F",
+            "colorSecondary": "#A71930"
+        },
+        {
+            "city": "Indianapolis",
+            "name": "Colts",
+            "abr": "IND",
+            "conf": "AFC",
+            "div": "South",
+            "colorPrimary": "#002C5F",
+            "colorSecondary": "#A2AAAD"
+        },
+        {
+            "city": "Jacksonville",
+            "name": "Jaguars",
+            "abr": "JAX",
+            "conf": "AFC",
+            "div": "South",
+            "colorPrimary": "#006778",
+            "colorSecondary": "#9F792C"
+        },
+        {
+            "city": "Kansas City",
+            "name": "Chiefs",
+            "abr": "KC",
+            "conf": "AFC",
+            "div": "West",
+            "colorPrimary": "#E31837",
+            "colorSecondary": "#FFB81C"
+        },
+        {
+            "city": "Las Vegas",
+            "name": "Raiders",
+            "abr": "OAK",
+            "conf": "AFC",
+            "div": "West",
+            "colorPrimary": "#000000",
+            "colorSecondary": "#A5ACAF"
+        },
+        {
+            "city": "Los Angeles",
+            "name": "Chargers",
+            "abr": "SD",
+            "conf": "AFC",
+            "div": "West",
+            "colorPrimary": "#002A5E",
+            "colorSecondary": "#FFC20E"
+        },
+        {
+            "city": "Los Angeles",
+            "name": "Rams",
+            "abr": "STL",
+            "conf": "NFC",
+            "div": "West",
+            "colorPrimary": "#003594",
+            "colorSecondary": "#FFA300"
+        },
+        {
+            "city": "Miami",
+            "name": "Dolphins",
+            "abr": "MIA",
+            "conf": "AFC",
+            "div": "East",
+            "colorPrimary": "#008E97",
+            "colorSecondary": "#FC4C02"
+        },
+        {
+            "city": "Minnesota",
+            "name": "Vikings",
+            "abr": "MIN",
+            "conf": "AFC",
+            "div": "North",
+            "colorPrimary": "#4F2683",
+            "colorSecondary": "#FFC62F"
+        },
+        {
+            "city": "New England",
+            "name": "Patriots",
+            "abr": "NE",
+            "conf": "AFC",
+            "div": "East",
+            "colorPrimary": "#002244",
+            "colorSecondary": "#C60C30"
+        },
+        {
+            "city": "New Orleans",
+            "name": "Saints",
+            "abr": "NO",
+            "conf": "NFC",
+            "div": "South",
+            "colorPrimary": "#D3BC8D",
+            "colorSecondary": "#101820"
+        },
+        {
+            "city": "New York",
+            "name": "Giants",
+            "abr": "NYG",
+            "conf": "NFC",
+            "div": "East",
+            "colorPrimary": "#0B2265",
+            "colorSecondary": "#A71930"
+        },
+        {
+            "city": "New York",
+            "name": "Jets",
+            "abr": "NYJ",
+            "conf": "AFC",
+            "div": "East",
+            "colorPrimary": "#125740",
+            "colorSecondary": "#000000"
+        },
+        {
+            "city": "Philadelphia",
+            "name": "Eagles",
+            "abr": "PHI",
+            "conf": "NFC",
+            "div": "East",
+            "colorPrimary": "#004C54",
+            "colorSecondary": "#A5ACAF"
+        },
+        {
+            "city": "Pittsburgh",
+            "name": "Steelers",
+            "abr": "PIT",
+            "conf": "AFC",
+            "div": "North",
+            "colorPrimary": "#101820",
+            "colorSecondary": "#FFB612"
+        },
+        {
+            "city": "San Francisco",
+            "name": "49ers",
+            "abr": "SF",
+            "conf": "NFC",
+            "div": "West",
+            "colorPrimary": "#AA0000",
+            "colorSecondary": "#B3995D"
+        },
+            {
+            "city": "Seattle",
+            "name": "Seahawks",
+            "abr": "SEA",
+            "conf": "NFC",
+            "div": "West",
+            "colorPrimary": "#002244",
+            "colorSecondary": "#69BE28"
+        },
+        {
+            "city": "Tampa Bay",
+            "name": "Buccaneers",
+            "abr": "TB",
+            "conf": "NFC",
+            "div": "South",
+            "colorPrimary": "#D50A0A",
+            "colorSecondary": "#B1BABF"
+        },
+        {
+            "city": "Tennessee",
+            "name": "Titans",
+            "abr": "TEN",
+            "conf": "AFC",
+            "div": "South",
+            "colorPrimary": "#4B92DB",
+            "colorSecondary": "#C8102E"
+        },
+        {
+            "city": "Washington",
+            "name": "Football Team",
+            "abr": "WAS",
+            "conf": "NFC",
+            "div": "East",
+            "colorPrimary": "#773141",
+            "colorSecondary": "#FFB612"
+        }
+    ],
+    "defaultSettings": {
+        "ipoBudget": 500,
+        "secondaryMarketBudget": null,
+        "milestones": [
+            {
+                "id": 1,
+                "name": "Reg Season Wins"
+            },
+            {
+                "id": 2,
+                "name": "Division Title"
+            },
+            {
+                "id": 3,
+                "name": "Conf #1 Seed"
+            },
+            {
+                "id": 4,
+                "name": "Divisional Round"
+            },
+            {
+                "id": 5,
+                "name": "Conference Finals"
+            },
+            {
+                "id": 6,
+                "name": "Conference Champ"
+            },
+            {
+                "id": 7,
+                "name": "SB Champ"
+            }
+        ]
+    }
+}

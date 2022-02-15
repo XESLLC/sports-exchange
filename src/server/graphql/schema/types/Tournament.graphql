@@ -2,8 +2,38 @@ type Tournament {
   id: ID!
   name: String!
   leagueId: ID!
+  isIpoOpen: Boolean!
+  settings: LeagueSettings
+  createdAt: String!
+  isActive: Boolean!
+  masterSheetUpload: String
+  pricingSheetUpload: String
+  rulesSheetUpload: String
+  projectedPayoutSheetUpload: String
+  stockPayoutSheetUpload: String
 }
 
+type TournamentWithLeagueName {
+  id: ID!
+  name: String!
+  leagueId: ID!
+  leagueName: String
+  createdAt: String!
+  isActive: Boolean!
+  masterSheetUpload: String
+  pricingSheetUpload: String
+  rulesSheetUpload: String
+  projectedPayoutSheetUpload: String
+  stockPayoutSheetUpload: String
+}
+
+type TournamentTeam {
+  id: ID!
+  tournamentId: ID!
+  teamId: ID!
+  price: Float!
+  seed: Int!
+}
 
 input TournamentInput {
   name: String!
@@ -21,25 +51,42 @@ input DeleteTournamentInput {
 }
 
 input TournamentTeamInput {
-    price: Int!
-    teamId: ID!
-    seed: Int!
-    tournamentId: ID!
+  price: Float!
+  teamId: ID!
+  seed: Int!
+  tournamentId: ID!
+}
+
+input TournamentTeamMilestoneInput {
+  id: ID!
+  milestoneInput: MilestoneDataInput
+}
+
+input MilestoneDataInput {
+  milestoneId: String!
+  milestoneName: String!
+  dividendPrice: Float!
+  wins: Int
+  losses: Int
+  ties: Int
 }
 
 type Query {
-  tournaments: [Tournament]
+  getTournamentsByLeagueId(leagueId: ID!): [Tournament]
+  getTournamentTransactions(tournamentId: ID!): [Transaction]
+  tournaments: [TournamentWithLeagueName]
   tournament(id: ID!): Tournament
 }
 
-
-
 type Mutation {
+  createOrUpdateMilestoneData(input: TournamentTeamMilestoneInput!): Team
   createTournament(input: TournamentInput!): Tournament!
-
-  createTournamentTeam(input: TournamentTeamInput!): ID!
-
+  createTournamentTeam(input: TournamentTeamInput!): TournamentTeam!
   updateTournament(input: UpdateTournamentInput!): ID!
-
   deleteTournament(input: DeleteTournamentInput!): ID
+  toggleIsIpoOpen(tournamentId: ID!, isIpoOpen: Boolean!): Tournament
+  toggleIsTournamentActive(tournamentId: ID!, isActive: Boolean!): Tournament
+  updateTournamentTeam(input: TournamentTeamInput!): TournamentTeam
+  toggleTournamentTeamEliminated(tournamentTeamId: ID!, isEliminated: Boolean!): TournamentTeam
+  # uploadFile(tournamentId: ID!, sheetType: String!, file: Upload!): Tournament
 }

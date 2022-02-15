@@ -7,7 +7,7 @@ provider:
   runtime: nodejs12.x
   region: ${opt:region, 'us-west-2'}
   stage: ${opt:stage, 'dev'}
-  memorySize: 512
+  memorySize: 1024
   timeout: 6
   logRetentionInDays: 7
   lambdaHashingVersion: 20201221 # for upcoming Serverless 3.0.0
@@ -37,7 +37,7 @@ plugins:
   #- serverless-webpack
   - serverless-plugin-scripts
   - serverless-offline
-  - serverless-s3-deploy
+  # - serverless-s3-deploy
 
 functions:
   graphql:

@@ -5,12 +5,14 @@ const TournamentTeam = require('../models/TournamentTeam');
 const { v4: uuidv4 } = require('uuid');
 
 const TeamService = {
-  getTournamentTeams: async (tournamentId) => {
+  tournamentTeams: async (tournamentId) => {
       const tournamentTeams = await TournamentTeam.findAll({
           where: {
             tournamentId: tournamentId
           }
       });
+
+      console.log("team: " + JSON.stringify(tournamentTeams[0]))
 
       const tournamentTeamsMap = tournamentTeams.map(async (tournamentTeam) => {
 
@@ -28,13 +30,47 @@ const TeamService = {
 
           return {
               id: tournamentTeam.id,
+              teamId: team.id,
               teamName: team.name,
               seed: tournamentTeam.seed,
               ipoPrice: tournamentTeam.price,
-              tournament: tournament.name
+              tournament: tournament.name,
+              isEliminated: tournamentTeam.isEliminated,
+              milestoneData: tournamentTeam.milestoneData
           }
       })
       return tournamentTeamsMap
+  },
+  tournamentTeamByTeamId: async (tournamentId, teamId) => {
+    const tournamentTeam = await TournamentTeam.findOne({
+      where: {
+        tournamentId,
+        teamId
+      }
+    });
+
+    const team = await Team.findOne({
+      where: {
+        id: tournamentTeam.teamId
+      }
+    });
+
+    const tournament = await Tournament.findOne({
+      where: {
+        id: tournamentId
+      }
+    });
+
+    return {
+      id: tournamentTeam.id,
+      teamId: team.id,
+      teamName: team.name,
+      seed: tournamentTeam.seed,
+      ipoPrice: tournamentTeam.price,
+      tournament: tournament.name,
+      isEliminated: tournamentTeam.isEliminated,
+      milestoneData: tournamentTeam.milestoneData
+    }
   },
   teams: async () => {
     return await Team.findAll();
@@ -86,11 +122,21 @@ const TeamService = {
   },
   addTeamToTournament: async (teamId, tournamentId) => {
     try {
-      let tournamentTeam = await TournamentTeam.create({
-        teamId,
-        tournamentId
+      const team = await Team.findOne({
+        where: {
+          id: teamId
+        }
       });
-      return tournamentTeam.id;
+
+      // TODO what are the default values for price and seed
+      await TournamentTeam.create({
+        teamId,
+        tournamentId,
+        price: 0,
+        seed: 0,
+        isEliminated: false
+      });
+      return team;
     } catch (error) {
       console.error("Failed to create TournamentTeam entry: " + error);
       return null;

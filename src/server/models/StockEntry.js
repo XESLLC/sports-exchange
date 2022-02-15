@@ -5,23 +5,13 @@ const SequelizeInstance = require('./SequelizeInstance');
 const Stock = require('./Stock');
 const Entry = require('./Entry');
 
-const Transaction = SequelizeInstance.define('Transaction', {
+const StockEntry = SequelizeInstance.define('StockEntry', {
   id: {
     type: DataTypes.UUID,
     allowNull: false,
     primaryKey: true,
     defaultValue:  DataTypes.UUIDV4
   },
-
-  entryId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: Entry,
-      key: 'id'
-    }
-  },
-
   stockId: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -30,18 +20,16 @@ const Transaction = SequelizeInstance.define('Transaction', {
       key: 'id'
     }
   },
-
-  quantity: {
-    type: DataTypes.INTEGER,
+  entryId: {
+    type: DataTypes.UUID,
     allowNull: false,
-  },
-
-  cost: {
-    type: DataTypes.FLOAT,
-    allowNull: false
+    references: {
+      model: Entry,
+      key: 'id'
+    }
   }
 }, {
   freezeTableName: true
 });
 
-module.exports = Transaction;
+module.exports = StockEntry;
