@@ -286,6 +286,7 @@ npx sequelize-cli db:migrate:undo --env staging
 
 ## SLS deploy
 just aws graphql lambda function
+Note: set the aws profile in serverless.yml (if you have more than a default) - its commented out for default profile
 ```
 sls deploy function -f graphql
 ```

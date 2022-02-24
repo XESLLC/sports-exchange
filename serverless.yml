@@ -11,7 +11,7 @@ provider:
   timeout: 6
   logRetentionInDays: 7
   lambdaHashingVersion: 20201221 # for upcoming Serverless 3.0.0
-  profile: sports-exchange
+  #profile: sports-exchange
 
   apiGateway:
     shouldStartNameWithService: true # for upcoming Serverless 3.0.0
