@@ -11,8 +11,17 @@ const { v4: uuidv4 } = require('uuid');
     console.log('Connection has been established successfully.');
 
     // Setup the tables, if not already done.
+    User.sync();
+    UserEntry.sync();
     League.sync();
     Team.sync();
+    Tournament.sync();
+    TournamentTeam.sync();
+    Entry.sync();
+    EntryBid.sync();
+    Stock.sync();
+    StockEntry.sync();
+    Transactions.sync();
 
     let league = await League.findOne({
       name: 'NFL'

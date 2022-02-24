@@ -1,8 +1,8 @@
 const { Sequelize } = require('sequelize');
 
 const database = 'EXCHANGE';
-const username = 'exchange';
-const password = 'sports';
+const username = 'root';
+const password = 'deavtdc021076';
 const host = 'localhost';
 const port = '3306';
 

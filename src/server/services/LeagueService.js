@@ -1,6 +1,7 @@
 const League = require('../models/League');
 const Team = require('../models/Team');
 const Tournament = require('../models/Tournament');
+const {sendEmail} = require ('../util/sendEmail');
 
 const LeagueService = {
   importLeague: async (leagueName) => {
@@ -8,7 +9,7 @@ const LeagueService = {
     if(!leagueData) {
         throw new Error(`Could not load league: ${leagueName}`);
     }
-    
+
     const league = await League.create({
       name: leagueData.name,
       defaultSettings: leagueData.defaultSettings
@@ -26,8 +27,8 @@ const LeagueService = {
     return league;
   },
   leagues: async () => {
+    sendEmail('david.xesllc@gmail.com', 'trade Notification', 'This is a trade notification for the purchase of 20 Stocks NY Giants Stocks at $10')
     const leagues = await League.findAll();
-
     const result = await Promise.all(
       leagues.map(async (league) => {
         const defaultSettings = JSON.parse(JSON.stringify(league.defaultSettings));
@@ -64,7 +65,7 @@ const LeagueService = {
         [league, created] = await League.findOrCreate({
             where: { name: name },
         });
-        // TODO: handle the already created Leage 
+        // TODO: handle the already created Leage
     } catch (error) {
         console.error("Error creating team: ", error);
     }

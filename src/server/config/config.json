@@ -1,7 +1,7 @@
 {
   "development": {
     "username": "root",
-    "password": "test",
+    "password": "deavtdc021076",
     "database": "Exchange",
     "host": "127.0.0.1",
     "dialect": "mysql"
