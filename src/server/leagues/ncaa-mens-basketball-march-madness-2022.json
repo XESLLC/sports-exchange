@@ -1,0 +1,50 @@
+{
+    "name": "NCAA Mens Basketball March Madness 2022",
+    "teams": [
+        {
+            "city": "Kansas",
+            "name": "Jayhawks"
+        },
+        {
+            "city": "Oregon",
+            "name": "Ducks"
+        },
+        {
+            "city": "Duke",
+            "name": "Blue Devils"
+        },
+        {
+            "city": "North Carolina",
+            "name": "Tar Heels"
+        },
+        {
+            "city": "Uconn",
+            "name": "Huskies"
+        }
+    ],
+    "defaultSettings": {
+        "ipoBudget": 500,
+        "secondaryMarketBudget": null,
+        "useSeed": true,
+        "regions": [
+            "North",
+            "South",
+            "East",
+            "West"
+        ],
+        "milestones": [
+            {
+                "id": 1,
+                "name": "Tournament Win"
+            },
+            {
+                "id": 2,
+                "name": "Final Four"
+            },
+            {
+                "id": 3,
+                "name": "National Champion"
+            }
+        ]
+    }
+}

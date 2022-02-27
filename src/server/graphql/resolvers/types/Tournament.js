@@ -35,8 +35,8 @@ const Tournament = {
       return tournament;
     },
     createTournamentTeam: async (_, { input }) => {
-      const { price, seed, teamId, tournamentId } = input;
-      const tournamentTeam = await TournamentService.createTournamentTeam(price, seed, teamId, tournamentId);
+      const { price, seed, region, teamId, tournamentId } = input;
+      const tournamentTeam = await TournamentService.createTournamentTeam(price, seed, region, teamId, tournamentId);
       return tournamentTeam;
     },
     updateTournament: async (_, { input }) => {
@@ -63,8 +63,8 @@ const Tournament = {
       return tournament;
     },
     updateTournamentTeam: async (_, { input }) => {
-      const { price, seed, teamId, tournamentId } = input;
-      const tournamentTeam = await TournamentService.updateTournamentTeam(price, seed, teamId, tournamentId);
+      const { price, seed, region, teamId, tournamentId } = input;
+      const tournamentTeam = await TournamentService.updateTournamentTeam(price, seed, region, teamId, tournamentId);
       return tournamentTeam;
     },
     toggleTournamentTeamEliminated: async (_, input) => {

@@ -9,6 +9,7 @@ const instance = require('../models/SequelizeInstance');
 const Transaction = require('../models/Transaction');
 const { Op } = require('sequelize');
 const EntryBid = require('../models/EntryBid');
+const { v4: uuidv4 } = require('uuid');
 
 const StockService = {
   removeExpiredBidsAndAsks:async (tournamentId) => {
@@ -71,17 +72,19 @@ const StockService = {
       }
     });
 
-    const myOfferedStocks = myStocks.filter(stock => stock.price !== null);
-    const tournamentOfferedStocks = leagueStocks.filter(stock => stock.price !== null);
+    const myOfferedStocks = myStocks.filter((stock) => stock.price !== null || stock.tradableTeams !== null);
+    const tournamentOfferedStocks = leagueStocks.filter(stock => stock.price !== null || stock.tradableTeams !== null);
 
     const myStocksTournamentTeamFrequency = myOfferedStocks.reduce((_result, stock) => {
       const index = _result.findIndex(_stock => _stock.tournamentTeamId === stock.tournamentTeamId);
       if(!_result || index < 0) {
         _result.push({
+          stockId: stock.id,
           tournamentTeamId: stock.tournamentTeamId,
           numStocksForSale: 1,
           currentAskPrice: stock.price,
-          offerExpiresAt: stock.offerExpiresAt
+          offerExpiresAt: stock.offerExpiresAt,
+          tradableTeams: stock.tradableTeams
         });
       } else {
         _result[index].numStocksForSale += 1;
@@ -93,10 +96,12 @@ const StockService = {
       const index = _result.findIndex(_stock => _stock.tournamentTeamId === stock.tournamentTeamId);
       if(!_result || index < 0) {
         _result.push({
+          stockId: stock.id,
           tournamentTeamId: stock.tournamentTeamId,
           numStocksForSale: 1,
           currentAskPrice: stock.price,
-          offerExpiresAt: stock.offerExpiresAt
+          offerExpiresAt: stock.offerExpiresAt,
+          tradableTeams: stock.tradableTeams
         });
       } else {
         _result[index].numStocksForSale += 1;
@@ -158,13 +163,17 @@ const StockService = {
       const ipoPrice = tournamentTeam.price
       const team = await Team.findByPk(tournamentTeam.teamId)
       const quantity = stocksTournamentTeamFrequencyObj[tournamentTeamId];
+      const seed = tournamentTeam.seed;
+      const region = tournamentTeam.region;
 
       return {
         teamName: team.name,
         teamId: team.id,
         tournamentTeamId,
         ipoPrice,
-        quantity
+        quantity,
+        seed,
+        region
       }
     });
 
@@ -296,7 +305,7 @@ const StockService = {
 
     return result;
   },
-  setStockAskPrice: async (email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt) => {
+  setStockAskPrice: async (email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt, tradableTeams, stockForStockOverage) => {
     const result = await instance.transaction(async (t) => {
       const user = await User.findOne({
         where: {
@@ -362,9 +371,14 @@ const StockService = {
       await Promise.all(
         stocksAvailableToUpdate.map(async (stock) => {
           try {
-            stock.price = null;
-            stock.offerExpiresAt = null;
-            await stock.save({transaction: t});
+            // stock.price = null;
+            // stock.offerExpiresAt = null;
+            // await stock.save({transaction: t});
+            await stock.update({
+              price: null,
+              offerExpiresAt: null,
+              tradableTeams: null
+            }, {transaction: t});
           } catch {
             throw new Error("Error updating stock prices");
           }
@@ -379,12 +393,19 @@ const StockService = {
         throw new Error("Something went wrong getting stock ids to delete");
       }
 
+      if(!newPrice && !tradableTeams) {
+        throw new Error("Stock price or tradable teams must be provided");
+      }
+
+      // set either the new stock ask price or tradableTeams
       await Promise.all(
         stocksToUpdate.map(async (stock) => {
           try {
-            stock.price = newPrice;
-            stock.offerExpiresAt = offerExpiresAt;
-            await stock.save({transaction: t});
+            await stock.update({
+              price: newPrice,
+              offerExpiresAt,
+              tradableTeams: JSON.parse(JSON.stringify(tradableTeams))
+            }, {transaction: t});
           } catch {
             throw new Error("Could not set new stock price");
           }
@@ -442,21 +463,22 @@ const StockService = {
       }
 
       await Promise.all(
-        Object.keys(entryBidQuantityObj).map(async (entryId) => {
+        Object.keys(entryBidQuantityObj).map(async (buyerEntryId) => {
           const buyerEntry = await Entry.findOne({
             where: {
-              id: entryId
+              id: buyerEntryId
             }
           });
 
-          buyerEntry.secondaryMarketCashSpent += (newPrice * entryBidQuantityObj[entryId]);
+          buyerEntry.secondaryMarketCashSpent += (newPrice * entryBidQuantityObj[buyerEntryId]);
           await buyerEntry.save({transaction: t});
-          entry.secondaryMarketCashSpent -= (newPrice * entryBidQuantityObj[entryId]);
+          entry.secondaryMarketCashSpent -= (newPrice * entryBidQuantityObj[buyerEntryId]);
           await entry.save({transaction: t});
         })
       );
 
       if(transactionCounter < iteratorVal) {
+        const transactionGroupId = uuidv4();
         for(let i = 0; i < matchedBids.length; i++) {
           let stockToUpdate;
           if(i === 0) {
@@ -470,6 +492,8 @@ const StockService = {
             stockToUpdate = stocksToUpdate.splice(alreadyUpdatedIndex, matchedBids[i].quantity);
           }
 
+          // TODO this might need to be wrapped in a transaction
+          // some Transactions are showing the same entryId for both sides of trade
           const buyerEntry = await Entry.findOne({
             where: {
               id: matchedBids[i].entryId
@@ -501,14 +525,16 @@ const StockService = {
                 entryId,
                 stockId: stock.id,
                 quantity: 1,
-                cost: (tradePrice * -1)
+                cost: (tradePrice * -1),
+                groupId: transactionGroupId
               }, {transaction: t});
     
               const buyerTransaction = await Transaction.create({
                 entryId: buyerEntry.id,
                 stockId: stock.id,
                 quantity: 1,
-                cost: tradePrice
+                cost: tradePrice,
+                groupId: transactionGroupId
               }, {transaction: t});
     
               trades.push({
@@ -555,6 +581,170 @@ const StockService = {
 
     return result;
   },
+  tradeStocks: async (email, entryId, stockIdToTradeFor, quantity, tradableTeams) => {
+    const result = await instance.transaction(async (t) => {
+      const user = await User.findOne({
+        where: {
+          email
+        }
+      });
+      if(!user) {
+        throw new Error("User not found");
+      }
+
+      const entry = await Entry.findOne({
+        where: {
+          id: entryId
+        }
+      });
+      if(!entry) {
+        throw new Error("Entry not found");
+      }
+
+      const userEntry = await UserEntry.findOne({
+        where: {
+          entryId: entry.id,
+          userId: user.id
+        }
+      });
+      if(!userEntry) {
+        throw new Error("User for entry not found");
+      }
+
+      let stockIdsToTradeFor = [stockIdToTradeFor];
+      const transactionGroupId = uuidv4();
+
+      if(quantity > 1) {
+        const instanceOfStockToTradeFor = await Stock.findByPk(stockIdToTradeFor);
+
+        const instanceOfStockEntry = await StockEntry.findOne({
+          where: {
+            stockId: instanceOfStockToTradeFor.id
+          }
+        });
+        const stocksByTournamentTeamId = await Stock.findAll({
+          where: {
+            tournamentTeamId: instanceOfStockToTradeFor.tournamentTeamId,
+            tradableTeams: {
+              [Op.not]: null
+            }
+          }
+        });
+        const tradableStockIds = stocksByTournamentTeamId.map(stock => stock.id);
+
+        const tradableStockEntries = await StockEntry.findAll({
+          where: {
+            stockId: tradableStockIds,
+            entryId: instanceOfStockEntry.entryId
+          },
+          limit: quantity
+        });
+
+        stockIdsToTradeFor = tradableStockEntries.map(stockEntry => stockEntry.stockId);
+      }
+
+      // find all stocks by stockIdsToTradeFor
+      // set stock.tradableTeams = null
+      // set stock.offerExpiresAt = null
+      const stocksToTradeFor = await Stock.findAll({
+        where: {
+          id: stockIdsToTradeFor
+        }
+      });
+
+      for(const stock of stocksToTradeFor) {
+        await stock.update({
+          offerExpiresAt: null,
+          price: null,
+          tradableTeams: null
+        }, {transaction: t});
+      }
+
+      // find stock entries by stockId = stock.id
+      // update all stockEntries.entryId = entry.id
+      const stockEntriesToTradeFor = await StockEntry.findAll({
+        where: {
+          stockId: stockIdsToTradeFor
+        }
+      });
+
+      const otherUserEntryId = JSON.parse(JSON.stringify(stockEntriesToTradeFor))[0].entryId;
+
+      for(const stockEntry of stockEntriesToTradeFor) {
+        await stockEntry.update({
+          entryId: entry.id
+        }, {transaction: t});
+
+        // the way we will track stock for stock transactions is to create one transaction for the entry that is gaining stock
+        await Transaction.create({
+          quantity: 1,
+          cost: 0,
+          stockId: stockEntry.stockId,
+          entryId: entryId,
+          groupId: transactionGroupId
+        }, {transaction: t});
+      }
+
+      // loop each tradableTeam
+      // find the userStockEntries and build a list of their stockIds
+      // find all stocks in that stockIds list
+      // from that stock list, grab the amount of stocks === the instance of tradableTeam.quantity && tradableTeam.tournamentTeamId === found stock.tournamentTeamId
+      // update their entryId to be the other user's entryId
+      const userStockEntries = await StockEntry.findAll({
+        where: {
+          entryId
+        }
+      });
+      const stockIds = userStockEntries.map(entry => entry.stockId);
+
+      const userStocks = await Stock.findAll({
+        where: {
+          id: stockIds
+        }
+      });
+
+      for(const team of tradableTeams) {
+        const stocksAvailableToTrade = userStocks.filter(stock => stock.tournamentTeamId === team.tournamentTeamId);
+        const numStocksAvailableToTrade = stocksAvailableToTrade.length;
+        
+        if(numStocksAvailableToTrade < team.quantity) {
+          throw new Error(`You do not have enough stock of ${team.teamName} to process this trade`);
+        }
+
+        for(let i = 0; i < team.quantity; i++) {
+          const tradableStock = stocksAvailableToTrade[i];
+
+          const stockEntryToUpdate = await StockEntry.findOne({
+            where: {
+              stockId: tradableStock.id
+            }
+          });
+
+          await stockEntryToUpdate.update({
+            entryId: otherUserEntryId
+          }, {transaction: t});
+
+          await Transaction.create({
+            quantity: 1,
+            cost: 0,
+            stockId: tradableStock.id,
+            entryId: otherUserEntryId,
+            groupId: transactionGroupId
+          }, {transaction: t});
+        }
+      }
+
+      const groupedTransactions = await Transaction.findAll({
+        where: {
+          groupId: transactionGroupId
+        }
+      });
+
+      return groupedTransactions;
+    });
+
+    return result;
+  },
   setTournamentTeamStockPriceToNull: async (tournamentTeamId, entryId) => {
     const entry = await Entry.findByPk(entryId);
 
@@ -565,7 +755,7 @@ const StockService = {
     });
     const stockIds = stockEntries.map(stockEntry => stockEntry.stockId);
 
-    const stocks = await Stock.findAll({
+    const pricedStocks = await Stock.findAll({
       where: {
         id: stockIds,
         price: {
@@ -575,9 +765,24 @@ const StockService = {
       }
     });
 
-    for(let i = 0; i < stocks.length; i++) {
-      stocks[i].price = null;
-      await stocks[i].save();
+    for(let i = 0; i < pricedStocks.length; i++) {
+      pricedStocks[i].price = null;
+      await pricedStocks[i].save();
+    }
+
+    const tradableStocks = await Stock.findAll({
+      where: {
+        id: stockIds,
+        tradableTeams: {
+          [Op.not]: null
+        },
+        tournamentTeamId
+      }
+    });
+
+    for(let i = 0; i < tradableStocks.length; i++) {
+      tradableStocks[i].tradableTeams = null;
+      await tradableStocks[i].save();
     }
 
     return entry;

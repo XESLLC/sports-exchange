@@ -12,7 +12,6 @@ const Transaction = SequelizeInstance.define('Transaction', {
     primaryKey: true,
     defaultValue:  DataTypes.UUIDV4
   },
-
   entryId: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -21,7 +20,6 @@ const Transaction = SequelizeInstance.define('Transaction', {
       key: 'id'
     }
   },
-
   stockId: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -30,14 +28,16 @@ const Transaction = SequelizeInstance.define('Transaction', {
       key: 'id'
     }
   },
-
   quantity: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-
   cost: {
     type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  groupId: {
+    type: DataTypes.UUID,
     allowNull: false
   }
 }, {

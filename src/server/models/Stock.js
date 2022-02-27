@@ -30,6 +30,9 @@ const Stock = SequelizeInstance.define('Stock', {
   },
   offerExpiresAt: {
     type: DataTypes.DATE
+  },
+  tradableTeams: {
+    type: DataTypes.JSON
   }
 }, {
   freezeTableName: true

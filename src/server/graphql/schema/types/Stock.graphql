@@ -5,14 +5,24 @@ type TournamentTeamStock {
   ipoPrice: Float!
   quantity: Int!
   trades: [Transaction]
+  seed: Int
+  region: String
 }
 
 type Stock {
-  id: ID!
+  id: ID
   tournamentTeamId: ID!
   price: Float
   originalIpoEntryId: ID!
   offerExpiresAt: String
+  tradableTeams: [TradableTeam]
+}
+
+type TradableTeam {
+  tournamentTeamId: ID!
+  teamName: String!
+  quantity: Int!
+  price: Float!
 }
 
 input SellStockInput {
@@ -22,13 +32,30 @@ input SellStockInput {
   quantity: Int!
 }
 
+input TradeStocksInput {
+  email: String!
+  entryId: ID!
+  stockIdToTradeFor: ID!
+  quantity: Int!
+  tradableTeams: [TradableTeamInput!]!
+}
+
 input StockPriceInput {
   email: String!
   entryId: ID!
   tournamentTeamId: ID!
   quantity: Int!
-  newPrice: Float!
+  newPrice: Float
   offerExpiresAt: Float
+  tradableTeams: [TradableTeamInput]
+  stockForStockOverage: Float
+}
+
+input TradableTeamInput {
+  tournamentTeamId: ID!
+  teamName: String!
+  quantity: Int!
+  price: Float!
 }
 
 type OfferedStocks {
@@ -37,11 +64,13 @@ type OfferedStocks {
 }
 
 type EntryStockData {
+  stockId: ID!
   tournamentTeamId: ID!
   teamName: String!
   numStocksForSale: Int!
-  currentAskPrice: Float!
+  currentAskPrice: Float
   offerExpiresAt: String
+  tradableTeams: [TradableTeam]
 }
 
 type Transaction {
@@ -69,4 +98,5 @@ type Mutation {
   setStockAskPrice(input: StockPriceInput!): [TournamentTeamStock]!
   setTournamentTeamStockPriceToNull(tournamentTeamId: ID!, entryId: ID!): Entry
   removeExpiredBidsAndAsks(tournamentId: ID!): RemoveExpiredBidsAndAsksResponse
+  tradeStocks(input: TradeStocksInput!): [Transaction]!
 }

@@ -2,6 +2,7 @@ const { transformCommentsToDescriptions } = require('graphql-tools');
 const Team = require('../models/Team');
 const Tournament = require('../models/Tournament');
 const TournamentTeam = require('../models/TournamentTeam');
+const Stock = require('../models/Stock');
 const { v4: uuidv4 } = require('uuid');
 
 const TeamService = {
@@ -28,15 +29,25 @@ const TeamService = {
               }
           })
 
+          const stocksInCirculation = await Stock.findAll({
+            where: {
+              tournamentTeamId: tournamentTeam.id
+            }
+          });
+
+          const numStocksInCirculation = stocksInCirculation && stocksInCirculation.length ? stocksInCirculation.length : 1;
+
           return {
               id: tournamentTeam.id,
               teamId: team.id,
               teamName: team.name,
               seed: tournamentTeam.seed,
               ipoPrice: tournamentTeam.price,
+              region: tournamentTeam.region,
               tournament: tournament.name,
               isEliminated: tournamentTeam.isEliminated,
-              milestoneData: tournamentTeam.milestoneData
+              milestoneData: tournamentTeam.milestoneData,
+              numStocksInCirculation
           }
       })
       return tournamentTeamsMap
@@ -61,6 +72,14 @@ const TeamService = {
       }
     });
 
+    const stocksInCirculation = await Stock.findAll({
+      where: {
+        tournamentTeamId: tournamentTeam.id
+      }
+    });
+
+    const numStocksInCirculation = stocksInCirculation && stocksInCirculation.length ? stocksInCirculation.length : 1;
+
     return {
       id: tournamentTeam.id,
       teamId: team.id,
@@ -69,7 +88,8 @@ const TeamService = {
       ipoPrice: tournamentTeam.price,
       tournament: tournament.name,
       isEliminated: tournamentTeam.isEliminated,
-      milestoneData: tournamentTeam.milestoneData
+      milestoneData: tournamentTeam.milestoneData,
+      numStocksInCirculation
     }
   },
   teams: async () => {

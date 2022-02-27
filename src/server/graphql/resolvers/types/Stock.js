@@ -26,8 +26,13 @@ const Stock = {
       return stocks;
     },
     setStockAskPrice: async (_, { input }) => {
-      const { email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt } = input;
-      const stocks = await StockService.setStockAskPrice(email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt);
+      const { email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt, tradableTeams, stockForStockOverage } = input;
+      const stocks = await StockService.setStockAskPrice(email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt, tradableTeams, stockForStockOverage);
+      return stocks;
+    },
+    tradeStocks: async (_, { input }) => {
+      const { email, entryId, stockIdToTradeFor, quantity, tradableTeams } = input;
+      const stocks = await StockService.tradeStocks(email, entryId, stockIdToTradeFor, quantity, tradableTeams);
       return stocks;
     },
     setTournamentTeamStockPriceToNull: async (_, input) => {

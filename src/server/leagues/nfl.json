@@ -293,6 +293,7 @@
     "defaultSettings": {
         "ipoBudget": 500,
         "secondaryMarketBudget": null,
+        "useSeed": false,
         "milestones": [
             {
                 "id": 1,

@@ -32,7 +32,8 @@ type TournamentTeam {
   tournamentId: ID!
   teamId: ID!
   price: Float!
-  seed: Int!
+  seed: Int
+  region: String
 }
 
 input TournamentInput {
@@ -54,6 +55,7 @@ input TournamentTeamInput {
   price: Float!
   teamId: ID!
   seed: Int!
+  region: String
   tournamentId: ID!
 }
 

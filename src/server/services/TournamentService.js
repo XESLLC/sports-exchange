@@ -83,7 +83,7 @@ const TournamentService = {
       }
     });
 
-    const result = await Promise.all(
+    const allTransactions = await Promise.all(
       transactions.map(async (transaction) => {
         const entry = await Entry.findOne({
           where: {
@@ -118,6 +118,19 @@ const TournamentService = {
       })
     );
 
+    const result = allTransactions.reduce((result, transaction) => {
+      if(result) {
+        const foundIndex = result.findIndex(_transaction =>  _transaction.groupId === transaction.groupId && _transaction.entryId === transaction.entryId);
+        if(foundIndex >= 0) {
+          result[foundIndex].quantity += transaction.quantity;
+          return result;
+        }
+      }
+
+      result.push(transaction);
+      return result;
+    }, [])
+
     return result.sort((a, b) => {
       return b.createdAt - a.createdAt
     });
@@ -137,7 +150,7 @@ const TournamentService = {
     
     return tournament;
   },
-  createTournamentTeam: async (price, seed, teamId, tournamentId) => {
+  createTournamentTeam: async (price, seed, region, teamId, tournamentId) => {
       let tournamentTeam
       try {
           [tournamentTeam, created] = await TournamentTeam.findOrCreate({
@@ -147,7 +160,8 @@ const TournamentService = {
             },
             defaults: {
                 price: price,
-                seed: seed
+                seed: seed,
+                region
             }
           })
       } catch (error) {
@@ -173,7 +187,7 @@ const TournamentService = {
 
     return tournament;
   },
-  updateTournamentTeam: async (price, seed, teamId, tournamentId) => {
+  updateTournamentTeam: async (price, seed, region, teamId, tournamentId) => {
     const tournamentTeam = await TournamentTeam.findOne({
       where: {
         teamId,
@@ -186,6 +200,7 @@ const TournamentService = {
 
     tournamentTeam.price = price;
     tournamentTeam.seed = seed;
+    tournamentTeam.region = region;
 
     await tournamentTeam.save();
 

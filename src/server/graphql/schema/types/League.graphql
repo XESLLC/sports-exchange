@@ -10,6 +10,8 @@ type LeagueSettings {
   ipoBudget: Float
   milestones: [Milestone]
   secondaryMarketBudget: Float
+  regions: [String]
+  useSeed: Boolean
 }
 
 type Milestone {

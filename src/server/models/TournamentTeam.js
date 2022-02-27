@@ -39,7 +39,11 @@ const TournamentTeam = SequelizeInstance.define('TournamentTeam', {
   }, //IPO price only
   seed: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: true
+  },
+  region: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
   milestoneData: {
     type: DataTypes.JSON

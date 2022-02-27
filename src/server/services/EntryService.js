@@ -10,6 +10,7 @@ const instance = require('../models/SequelizeInstance');
 const Transaction = require('../models/Transaction');
 const { Op } = require('sequelize');
 const Tournament = require('../models/Tournament');
+const { v4: uuidv4 } = require('uuid');
 
 const EntryService = {
   createEntry: async (name, userEmails, tournamentId) => {
@@ -105,22 +106,23 @@ const EntryService = {
         }
       }
 
-      for(const entryId in entryStockQuantityObj) {
+      for(const sellerEntryId in entryStockQuantityObj) {
         const sellerEntry = await Entry.findOne({
           where: {
-            id: entryId
+            id: sellerEntryId
           }
         });
         if(!sellerEntry) {
           throw new Error("Entry for seller not found");
         }
 
-        sellerEntry.secondaryMarketCashSpent -= (price * entryStockQuantityObj[entryId]);
+        sellerEntry.secondaryMarketCashSpent -= (price * entryStockQuantityObj[sellerEntryId]);
         await sellerEntry.save({transaction: t});
-        entry.secondaryMarketCashSpent += (price * entryStockQuantityObj[entryId]);
+        entry.secondaryMarketCashSpent += (price * entryStockQuantityObj[sellerEntryId]);
         await entry.save({transaction: t});
       }
 
+      const transactionGroupId = uuidv4();
       for(let i = 0; i < iteratorVal; i++) {
         // set up transaction in case any of this shit fails
         // capture the current stockentry entryId in order to credit the entry with cash later
@@ -132,6 +134,14 @@ const EntryService = {
         // create two new transaction records in the db for seller and buyer, negative cash amount for seller
         // return the transaction as a decorated object
         const stockEntryToTrade = availableStocks[i];
+        const sellerEntry = await Entry.findOne({
+          where: {
+            id: stockEntryToTrade.entryId
+          }
+        });
+        if(!sellerEntry) {
+          throw new Error("Entry for seller not found");
+        }
         stockEntryToTrade.entryId = entryId;
         await stockEntryToTrade.save({transaction: t});
 
@@ -143,14 +153,6 @@ const EntryService = {
         if(!stockToTrade) {
           throw new Error("Stock to trade not found");
         }
-        const sellerEntry = await Entry.findOne({
-          where: {
-            id: stockEntryToTrade.entryId
-          }
-        });
-        if(!sellerEntry) {
-          throw new Error("Entry for seller not found");
-        }
         const tradePrice = stockToTrade.price;
         stockToTrade.price = null;
         await stockToTrade.save({transaction: t});
@@ -159,14 +161,16 @@ const EntryService = {
           entryId: sellerEntry.id,
           stockId: stockToTrade.id,
           quantity: 1,
-          cost: (tradePrice * -1)
+          cost: (tradePrice * -1),
+          groupId: transactionGroupId
         }, {transaction: t});
 
         const buyerTransaction = await Transaction.create({
           entryId,
           stockId: stockToTrade.id,
           quantity: 1,
-          cost: tradePrice
+          cost: tradePrice,
+          groupId: transactionGroupId
         }, {transaction: t});
 
         trades.push({
@@ -302,76 +306,84 @@ const EntryService = {
     }
   },
   ipoPurchase: async (tournamentTeamId, quantity, userEmail, entryId) => {
-    const tournamentTeam = await TournamentTeam.findByPk(tournamentTeamId);
-    if(!tournamentTeam) {
-      throw new Error("Tournament team not found");
-    }
-
-    const tournament = await Tournament.findOne({
-      where: {
-        id: tournamentTeam.tournamentId
+    const result = await instance.transaction(async (t) => {
+      const tournamentTeam = await TournamentTeam.findByPk(tournamentTeamId);
+      if(!tournamentTeam) {
+        throw new Error("Tournament team not found");
       }
-    });
-    if(!tournament) {
-      throw new Error("Tournament not found");
-    }
 
-    if(tournament.isIpoOpen === false) {
-      throw new Error("IPO purchasing window is closed");
-    }
-
-    const entry = await Entry.findOne({
-      where: {
-        id: entryId
-      }
-    });
-    if(!entry) {
-      throw new Error("Entry not found");
-    }
-
-    const user = await User.findOne({
-      where: {
-        email: userEmail
-      }
-    });
-    if(!user) {
-      throw new Error("User not found");
-    }
-
-    const userEntry = await UserEntry.findOne({
-      where: {
-        entryId: entry.id,
-        userId: user.id
-      }
-    });
-    if(!userEntry) {
-      throw new Error("Not authorized for entry ipo purchase");
-    }
-
-    const ipoPrice = tournamentTeam.price
-    const team = await Team.findByPk(tournamentTeam.teamId)
-    const totalPrice = ipoPrice * quantity;
-
-    entry.ipoCashSpent += totalPrice;
-    await entry.save();
-
-    for(let i = 0; i < quantity; i++) {
-      const stock = await Stock.create({
-        price: null,
-        tournamentTeamId,
-        originalIpoEntryId: entryId
+      const tournament = await Tournament.findOne({
+        where: {
+          id: tournamentTeam.tournamentId
+        }
       });
-      await StockEntry.create({
-        entryId: entry.id,
-        stockId: stock.id
-      });
-    }
+      if(!tournament) {
+        throw new Error("Tournament not found");
+      }
 
-    const result = {
-      ipoPrice,
-      quantity,
-      teamName: team.name
-    };
+      if(tournament.isIpoOpen === false) {
+        throw new Error("IPO purchasing window is closed");
+      }
+
+      const entry = await Entry.findOne({
+        where: {
+          id: entryId
+        }
+      });
+      if(!entry) {
+        throw new Error("Entry not found");
+      }
+
+      const user = await User.findOne({
+        where: {
+          email: userEmail
+        }
+      });
+      if(!user) {
+        throw new Error("User not found");
+      }
+
+      const userEntry = await UserEntry.findOne({
+        where: {
+          entryId: entry.id,
+          userId: user.id
+        }
+      });
+      if(!userEntry) {
+        throw new Error("Not authorized for entry ipo purchase");
+      }
+
+      const ipoPrice = tournamentTeam.price
+      const team = await Team.findByPk(tournamentTeam.teamId)
+      const totalPrice = ipoPrice * quantity;
+
+      entry.ipoCashSpent += totalPrice;
+      await entry.save({transaction: t});
+
+      let stocksList = [];
+      for(let i = 0; i < quantity; i++) {
+        stocksList.push({
+          price: null,
+          tournamentTeamId,
+          originalIpoEntryId: entryId
+        });
+      }
+
+      const createdStocks = await Stock.bulkCreate(stocksList, {transaction: t});
+      const stockEntriesList = createdStocks.map((stock) => {
+        return {
+          entryId: entry.id,
+          stockId: stock.id
+        }
+      });
+      await StockEntry.bulkCreate(stockEntriesList, {transaction: t});
+
+      return {
+        ipoPrice,
+        quantity,
+        teamName: team.name
+      };
+    });
 
     return result;
   },

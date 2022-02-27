@@ -8,10 +8,12 @@ type TournamentTeam {
   teamId: ID!
   teamName: String!
   seed: Int!
+  region: String
   ipoPrice: Float!
   tournament: String!
   milestoneData: [MilestoneData]
   isEliminated: Boolean!
+  numStocksInCirculation: Int
 }
 
 type MilestoneData {
