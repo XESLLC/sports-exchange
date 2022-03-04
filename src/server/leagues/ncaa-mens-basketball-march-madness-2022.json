@@ -2,24 +2,276 @@
     "name": "NCAA Mens Basketball March Madness 2022",
     "teams": [
         {
+            "city": "Gonzaga",
+            "name": "Bulldogs"
+        },
+        {
+            "city": "Baylor",
+            "name": "Bears"
+        },
+        {
+            "city": "Illinois",
+            "name": "Fighting Illini"
+        },
+        {
+            "city": "Michigan",
+            "name": "Wolverines"
+        },
+        {
+            "city": "Iowa",
+            "name": "Hawkeyes"
+        },
+        {
+            "city": "Ohio State",
+            "name": "Buckeyes"
+        },
+        {
+            "city": "Houston",
+            "name": "Cougars"
+        },
+        {
+            "city": "Alabama",
+            "name": "Crimson Tide"
+        },
+        {
             "city": "Kansas",
             "name": "Jayhawks"
+        },
+        {
+            "city": "Arkansas",
+            "name": "Razorbacks"
+        },
+        {
+            "city": "West Virginia",
+            "name": "Moutaineers"
+        },
+        {
+            "city": "Texas",
+            "name": "Longhorns"
+        },
+        {
+            "city": "Virginia",
+            "name": "Cavaliers"
+        },
+        {
+            "city": "Purdue",
+            "name": "Boilermakers"
+        },
+        {
+            "city": "Oklahoma State",
+            "name": "Cowboys"
+        },
+        {
+            "city": "Florida State",
+            "name": "Seminoles"
+        },
+        {
+            "city": "Creighton",
+            "name": "Bluejays"
+        },
+        {
+            "city": "Villianova",
+            "name": "Wildcats"
+        },
+        {
+            "city": "Tennessee",
+            "name": "Volunteers"
+        },
+        {
+            "city": "Colorado",
+            "name": "Buffaloes"
+        },
+        {
+            "city": "USC",
+            "name": "Trogans"
+        },
+        {
+            "city": "Texas Tech",
+            "name": "Red Raiders"
+        },
+        {
+            "city": "San Diego State",
+            "name": "Aztecs"
+        },
+        {
+            "city": "BYU",
+            "name": "Cougars"
         },
         {
             "city": "Oregon",
             "name": "Ducks"
         },
         {
-            "city": "Duke",
-            "name": "Blue Devils"
+            "city": "Florida",
+            "name": "Gators"
+        },
+        {
+            "city": "Clemson",
+            "name": "Tigers"
+        },
+        {
+            "city": "UConn",
+            "name": "Huskier"
+        },
+        {
+            "city": "Oklahoma",
+            "name": "Sooners"
         },
         {
             "city": "North Carolina",
             "name": "Tar Heels"
         },
         {
-            "city": "Uconn",
-            "name": "Huskies"
+            "city": "Loyola",
+            "name": "Ramblers"
+        },
+        {
+            "city": "LSU",
+            "name": "Tigers"
+        },
+        {
+            "city": "Missouri",
+            "name": "Tigers"
+        },
+        {
+            "city": "Wisconsin",
+            "name": "Badgers"
+        },
+        {
+            "city": "Georgia Tech",
+            "name": "Yellow Jackets"
+        },
+        {
+            "city": "St. Bonaventure",
+            "name": "Bonnies"
+        },
+        {
+            "city": "VCU",
+            "name": "Rams"
+        },
+        {
+            "city": "Virginia Tech",
+            "name": "Hokies"
+        },
+        {
+            "city": "Rutgers",
+            "name": "Scarlet Knights"
+        },
+        {
+            "city": "Maryland",
+            "name": "Terrapins"
+        },
+        {
+            "city": "Drake",
+            "name": "Bulldogs"
+        },
+        {
+            "city": "Wichita State",
+            "name": "Shockers"
+        },
+        {
+            "city": "Utah State",
+            "name": "Aggies"
+        },
+        {
+            "city": "Syracuse",
+            "name": "Orange"
+        },
+        {
+            "city": "Michigan State",
+            "name": "Spartans"
+        },
+        {
+            "city": "UCLA",
+            "name": "Bruins"
+        },
+        {
+            "city": "UC Santa Barbara",
+            "name": "Gauchos"
+        },
+        {
+            "city": "Winthrop",
+            "name": "Eagles"
+        },
+        {
+            "city": "Oregon State",
+            "name": "Beavers"
+        },
+        {
+            "city": "Georgetown",
+            "name": "Hoyas"
+        },
+        {
+            "city": "Ohio",
+            "name": "Bobcats"
+        },
+        {
+            "city": "North Texas",
+            "name": "Mean Green"
+        },
+        {
+            "city": "Liberty",
+            "name": "Flames"
+        },
+        {
+            "city": "UNC Greensboro",
+            "name": "Spartans"
+        },
+        {
+            "city": "Eastern Washington",
+            "name": "Eagles"
+        },
+        {
+            "city": "Colgate",
+            "name": "Raiders"
+        },
+        {
+            "city": "Morehead State",
+            "name": "Eagles"
+        },
+        {
+            "city": "Abilene Christian",
+            "name": "Wildcats"
+        },
+        {
+            "city": "Grand Canyon",
+            "name": "Antelopes"
+        },
+        {
+            "city": "Oral Roberts",
+            "name": "Golden Eagles"
+        },
+        {
+            "city": "Cleveland State",
+            "name": "Vikings"
+        },
+        {
+            "city": "Iona",
+            "name": "Gaels"
+        },
+        {
+            "city": "Norfolk State",
+            "name": "Spartans"
+        },
+        {
+            "city": "Appalachian State",
+            "name": "Mountaineers"
+        },
+        {
+            "city": "Hartford",
+            "name": "Hawks"
+        },
+        {
+            "city": "Drexel",
+            "name": "Dragons"
+        },
+        {
+            "city": "Mount St. Mary's",
+            "name": "Mountaineers"
+        },
+        {
+            "city": "Texas Southern",
+            "name": "Tigers"
         }
     ],
     "defaultSettings": {
@@ -35,14 +287,22 @@
         "milestones": [
             {
                 "id": 1,
-                "name": "Tournament Win"
+                "name": "Sweet Sixteen"
             },
             {
                 "id": 2,
-                "name": "Final Four"
+                "name": "Elite Eight"
             },
             {
                 "id": 3,
+                "name": "Final Four"
+            },
+            {
+                "id": 4,
+                "name": "Final Game"
+            },
+            {
+                "id": 5,
                 "name": "National Champion"
             }
         ]

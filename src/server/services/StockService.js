@@ -150,9 +150,13 @@ const StockService = {
 
     const stocksTournamentTeamFrequencyObj = stocks.reduce((result, stock) => {
       if(result && result[stock.tournamentTeamId]) {
-        result[stock.tournamentTeamId] += 1;
+        result[stock.tournamentTeamId]["quantity"] += 1;
+        result[stock.tournamentTeamId]["stockIds"].push(stock.id);
       } else {
-        result[stock.tournamentTeamId] = 1;
+        result[stock.tournamentTeamId] = {
+          quantity: 1,
+          stockIds: [stock.id]
+        }
       }
 
       return result;
@@ -162,9 +166,10 @@ const StockService = {
       const tournamentTeam = await TournamentTeam.findByPk(tournamentTeamId)
       const ipoPrice = tournamentTeam.price
       const team = await Team.findByPk(tournamentTeam.teamId)
-      const quantity = stocksTournamentTeamFrequencyObj[tournamentTeamId];
+      const quantity = stocksTournamentTeamFrequencyObj[tournamentTeamId].quantity;
       const seed = tournamentTeam.seed;
       const region = tournamentTeam.region;
+      const stockIds = stocksTournamentTeamFrequencyObj[tournamentTeamId].stockIds;
 
       return {
         teamName: team.name,
@@ -173,7 +178,8 @@ const StockService = {
         ipoPrice,
         quantity,
         seed,
-        region
+        region,
+        stockIds
       }
     });
 
@@ -305,7 +311,7 @@ const StockService = {
 
     return result;
   },
-  setStockAskPrice: async (email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt, tradableTeams, stockForStockOverage) => {
+  setStockAskPrice: async (email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt, tradableTeams) => {
     const result = await instance.transaction(async (t) => {
       const user = await User.findOne({
         where: {
@@ -786,6 +792,117 @@ const StockService = {
     }
 
     return entry;
+  },
+  deleteStocks: async (entryId, stockIds) => {
+    const result = await instance.transaction(async (t) => {
+      const entry = await Entry.findByPk(entryId);
+
+      await StockEntry.destroy({
+        where: {
+          entryId,
+          stockId: stockIds
+        }
+      }, {transaction: t});
+
+      const stocks = await Stock.findAll({
+        where: {
+          id: stockIds
+        }
+      });
+
+      const tournamentTeam = await TournamentTeam.findByPk(stocks[0].tournamentTeamId);
+      const cashAmountToRefund = stockIds.length * tournamentTeam.price;
+
+      await Stock.findAll({
+        where: {
+          id: stockIds
+        }
+      }, {transaction: t});
+
+      await entry.update({
+        ipoCashSpent: entry.ipoCashSpent - cashAmountToRefund
+      }, {transaction: t});
+
+      return entry;
+    });
+
+    return result;
+  },
+  manualTrade: async (entryId, stockIds, receivingEntryId, pricePerStock) => {
+    const result = await instance.transaction(async (t) => {
+      const entry = await Entry.findByPk(entryId);
+      const receivingEntry = await Entry.findByPk(receivingEntryId);
+
+      const stockEntries = await StockEntry.findAll({
+        where: {
+          stockId: stockIds,
+          entryId
+        }
+      });
+
+      for(const stockEntry of stockEntries) {
+        await stockEntry.update({
+          entryId: receivingEntryId
+        }, {transaction: t});
+      }
+
+      const stocks = await Stock.findAll({
+        where: {
+          id: stockIds
+        }
+      });
+
+      for(const stock of stocks) {
+        await stock.update({
+          offerExpiresAt: null,
+          price: null,
+          tradableTeams: null
+        }, {transaction: t});
+      }
+
+      const transactionAmount = stockIds.length * pricePerStock;
+
+      await entry.update({
+        secondaryMarketCashSpent: entry.secondaryMarketCashSpent - transactionAmount
+      }, {transaction: t});
+
+      await receivingEntry.update({
+        secondaryMarketCashSpent: receivingEntry.secondaryMarketCashSpent + transactionAmount
+      }, {transaction: t});
+
+      const transactionGroupId = uuidv4();
+      for(let i = 0; i < stockIds.length; i++) {
+        if(pricePerStock === 0) {
+          await Transaction.create({
+            quantity: 1,
+            cost: 0,
+            stockId: stockIds[i],
+            entryId: receivingEntryId,
+            groupId: transactionGroupId
+          }, {transaction: t});
+        } else {
+          await Transaction.create({
+            quantity: 1,
+            cost: pricePerStock * -1,
+            stockId: stockIds[i],
+            entryId,
+            groupId: transactionGroupId
+          }, {transaction: t});
+  
+          await Transaction.create({
+            quantity: 1,
+            cost: pricePerStock,
+            stockId: stockIds[i],
+            entryId: receivingEntryId,
+            groupId: transactionGroupId
+          }, {transaction: t});
+        }
+      }
+
+      return entry;
+    });
+
+    return result;
   }
 };
 

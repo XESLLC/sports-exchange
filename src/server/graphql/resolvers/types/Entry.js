@@ -44,6 +44,10 @@ const Entry = {
       const { tournamentTeamId, quantity, userEmail, entryId } = input;
       const tournamentTeamStock = await EntryService.ipoPurchase(tournamentTeamId, quantity, userEmail, entryId);
       return tournamentTeamStock;
+    },
+    updateEntryCashSpent: async (_, { entryId, ipoCashSpent, secondaryMarketCashSpent } ) => {
+      const entry = await EntryService.updateEntryCashSpent(entryId, ipoCashSpent, secondaryMarketCashSpent);
+      return entry;
     }
   }
 };

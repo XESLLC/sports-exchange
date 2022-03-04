@@ -423,6 +423,20 @@ const EntryService = {
     )
 
     return result;
+  },
+  updateEntryCashSpent: async (entryId, ipoCashSpent, secondaryMarketCashSpent) => {
+    const result = await instance.transaction(async (t) => {
+      const entry = await Entry.findByPk(entryId);
+
+      await entry.update({
+        ipoCashSpent,
+        secondaryMarketCashSpent
+      }, {transaction: t});
+
+      return entry;
+    });
+
+    return result;
   }
 };
 

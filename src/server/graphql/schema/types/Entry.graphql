@@ -56,4 +56,5 @@ type Mutation {
   createEntryBid(input: NewEntryBidInput!): EntryBid
   deleteEntryBid(id: ID!): Entry
   ipoPurchase(input: IPOPurchaseInput!): TournamentTeamStock!
+  updateEntryCashSpent(entryId: ID!, ipoCashSpent: Float!, secondaryMarketCashSpent: Float): Entry
 }

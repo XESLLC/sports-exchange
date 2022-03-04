@@ -26,8 +26,8 @@ const Stock = {
       return stocks;
     },
     setStockAskPrice: async (_, { input }) => {
-      const { email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt, tradableTeams, stockForStockOverage } = input;
-      const stocks = await StockService.setStockAskPrice(email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt, tradableTeams, stockForStockOverage);
+      const { email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt, tradableTeams } = input;
+      const stocks = await StockService.setStockAskPrice(email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt, tradableTeams);
       return stocks;
     },
     tradeStocks: async (_, { input }) => {
@@ -45,6 +45,14 @@ const Stock = {
       const tournamentId = input.tournamentId;
       const resultString = await StockService.removeExpiredBidsAndAsks(tournamentId);
       return resultString;
+    },
+    deleteStocks: async (_, { entryId, stockIds } ) => {
+      const entry = await StockService.deleteStocks(entryId, stockIds);
+      return entry;
+    },
+    manualTrade: async (_, { entryId, stockIds, receivingEntryId, pricePerStock } ) => {
+      const entry = await StockService.manualTrade(entryId, stockIds, receivingEntryId, pricePerStock);
+      return entry;
     }
   }
 };
