@@ -2,7 +2,7 @@ const { Sequelize } = require('sequelize');
 
 const database = 'EXCHANGE';
 const username = 'root';
-const password = 'deavtdc021076';
+const password = 'test';
 const host = 'localhost';
 const port = '3306';
 

@@ -39,6 +39,7 @@ input TradeStocksInput {
   stockIdToTradeFor: ID!
   quantity: Int!
   tradableTeams: [TradableTeamInput!]!
+  teamName: String!
 }
 
 input StockPriceInput {

@@ -27,7 +27,7 @@ const LeagueService = {
     return league;
   },
   leagues: async () => {
-    sendEmail('david.xesllc@gmail.com', 'trade Notification', 'This is a trade notification for the purchase of 20 Stocks NY Giants Stocks at $10')
+    // sendEmail('david.xesllc@gmail.com', 'trade Notification', 'This is a trade notification for the purchase of 20 Stocks NY Giants Stocks at $10')
     const leagues = await League.findAll();
     const result = await Promise.all(
       leagues.map(async (league) => {

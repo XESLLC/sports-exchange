@@ -11,6 +11,7 @@ const Transaction = require('../models/Transaction');
 const { Op } = require('sequelize');
 const Tournament = require('../models/Tournament');
 const { v4: uuidv4 } = require('uuid');
+const {sendEmail} = require ('../util/sendEmail');
 
 const EntryService = {
   createEntry: async (name, userEmails, tournamentId) => {
@@ -123,6 +124,9 @@ const EntryService = {
       }
 
       const transactionGroupId = uuidv4();
+      let transactionCounter = 0;
+      let sellerEntryForEmail;
+      let amountPerShare;
       for(let i = 0; i < iteratorVal; i++) {
         // set up transaction in case any of this shit fails
         // capture the current stockentry entryId in order to credit the entry with cash later
@@ -142,6 +146,7 @@ const EntryService = {
         if(!sellerEntry) {
           throw new Error("Entry for seller not found");
         }
+        sellerEntryForEmail = JSON.parse(JSON.stringify(sellerEntry));
         stockEntryToTrade.entryId = entryId;
         await stockEntryToTrade.save({transaction: t});
 
@@ -154,6 +159,7 @@ const EntryService = {
           throw new Error("Stock to trade not found");
         }
         const tradePrice = stockToTrade.price;
+        amountPerShare = stockToTrade.price;
         stockToTrade.price = null;
         await stockToTrade.save({transaction: t});
 
@@ -184,6 +190,54 @@ const EntryService = {
           teamName: team.name,
           tournamentTeamId,
         });
+
+        transactionCounter += 1;
+      }
+
+      if(transactionCounter > 0) {
+        const plural = transactionCounter > 1 ? 's' : '';
+        const sellerMessage = `You sold ${transactionCounter} share${plural} of ${team.name} to ${entry.name} for $${amountPerShare} per share`;
+        const buyerMessage = `You bought ${transactionCounter} share${plural} of ${team.name} from ${sellerEntryForEmail.name} for $${amountPerShare} per share`;
+    
+        const userEntries = await UserEntry.findAll({
+          where: {
+            entryId: sellerEntryForEmail.id
+          }
+        });
+    
+        const userIds = userEntries.map(userEntry => userEntry.userId);
+    
+        const users = await User.findAll({
+          where: {
+            id: userIds
+          }
+        });
+    
+        const sellerEmailAddressToSendTradeNotification = users.map(user => user.email);
+    
+        for(let email of sellerEmailAddressToSendTradeNotification) {
+          await sendEmail(email, 'Trade Notification', sellerMessage);
+        }
+
+        const buyerEntries = await UserEntry.findAll({
+          where: {
+            entryId
+          }
+        });
+
+        const buyerUserIds = buyerEntries.map(userEntry => userEntry.userId);
+    
+        const buyerUsers = await User.findAll({
+          where: {
+            id: buyerUserIds
+          }
+        });
+    
+        const buyerEmailAddressToSendTradeNotification = buyerUsers.map(user => user.email);
+    
+        for(let email of buyerEmailAddressToSendTradeNotification) {
+          await sendEmail(email, 'Trade Notification', buyerMessage)
+        }
       }
       
       if(iteratorVal === entryBid.quantity) {

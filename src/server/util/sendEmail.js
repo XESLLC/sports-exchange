@@ -4,6 +4,8 @@ const REGION = "us-west-2";
 const client = new SESClient({ region: REGION });
 
 exports.sendEmail = async(emailAddress, notificationEnum, message) => {
+    console.log("sending email to: " + emailAddress);
+    console.log("message: " + message);
     const params = {
         Destination: {
             ToAddresses: [

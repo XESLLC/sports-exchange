@@ -31,8 +31,8 @@ const Stock = {
       return stocks;
     },
     tradeStocks: async (_, { input }) => {
-      const { email, entryId, stockIdToTradeFor, quantity, tradableTeams } = input;
-      const stocks = await StockService.tradeStocks(email, entryId, stockIdToTradeFor, quantity, tradableTeams);
+      const { email, entryId, stockIdToTradeFor, quantity, tradableTeams, teamName } = input;
+      const stocks = await StockService.tradeStocks(email, entryId, stockIdToTradeFor, quantity, tradableTeams, teamName);
       return stocks;
     },
     setTournamentTeamStockPriceToNull: async (_, input) => {
