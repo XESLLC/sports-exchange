@@ -11,7 +11,13 @@ const port = '3306';
 const instance = new Sequelize(database, username, password, {
   host: host,
   port: port,
-  dialect: 'mysql'
+  dialect: 'mysql',
+  pool: {
+    max: 1,
+    min: 0,
+    acquire: 10000,
+    idle: 5000
+  }
 });
 
 module.exports = instance;
