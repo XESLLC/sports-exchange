@@ -312,7 +312,8 @@ const StockService = {
     return result;
   },
   setStockAskPrice: async (email, entryId, tournamentTeamId, quantity, newPrice, offerExpiresAt, tradableTeams) => {
-    const result = await instance.transaction(async (t) => {
+    // TODO wrapping in transaction calls commit and fails around line 456, cant seem to loop matchedBids
+    // const result = await instance.transaction(async (t) => {
       const user = await User.findOne({
         where: {
           email
@@ -377,14 +378,11 @@ const StockService = {
       await Promise.all(
         stocksAvailableToUpdate.map(async (stock) => {
           try {
-            // stock.price = null;
-            // stock.offerExpiresAt = null;
-            // await stock.save({transaction: t});
             await stock.update({
               price: null,
               offerExpiresAt: null,
               tradableTeams: null
-            }, {transaction: t});
+            });
           } catch {
             throw new Error("Error updating stock prices");
           }
@@ -411,7 +409,7 @@ const StockService = {
               price: newPrice,
               offerExpiresAt,
               tradableTeams: tradableTeams ? JSON.parse(JSON.stringify(tradableTeams)) : null
-            }, {transaction: t});
+            });
           } catch {
             throw new Error("Could not set new stock price");
           }
@@ -477,9 +475,9 @@ const StockService = {
           });
 
           buyerEntry.secondaryMarketCashSpent += (newPrice * entryBidQuantityObj[buyerEntryId]);
-          await buyerEntry.save({transaction: t});
+          await buyerEntry.save();
           entry.secondaryMarketCashSpent -= (newPrice * entryBidQuantityObj[buyerEntryId]);
-          await entry.save({transaction: t});
+          await entry.save();
         })
       );
 
@@ -500,8 +498,6 @@ const StockService = {
             stockToUpdate = stocksToUpdate.splice(alreadyUpdatedIndex, matchedBids[i].quantity);
           }
 
-          // TODO this might need to be wrapped in a transaction
-          // some Transactions are showing the same entryId for both sides of trade
           const buyerEntry = await Entry.findOne({
             where: {
               id: matchedBids[i].entryId
@@ -524,12 +520,12 @@ const StockService = {
               }
     
               stockEntryToTrade.entryId = buyerEntry.id;
-              await stockEntryToTrade.save({transaction: t});
+              await stockEntryToTrade.save();
     
               const tradePrice = stock.price;
               amountPerShare = stock.price;
               stock.price = null;
-              await stock.save({transaction: t});
+              await stock.save();
     
               const sellerTransaction = await Transaction.create({
                 entryId,
@@ -537,7 +533,7 @@ const StockService = {
                 quantity: 1,
                 cost: (tradePrice * -1),
                 groupId: transactionGroupId
-              }, {transaction: t});
+              });
     
               const buyerTransaction = await Transaction.create({
                 entryId: buyerEntry.id,
@@ -545,7 +541,7 @@ const StockService = {
                 quantity: 1,
                 cost: tradePrice,
                 groupId: transactionGroupId
-              }, {transaction: t});
+              });
     
               trades.push({
                 ...sellerTransaction.toJSON(),
@@ -562,14 +558,14 @@ const StockService = {
           );
 
           matchedBids[i].quantity -= stockToUpdate.length;
-          await matchedBids[i].save({transaction: t});
+          await matchedBids[i].save();
           transactionCounter += stockToUpdate.length;
         }
       }
 
       for(let bid of matchedBids) {
         if(bid.quantity === 0) {
-          await bid.destroy({transaction: t});
+          await bid.destroy();
         }
       }
 
@@ -633,7 +629,7 @@ const StockService = {
           trades
         }
       });
-    });
+    // });
 
     return result;
   },
@@ -642,7 +638,8 @@ const StockService = {
       const user = await User.findOne({
         where: {
           email
-        }
+        },
+        transaction: t
       });
       if(!user) {
         throw new Error("User not found");
@@ -651,7 +648,8 @@ const StockService = {
       const entry = await Entry.findOne({
         where: {
           id: entryId
-        }
+        },
+        transaction: t
       });
       if(!entry) {
         throw new Error("Entry not found");
@@ -661,7 +659,8 @@ const StockService = {
         where: {
           entryId: entry.id,
           userId: user.id
-        }
+        },
+        transaction: t
       });
       if(!userEntry) {
         throw new Error("User for entry not found");
@@ -671,12 +670,13 @@ const StockService = {
       const transactionGroupId = uuidv4();
 
       if(quantity > 1) {
-        const instanceOfStockToTradeFor = await Stock.findByPk(stockIdToTradeFor);
+        const instanceOfStockToTradeFor = await Stock.findByPk(stockIdToTradeFor, {transaction: t});
 
         const instanceOfStockEntry = await StockEntry.findOne({
           where: {
             stockId: instanceOfStockToTradeFor.id
-          }
+          },
+          transaction: t
         });
         const stocksByTournamentTeamId = await Stock.findAll({
           where: {
@@ -684,7 +684,8 @@ const StockService = {
             tradableTeams: {
               [Op.not]: null
             }
-          }
+          },
+          transaction: t
         });
         const tradableStockIds = stocksByTournamentTeamId.map(stock => stock.id);
 
@@ -693,7 +694,8 @@ const StockService = {
             stockId: tradableStockIds,
             entryId: instanceOfStockEntry.entryId
           },
-          limit: quantity
+          limit: quantity,
+          transaction: t
         });
 
         stockIdsToTradeFor = tradableStockEntries.map(stockEntry => stockEntry.stockId);
@@ -705,7 +707,8 @@ const StockService = {
       const stocksToTradeFor = await Stock.findAll({
         where: {
           id: stockIdsToTradeFor
-        }
+        },
+        transaction: t
       });
 
       for(const stock of stocksToTradeFor) {
@@ -721,11 +724,12 @@ const StockService = {
       const stockEntriesToTradeFor = await StockEntry.findAll({
         where: {
           stockId: stockIdsToTradeFor
-        }
+        },
+        transaction: t
       });
 
       const otherUserEntryId = JSON.parse(JSON.stringify(stockEntriesToTradeFor))[0].entryId;
-      const otherUserEntry = await Entry.findByPk(otherUserEntryId);
+      const otherUserEntry = await Entry.findByPk(otherUserEntryId, {transaction: t});
 
       for(const stockEntry of stockEntriesToTradeFor) {
         await stockEntry.update({
@@ -750,14 +754,16 @@ const StockService = {
       const userStockEntries = await StockEntry.findAll({
         where: {
           entryId
-        }
+        },
+        transaction: t
       });
       const stockIds = userStockEntries.map(entry => entry.stockId);
 
       const userStocks = await Stock.findAll({
         where: {
           id: stockIds
-        }
+        },
+        transaction: t
       });
 
       let initiatorTradePackage = "";
@@ -778,7 +784,8 @@ const StockService = {
           const stockEntryToUpdate = await StockEntry.findOne({
             where: {
               stockId: tradableStock.id
-            }
+            },
+            transaction: t
           });
 
           await stockEntryToUpdate.update({
@@ -803,7 +810,8 @@ const StockService = {
       const initiatorUserEntries = await UserEntry.findAll({
         where: {
           entryId
-        }
+        },
+        transaction: t
       });
   
       const userIds = initiatorUserEntries.map(userEntry => userEntry.userId);
@@ -811,7 +819,8 @@ const StockService = {
       const users = await User.findAll({
         where: {
           id: userIds
-        }
+        },
+        transaction: t
       });
   
       const initiatorEmailAddressToSendTradeNotification = users.map(user => user.email);
@@ -823,7 +832,8 @@ const StockService = {
       const passiveUserEntries = await UserEntry.findAll({
         where: {
           entryId
-        }
+        },
+        transaction: t
       });
 
       const passiveUserIds = passiveUserEntries.map(userEntry => userEntry.userId);
@@ -831,7 +841,8 @@ const StockService = {
       const passiveUsers = await User.findAll({
         where: {
           id: passiveUserIds
-        }
+        },
+        transaction: t
       });
   
       const passiveEmailAddressToSendTradeNotification = passiveUsers.map(user => user.email);
@@ -843,7 +854,8 @@ const StockService = {
       const groupedTransactions = await Transaction.findAll({
         where: {
           groupId: transactionGroupId
-        }
+        },
+        transaction: t
       });
 
       return groupedTransactions;
@@ -895,7 +907,7 @@ const StockService = {
   },
   deleteStocks: async (entryId, stockIds) => {
     const result = await instance.transaction(async (t) => {
-      const entry = await Entry.findByPk(entryId);
+      const entry = await Entry.findByPk(entryId, {transaction: t});
 
       await StockEntry.destroy({
         where: {
@@ -907,17 +919,19 @@ const StockService = {
       const stocks = await Stock.findAll({
         where: {
           id: stockIds
-        }
+        },
+        transaction: t
       });
 
-      const tournamentTeam = await TournamentTeam.findByPk(stocks[0].tournamentTeamId);
+      const tournamentTeam = await TournamentTeam.findByPk(stocks[0].tournamentTeamId, {transaction: t});
       const cashAmountToRefund = stockIds.length * tournamentTeam.price;
 
       await Stock.findAll({
         where: {
           id: stockIds
-        }
-      }, {transaction: t});
+        },
+        transaction: t
+      });
 
       await entry.update({
         ipoCashSpent: entry.ipoCashSpent - cashAmountToRefund
@@ -930,14 +944,15 @@ const StockService = {
   },
   manualTrade: async (entryId, stockIds, receivingEntryId, pricePerStock) => {
     const result = await instance.transaction(async (t) => {
-      const entry = await Entry.findByPk(entryId);
-      const receivingEntry = await Entry.findByPk(receivingEntryId);
+      const entry = await Entry.findByPk(entryId, {transaction: t});
+      const receivingEntry = await Entry.findByPk(receivingEntryId, {transaction: t});
 
       const stockEntries = await StockEntry.findAll({
         where: {
           stockId: stockIds,
           entryId
-        }
+        },
+        transaction: t
       });
 
       for(const stockEntry of stockEntries) {
@@ -949,12 +964,13 @@ const StockService = {
       const stocks = await Stock.findAll({
         where: {
           id: stockIds
-        }
+        },
+        transaction: t
       });
 
       const tournamentTeamId = stocks[0].tournamentTeamId;
-      const tournamentTeam = await TournamentTeam.findByPk(tournamentTeamId);
-      const team = await Team.findByPk(tournamentTeam.teamId);
+      const tournamentTeam = await TournamentTeam.findByPk(tournamentTeamId, {transaction: t});
+      const team = await Team.findByPk(tournamentTeam.teamId, {transaction: t});
 
       for(const stock of stocks) {
         await stock.update({
@@ -1021,7 +1037,8 @@ const StockService = {
         const userEntries = await UserEntry.findAll({
           where: {
             entryId
-          }
+          },
+          transaction: t
         });
     
         const userIds = userEntries.map(userEntry => userEntry.userId);
@@ -1029,7 +1046,8 @@ const StockService = {
         const users = await User.findAll({
           where: {
             id: userIds
-          }
+          },
+          transaction: t
         });
     
         const sellerEmailAddressToSendTradeNotification = users.map(user => user.email);
@@ -1041,7 +1059,8 @@ const StockService = {
         const buyerEntries = await UserEntry.findAll({
           where: {
             entryId: receivingEntryId
-          }
+          },
+          transaction: t
         });
 
         const buyerUserIds = buyerEntries.map(userEntry => userEntry.userId);
@@ -1049,7 +1068,8 @@ const StockService = {
         const buyerUsers = await User.findAll({
           where: {
             id: buyerUserIds
-          }
+          },
+          transaction: t
         });
     
         const buyerEmailAddressToSendTradeNotification = buyerUsers.map(user => user.email);

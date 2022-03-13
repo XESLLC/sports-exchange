@@ -6,272 +6,284 @@
             "name": "Bulldogs"
         },
         {
-            "city": "Baylor",
-            "name": "Bears"
-        },
-        {
-            "city": "Illinois",
-            "name": "Fighting Illini"
-        },
-        {
-            "city": "Michigan",
-            "name": "Wolverines"
-        },
-        {
-            "city": "Iowa",
-            "name": "Hawkeyes"
-        },
-        {
-            "city": "Ohio State",
-            "name": "Buckeyes"
-        },
-        {
-            "city": "Houston",
-            "name": "Cougars"
-        },
-        {
-            "city": "Alabama",
-            "name": "Crimson Tide"
-        },
-        {
-            "city": "Kansas",
-            "name": "Jayhawks"
-        },
-        {
-            "city": "Arkansas",
-            "name": "Razorbacks"
-        },
-        {
-            "city": "West Virginia",
-            "name": "Moutaineers"
-        },
-        {
-            "city": "Texas",
-            "name": "Longhorns"
-        },
-        {
-            "city": "Virginia",
-            "name": "Cavaliers"
-        },
-        {
-            "city": "Purdue",
-            "name": "Boilermakers"
-        },
-        {
-            "city": "Oklahoma State",
-            "name": "Cowboys"
-        },
-        {
-            "city": "Florida State",
-            "name": "Seminoles"
-        },
-        {
-            "city": "Creighton",
-            "name": "Bluejays"
-        },
-        {
-            "city": "Villianova",
-            "name": "Wildcats"
-        },
-        {
-            "city": "Tennessee",
-            "name": "Volunteers"
-        },
-        {
-            "city": "Colorado",
-            "name": "Buffaloes"
-        },
-        {
-            "city": "USC",
-            "name": "Trogans"
-        },
-        {
-            "city": "Texas Tech",
-            "name": "Red Raiders"
+            "city": "Norfolk State",
+            "name": "Spartans"
         },
         {
             "city": "San Diego State",
             "name": "Aztecs"
         },
         {
-            "city": "BYU",
-            "name": "Cougars"
+            "city": "Iowa State",
+            "name": "Cyclones"
         },
         {
-            "city": "Oregon",
-            "name": "Ducks"
-        },
-        {
-            "city": "Florida",
-            "name": "Gators"
-        },
-        {
-            "city": "Clemson",
-            "name": "Tigers"
-        },
-        {
-            "city": "UConn",
-            "name": "Huskier"
-        },
-        {
-            "city": "Oklahoma",
-            "name": "Sooners"
-        },
-        {
-            "city": "North Carolina",
-            "name": "Tar Heels"
-        },
-        {
-            "city": "Loyola",
-            "name": "Ramblers"
-        },
-        {
-            "city": "LSU",
-            "name": "Tigers"
-        },
-        {
-            "city": "Missouri",
-            "name": "Tigers"
-        },
-        {
-            "city": "Wisconsin",
-            "name": "Badgers"
-        },
-        {
-            "city": "Georgia Tech",
-            "name": "Yellow Jackets"
-        },
-        {
-            "city": "St. Bonaventure",
-            "name": "Bonnies"
-        },
-        {
-            "city": "VCU",
-            "name": "Rams"
+            "city": "USC",
+            "name": "Trogans"
         },
         {
             "city": "Virginia Tech",
             "name": "Hokies"
         },
         {
-            "city": "Rutgers",
-            "name": "Scarlet Knights"
+            "city": "Arkansas",
+            "name": "Razorbacks"
         },
         {
-            "city": "Maryland",
-            "name": "Terrapins"
+            "city": "Chattanooga",
+            "name": "Mocs"
         },
         {
-            "city": "Drake",
-            "name": "Bulldogs"
+            "city": "Iowa",
+            "name": "Hawkeyes"
         },
         {
-            "city": "Wichita State",
-            "name": "Shockers"
+            "city": "Loyola",
+            "name": "Ramblers"
         },
         {
-            "city": "Utah State",
-            "name": "Aggies"
+            "city": "Texas Tech",
+            "name": "Red Raiders"
         },
         {
-            "city": "Syracuse",
-            "name": "Orange"
+            "city": "Cal State Fullerton",
+            "name": "Titans"
+        },
+        {
+            "city": "Alabama",
+            "name": "Crimson Tide"
+        },
+        {
+            "city": "Wyoming",
+            "name": "Cowboys"
+        },
+        {
+            "city": "Villianova",
+            "name": "Wildcats"
+        },
+        {
+            "city": "Colgate",
+            "name": "Raiders"
+        },
+
+
+
+        {
+            "city": "Baylor",
+            "name": "Bears"
         },
         {
             "city": "Michigan State",
             "name": "Spartans"
         },
         {
+            "city": "Murray State",
+            "name": "Racers"
+        },
+        {
+            "city": "UConn",
+            "name": "Huskies"
+        },
+        {
+            "city": "UAB",
+            "name": "Blazers"
+        },
+        {
+            "city": "Illinois",
+            "name": "Fighting Illini"
+        },
+        {
+            "city": "Vermont",
+            "name": "Catamounts"
+        },
+        {
+            "city": "LSU",
+            "name": "Tigers"
+        },
+        {
+            "city": "Indiana",
+            "name": "Hoosiers"
+        },
+        {
+            "city": "Duke",
+            "name": "Blue Devils"
+        },
+        {
+            "city": "Delaware",
+            "name": "Fightin' Blue Hens"
+        },
+        {
+            "city": "Boise State",
+            "name": "Broncos"
+        },
+        {
+            "city": "Marquette",
+            "name": "Golden Eagles"
+        },
+        {
+            "city": "Kentucky",
+            "name": "Wildcats"
+        },
+        {
+            "city": "Georgia State",
+            "name": "Panthers"
+        },
+
+
+        
+        {
+            "city": "Arizona",
+            "name": "Wildcats"
+        },
+        {
+            "city": "TCU",
+            "name": "Horned Frogs"
+        },
+        {
+            "city": "Davidson",
+            "name": "Wildcats"
+        },
+        {
+            "city": "Houston",
+            "name": "Cougars"
+        },
+        {
+            "city": "Providence",
+            "name": "Friars"
+        },
+        {
+            "city": "Princeton",
+            "name": "Tigers"
+        },
+        {
+            "city": "Texas",
+            "name": "Longhorns"
+        },
+        {
+            "city": "Memphis",
+            "name": "Tigers"
+        },
+        {
+            "city": "Tennessee",
+            "name": "Volunteers"
+        },
+        {
+            "city": "Saint Peter's",
+            "name": "Peacocks"
+        },
+        {
+            "city": "Creighton",
+            "name": "Bluejays"
+        },
+        {
+            "city": "Texas A&M",
+            "name": "Aggies"
+        },
+        {
+            "city": "Purdue",
+            "name": "Boilermakers"
+        },
+        {
+            "city": "Montana State",
+            "name": "Bobcats"
+        },
+
+
+
+        {
+            "city": "Kansas",
+            "name": "Jayhawks"
+        },
+        {
+            "city": "Jacksonville State",
+            "name": "Gamecocks"
+        },
+        {
+            "city": "Ohio State",
+            "name": "Buckeyes"
+        },
+        {
+            "city": "North Carolina",
+            "name": "Tar Heels"
+        },
+        {
+            "city": "Saint Mary's",
+            "name": "Gaels"
+        },
+        {
+            "city": "South Dakota State",
+            "name": "Jackrabbits"
+        },
+        {
             "city": "UCLA",
             "name": "Bruins"
         },
         {
-            "city": "UC Santa Barbara",
-            "name": "Gauchos"
+            "city": "New Mexico State",
+            "name": "Aggies"
         },
         {
-            "city": "Winthrop",
-            "name": "Eagles"
+            "city": "Colorado State",
+            "name": "Rams"
         },
         {
-            "city": "Oregon State",
-            "name": "Beavers"
+            "city": "Wisconsin",
+            "name": "Badgers"
         },
         {
-            "city": "Georgetown",
-            "name": "Hoyas"
+            "city": "Akron",
+            "name": "Zips"
         },
         {
-            "city": "Ohio",
-            "name": "Bobcats"
+            "city": "Seton Hall",
+            "name": "Pirates"
         },
         {
-            "city": "North Texas",
-            "name": "Mean Green"
+            "city": "Miami",
+            "name": "Hurricanes"
         },
         {
-            "city": "Liberty",
-            "name": "Flames"
+            "city": "Auburn",
+            "name": "Tigers"
         },
         {
-            "city": "UNC Greensboro",
-            "name": "Spartans"
+            "city": "Longwood",
+            "name": "Lancers"
+        },
+
+
+
+        {
+            "city": "Notre Dame",
+            "name": "Fighting Irish"
         },
         {
-            "city": "Eastern Washington",
-            "name": "Eagles"
+            "city": "San Francisco",
+            "name": "Dons"
         },
         {
-            "city": "Colgate",
+            "city": "Xavier",
+            "name": "Musketeers"
+        },
+        {
+            "city": "BYU",
+            "name": "Cougars"
+        },
+        {
+            "city": "Wright State",
             "name": "Raiders"
         },
         {
-            "city": "Morehead State",
-            "name": "Eagles"
-        },
-        {
-            "city": "Abilene Christian",
-            "name": "Wildcats"
-        },
-        {
-            "city": "Grand Canyon",
-            "name": "Antelopes"
-        },
-        {
-            "city": "Oral Roberts",
-            "name": "Golden Eagles"
-        },
-        {
-            "city": "Cleveland State",
-            "name": "Vikings"
-        },
-        {
-            "city": "Iona",
-            "name": "Gaels"
-        },
-        {
-            "city": "Norfolk State",
-            "name": "Spartans"
-        },
-        {
-            "city": "Appalachian State",
-            "name": "Mountaineers"
-        },
-        {
-            "city": "Hartford",
-            "name": "Hawks"
-        },
-        {
-            "city": "Drexel",
-            "name": "Dragons"
-        },
-        {
-            "city": "Mount St. Mary's",
-            "name": "Mountaineers"
+            "city": "Bryant",
+            "name": "Bulldogs"
         },
         {
             "city": "Texas Southern",
             "name": "Tigers"
+        },
+        {
+            "city": "Texas A&M-Corpus Christi",
+            "name": "Islanders"
         }
     ],
     "defaultSettings": {
@@ -279,7 +291,7 @@
         "secondaryMarketBudget": null,
         "useSeed": true,
         "regions": [
-            "North",
+            "Midwest",
             "South",
             "East",
             "West"
