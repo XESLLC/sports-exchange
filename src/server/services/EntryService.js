@@ -136,7 +136,7 @@ const EntryService = {
         // capture the current stockentry entryId in order to credit the entry with cash later
         // set the stockentry entryId to entryId
         // get Stock where id === stockentry.stockId, capture the current price in order to decrement/increase cash to entries later
-        // set the stock price to null 
+        // set the stock price to null
         // credit the captured entry with the captured price
         // decrement entryId with the captured price
         // create two new transaction records in the db for seller and buyer, negative cash amount for seller
@@ -204,25 +204,25 @@ const EntryService = {
         const plural = transactionCounter > 1 ? 's' : '';
         const sellerMessage = `You sold ${transactionCounter} share${plural} of ${team.name} to ${entry.name} for $${amountPerShare} per share`;
         const buyerMessage = `You bought ${transactionCounter} share${plural} of ${team.name} from ${sellerEntryForEmail.name} for $${amountPerShare} per share`;
-    
+
         const userEntries = await UserEntry.findAll({
           where: {
             entryId: sellerEntryForEmail.id
           },
           transaction: t
         });
-    
+
         const userIds = userEntries.map(userEntry => userEntry.userId);
-    
+
         const users = await User.findAll({
           where: {
             id: userIds
           },
           transaction: t
         });
-    
+
         const sellerEmailAddressToSendTradeNotification = users.map(user => user.email);
-    
+
         for(let email of sellerEmailAddressToSendTradeNotification) {
           await sendEmail(email, 'Trade Notification', sellerMessage);
         }
@@ -235,21 +235,21 @@ const EntryService = {
         });
 
         const buyerUserIds = buyerEntries.map(userEntry => userEntry.userId);
-    
+
         const buyerUsers = await User.findAll({
           where: {
             id: buyerUserIds
           },
           transaction: t
         });
-    
+
         const buyerEmailAddressToSendTradeNotification = buyerUsers.map(user => user.email);
-    
+
         for(let email of buyerEmailAddressToSendTradeNotification) {
           await sendEmail(email, 'Trade Notification', buyerMessage)
         }
       }
-      
+
       if(iteratorVal === entryBid.quantity) {
         await entryBid.destroy({transaction: t});
       } else {
@@ -478,7 +478,7 @@ const EntryService = {
         id: entryIds
       }
     });
-    
+
     const result = await Promise.all(
       entries.map(async (entry) => {
         const tournament = await Tournament.findByPk(entry.tournamentId);
@@ -494,7 +494,7 @@ const EntryService = {
   },
   updateEntryCashSpent: async (entryId, ipoCashSpent, secondaryMarketCashSpent) => {
     const result = await instance.transaction(async (t) => {
-      const entry = await Entry.findByPk(entryId);
+      const entry = await Entry.findByPk(entryId, {transaction: t});
 
       await entry.update({
         ipoCashSpent,
@@ -505,6 +505,120 @@ const EntryService = {
     });
 
     return result;
+  },
+  getPortfolioSummary: async (tournamentId, entryId) => {
+      const result = await instance.transaction(async (t) => {
+          const entries = await Entry.findAll({
+              where: {
+                  tournamentId: tournamentId
+              },
+              transaction: t
+          });
+          const tournamentTeams = await TournamentTeam.findAll({
+            where: {
+                tournamentId: tournamentId
+            },
+            transaction: t
+          })
+          const portfolioSummaries = entries.map(async(entry) => {
+              const userEntries = await userEntries.findAll({
+                where: {
+                    entryId: entry.id
+                },
+                transaction: t
+              })
+
+              let names = []
+              for(let userEntry of userEntries) {
+                  const user = await User.findByPk(userEntry.userId, {transaction: t})
+                  names.push (user.firstName + " " + user.lastName)
+              }
+              const combinedNames = names.reduce((result, userName) => {
+                  if (result.length > 0) {
+                      return result + " & " + userName
+                  }
+                  return userName
+              }, "")
+
+              const initalIpoStocks = await Stock.findAll({
+                  where: {
+                      originalIpoEntryId: entryId
+                  },
+                  transaction: t
+              })
+
+              const initialIpoStockInvestment = initialIpoStocks.reduce((cost, stock) => {
+                  const teams = tournamentTeams.filter((tournamentTeam) => {
+                      return tournamentTeam.id == stock.tournamentTeamId
+                  }) // result should always be one team
+                  return cost += teams[0].price
+              }, 0)
+
+              const currentStocksOwned = await StockEntry.findAll({
+                  where: {
+                      entryId: entry.id
+                  },
+                  transaction: t
+              })
+
+              const stocksRemaining = currentStocksOwned.filter((stock) => {
+                  const teams = tournamentTeams.filter(team => {
+                      return teams[0].id === stock.tournamentTeamId
+                  }) // result should always be one team
+                  return teams[0].isEliminated? false : true
+              })
+
+              const teamsOwnedMayBeEliminated = tournamentTeams.filter((tournamentTeam) => {
+                   return currentStocksOwned.reduce((hasTeam, stock) => {
+                      if (!hasTeam) {
+                          return stock.tournamentTeamId == tournamentTeam.id
+                      }
+                  }, false)
+              })
+
+              const teamsOwnedNotEliminated = tournamentTeams.filter((tournamentTeam) => {
+                   return currentStocksOwned.reduce((hasTeam, stock) => {
+                      if (!hasTeam) {
+                          return stock.tournamentTeamId == tournamentTeam.id && !tournamentTeam.isEliminated
+                      }
+                  }, false)
+              })
+
+              const percentStocksRemaining =  Math.round(initalIpoStocks.length/stocksRemaining.length * 10)/10
+
+              const moneyWonToDateAndRemainIpoValue = stocksRemaining.reduce((result, stock) => {
+                  const matchedTournTeam = tournamentTeams.reduce((matchedTeam, tournamentTeam) => {
+                      if (!matchedTeam.team && tournamentTeam.id == stock.tournamentTeamId) {
+                          return tournamentTeam
+                      }
+                  }, {})
+                  result.moneyWon += matchedTournTeam.milestoneData.dividendPrice
+                  result.remIpoVal += matchedTournTeam.price
+                  return result
+              }, {moneyWon: 0, remIpoVal: 0})
+
+              const percentMoneyWonInvested = moneyWonToDateAndRemainIpoValue.moneyWon/ipoCashSpent
+
+              return  {
+                ownerName: combinedNames,
+                entryName: entry.name,
+                totalInitalInvestment: initialIpoStockInvestment, // initial ipo investment
+                totalInitialStocksOwned: initalIpoStocks.length, //
+                totalCurrentStocksOwned: currentStocksOwned.lenght, //total owned and eliminated
+                stocksRemaining: stocksRemaining.length, //total of whats not eliminated
+                percentStocksRemaining: percentStocksRemaining,
+                totalCurrentTeamsOwned: teamsOwnedMayBeEliminated.lenght, //number teams owned & may have been eliminated
+                totalCurrentTeamsRemaining: teamsOwnedNotEliminated.length, // number of teams that are left in tourn
+                moneyWonToDate: moneyWonToDateAndRemainIpoValue.moneyWon,
+                percentMoneyWonInvested: percentMoneyWonInvested,
+                originalMoneyRemaining: moneyWonToDateAndRemainIpoValue.remIpoVal, //money left from ipo
+                profitLoss: moneyWonToDateAndRemainIpoValue.moneyWon + moneyWonToDateAndRemainIpoValue.remIpoVal - entry.ipoCashSpent - entry.secondaryMarketCashSpent, //money won - ipo - secondary market cash
+                percentMoneyRemaining: (moneyWonToDateAndRemainIpoValue.remIpoVal + moneyWonToDateAndRemainIpoValue.remIpoVal)/(entry.ipoCashSpent + entry.secondaryMarketCashSpent) // allMoney/totalInvestment
+              }
+          })
+          return portfolioSummaries
+      })
+      return result
   }
 };
 

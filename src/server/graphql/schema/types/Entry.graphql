@@ -44,11 +44,30 @@ type EntryBid {
   expiresAt: String
 }
 
+type PortfolioSummary {
+  ownerName: String!,
+  entryName: String!,
+  totalInitalInvestment: Float!, # initial ipo investment
+  totalInitialStocksOwned: Float!,
+  totalCurrentStocksOwned: Float!, #total owned and eliminated
+  stocksRemaining: Float!, #total of whats no eliminated
+  percentStocksRemaining: Float!, #totalInitial/stocksRemaining,
+  totalCurrentTeamsOwned: Float!, #number of specific teams owned and may have been eliminated
+  totalCurrentTeamsRemaining: Float!, #number of teams that are left in tourn
+  moneyWonToDate: Float!,
+  percentMoneyWonInvested: Float!, #moneyWonToDate/totalInvestment,
+  originalMoneyRemaining: Float!, #money left from ipo
+  profitLoss: Float!, #money won - ipo - secondary market cash
+  percentMoneyRemaining: Float!, #originalMoneyr
+}
+
+
 type Query {
   entry(id: ID!): Entry
   entriesByTournamentId(tournamentId: ID!): [Entry]
   getBidsForEntry(entryId: ID!): OfferedBids
   userEntries(email: String!): [Entry]
+  portfolioSummaries(tournamentId: ID!, entryId: ID): [PortfolioSummary]
 }
 
 type Mutation {

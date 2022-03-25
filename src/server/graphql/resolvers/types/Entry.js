@@ -21,6 +21,11 @@ const Entry = {
       const email = input.email;
       const userEntries = await EntryService.userEntries(email);
       return userEntries;
+    },
+    portfolioSummaries: async (_, input) => {
+      const tournamentId = input.tournamentTeamId
+      const entryId = input.entryId
+      const portfolioSummaries = await EntryService.portfolioSummaries(tournamentId, entryId)
     }
   },
 
