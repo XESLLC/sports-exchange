@@ -410,15 +410,19 @@ const EntryService = {
         throw new Error("User not found");
       }
 
-      const userEntry = await UserEntry.findOne({
-        where: {
-          entryId: entry.id,
-          userId: user.id
-        },
-        transaction: t
-      });
-      if(!userEntry) {
-        throw new Error("Not authorized for entry ipo purchase");
+      const adminEmails = ["couvillion@gmail.com", "david.xesllc@gmail.com", "bartsched@gmail.com"];
+      
+      if(!adminEmails.includes(user.email)) {
+        const userEntry = await UserEntry.findOne({
+          where: {
+            entryId: entry.id,
+            userId: user.id
+          },
+          transaction: t
+        });
+        if(!userEntry) {
+          throw new Error("Not authorized for entry ipo purchase");
+        }
       }
 
       const ipoPrice = tournamentTeam.price

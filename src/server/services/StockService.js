@@ -906,41 +906,48 @@ const StockService = {
     return entry;
   },
   deleteStocks: async (entryId, stockIds) => {
-    const result = await instance.transaction(async (t) => {
-      const entry = await Entry.findByPk(entryId, {transaction: t});
+    // const result = await instance.transaction(async (t) => {
+      const entry = await Entry.findByPk(entryId);
 
+      // await StockEntry.destroy({
+      //   where: {
+      //     entryId,
+      //     stockId: stockIds
+      //   }
+      // }, {transaction: t});
       await StockEntry.destroy({
         where: {
           entryId,
           stockId: stockIds
         }
-      }, {transaction: t});
+      });
 
       const stocks = await Stock.findAll({
         where: {
           id: stockIds
-        },
-        transaction: t
+        }
       });
 
-      const tournamentTeam = await TournamentTeam.findByPk(stocks[0].tournamentTeamId, {transaction: t});
+      const tournamentTeam = await TournamentTeam.findByPk(stocks[0].tournamentTeamId);
       const cashAmountToRefund = stockIds.length * tournamentTeam.price;
 
       await Stock.findAll({
         where: {
           id: stockIds
-        },
-        transaction: t
+        }
       });
 
+      // await entry.update({
+      //   ipoCashSpent: entry.ipoCashSpent - cashAmountToRefund
+      // }, {transaction: t});
       await entry.update({
         ipoCashSpent: entry.ipoCashSpent - cashAmountToRefund
-      }, {transaction: t});
+      });
 
       return entry;
-    });
+    // });
 
-    return result;
+    // return result;
   },
   manualTrade: async (entryId, stockIds, receivingEntryId, pricePerStock) => {
     const result = await instance.transaction(async (t) => {
