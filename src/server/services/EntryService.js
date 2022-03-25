@@ -508,12 +508,22 @@ const EntryService = {
   },
   getPortfolioSummary: async (tournamentId, entryId) => {
       const result = await instance.transaction(async (t) => {
-          const entries = await Entry.findAll({
-              where: {
-                  tournamentId: tournamentId
-              },
-              transaction: t
-          });
+          if (!entryId) {
+            const entries = await Entry.findAll({
+                where: {
+                    tournamentId: tournamentId
+                },
+                transaction: t
+            });
+          } else {
+            const entries = await Entry.findAll({
+                where: {
+                    id: entryId
+                },
+                transaction: t
+            });
+          }
+
           const tournamentTeams = await TournamentTeam.findAll({
             where: {
                 tournamentId: tournamentId
