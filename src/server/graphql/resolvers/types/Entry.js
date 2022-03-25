@@ -23,9 +23,10 @@ const Entry = {
       return userEntries;
     },
     portfolioSummaries: async (_, input) => {
-      const tournamentId = input.tournamentTeamId
-      const entryId = input.entryId
-      const portfolioSummaries = await EntryService.portfolioSummaries(tournamentId, entryId)
+      const tournamentId = input.tournamentId;
+      const entryId = input.entryId;
+      const portfolioSummaries = await EntryService.portfolioSummaries(tournamentId, entryId);
+      return portfolioSummaries;
     }
   },
 

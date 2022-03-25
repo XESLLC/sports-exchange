@@ -4,7 +4,7 @@ isNotLocal = (process.env.ENV !== 'local')
 // isNotLocal? aws db : local db
 const database = isNotLocal? 'sports_exchange_db' : 'Exchange';
 const username = isNotLocal? 'admin' : 'root';
-const password = isNotLocal? 'sports-exchange' : 'deavtdc021076';
+const password = isNotLocal? 'sports-exchange' : 'test';
 const host = isNotLocal? 'sports-exchange-db.cg3onfdtaa7j.us-west-2.rds.amazonaws.com' : 'localhost';
 const port = '3306';
 

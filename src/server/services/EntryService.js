@@ -510,129 +510,142 @@ const EntryService = {
 
     return result;
   },
-  getPortfolioSummary: async (tournamentId, entryId) => {
-      const result = await instance.transaction(async (t) => {
-          if (!entryId) {
-            const entries = await Entry.findAll({
-                where: {
-                    tournamentId: tournamentId
-                },
-                transaction: t
-            });
-          } else {
-            const entries = await Entry.findAll({
-                where: {
-                    id: entryId
-                },
-                transaction: t
-            });
+  portfolioSummaries: async (tournamentId, entryId) => {
+    console.log("starting portfolioSummaries")
+    let entries;
+    if (!entryId) {
+      entries = await Entry.findAll({
+          where: {
+              tournamentId: tournamentId
           }
+      });
+    } else {
+      entries = await Entry.findAll({
+          where: {
+              id: entryId
+          }
+      });
+    }
 
-          const tournamentTeams = await TournamentTeam.findAll({
-            where: {
-                tournamentId: tournamentId
-            },
-            transaction: t
-          })
-          const portfolioSummaries = entries.map(async(entry) => {
-              const userEntries = await userEntries.findAll({
-                where: {
-                    entryId: entry.id
-                },
-                transaction: t
-              })
+    const entryIds = entries.map(entry => entry.id);
 
-              let names = []
-              for(let userEntry of userEntries) {
-                  const user = await User.findByPk(userEntry.userId, {transaction: t})
-                  names.push (user.firstName + " " + user.lastName)
+    const userEntries = await UserEntry.findAll({
+      where: {
+          entryId: entryIds
+      }
+    })
+
+    const userIds = userEntries.map(userEntry => userEntry.userId);
+
+    const users = await User.findAll({
+      where: {
+        id: userIds
+      }
+    })
+
+    const tournamentTeams = await TournamentTeam.findAll({
+      where: {
+          tournamentId: tournamentId
+      }
+    })
+
+    const tournamentTeamIds = tournamentTeams.map(tournamentTeam => tournamentTeam.id);
+
+    const stocks = await Stock.findAll({
+      where: {
+        tournamentTeamId: tournamentTeamIds
+      }
+    });
+
+    console.log("before entries map")
+    const portfolioSummaries = await Promise.all(
+        entries.map(async(entry) => {
+          let names = []
+          for(let userEntry of userEntries) {
+              const user = users.find(_user => _user.id = userEntry.userId)
+              names.push (user.firstName + " " + user.lastName)
+          }
+          const combinedNames = names.reduce((result, userName) => {
+              if (result.length > 0) {
+                  return result + " & " + userName
               }
-              const combinedNames = names.reduce((result, userName) => {
-                  if (result.length > 0) {
-                      return result + " & " + userName
+              return userName
+          }, "")
+
+          const initialIpoStocks = stocks.filter(stock => stock.originalIpoEntryId === entry.id)
+
+          const initialIpoStockInvestment = initialIpoStocks.reduce((cost, stock) => {
+              const teams = tournamentTeams.filter((tournamentTeam) => {
+                  return tournamentTeam.id == stock.tournamentTeamId
+              }) // result should always be one team
+              return cost += teams[0].price
+          }, 0)
+
+          const currentStocksOwned = await StockEntry.findAll({
+              where: {
+                  entryId: entry.id
+              }
+          })
+
+          const stocksRemaining = currentStocksOwned.filter((stockOwned) => {
+              const teams = tournamentTeams.filter(team => {
+                  const stockMatch = stocks.find(stock => stock.id === stockOwned.stockId)
+                  return team.id === stockMatch.tournamentTeamId
+              }) // result should always be one team
+              return teams[0].isEliminated? false : true
+          })
+
+          const teamsOwnedMayBeEliminated = tournamentTeams.filter((tournamentTeam) => {
+                return currentStocksOwned.reduce((hasTeam, stock) => {
+                  if (!hasTeam) {
+                      return stock.tournamentTeamId == tournamentTeam.id
                   }
-                  return userName
-              }, "")
-
-              const initalIpoStocks = await Stock.findAll({
-                  where: {
-                      originalIpoEntryId: entryId
-                  },
-                  transaction: t
-              })
-
-              const initialIpoStockInvestment = initialIpoStocks.reduce((cost, stock) => {
-                  const teams = tournamentTeams.filter((tournamentTeam) => {
-                      return tournamentTeam.id == stock.tournamentTeamId
-                  }) // result should always be one team
-                  return cost += teams[0].price
-              }, 0)
-
-              const currentStocksOwned = await StockEntry.findAll({
-                  where: {
-                      entryId: entry.id
-                  },
-                  transaction: t
-              })
-
-              const stocksRemaining = currentStocksOwned.filter((stock) => {
-                  const teams = tournamentTeams.filter(team => {
-                      return teams[0].id === stock.tournamentTeamId
-                  }) // result should always be one team
-                  return teams[0].isEliminated? false : true
-              })
-
-              const teamsOwnedMayBeEliminated = tournamentTeams.filter((tournamentTeam) => {
-                   return currentStocksOwned.reduce((hasTeam, stock) => {
-                      if (!hasTeam) {
-                          return stock.tournamentTeamId == tournamentTeam.id
-                      }
-                  }, false)
-              })
-
-              const teamsOwnedNotEliminated = tournamentTeams.filter((tournamentTeam) => {
-                   return currentStocksOwned.reduce((hasTeam, stock) => {
-                      if (!hasTeam) {
-                          return stock.tournamentTeamId == tournamentTeam.id && !tournamentTeam.isEliminated
-                      }
-                  }, false)
-              })
-
-              const percentStocksRemaining =  Math.round(initalIpoStocks.length/stocksRemaining.length * 10)/10
-
-              const moneyWonToDateAndRemainIpoValue = stocksRemaining.reduce((result, stock) => {
-                  const matchedTournTeam = tournamentTeams.reduce((matchedTeam, tournamentTeam) => {
-                      if (!matchedTeam.team && tournamentTeam.id == stock.tournamentTeamId) {
-                          return tournamentTeam
-                      }
-                  }, {})
-                  result.moneyWon += matchedTournTeam.milestoneData.dividendPrice
-                  result.remIpoVal += matchedTournTeam.price
-                  return result
-              }, {moneyWon: 0, remIpoVal: 0})
-
-              const percentMoneyWonInvested = moneyWonToDateAndRemainIpoValue.moneyWon/ipoCashSpent
-
-              return  {
-                ownerName: combinedNames,
-                entryName: entry.name,
-                totalInitalInvestment: initialIpoStockInvestment, // initial ipo investment
-                totalInitialStocksOwned: initalIpoStocks.length, //
-                totalCurrentStocksOwned: currentStocksOwned.lenght, //total owned and eliminated
-                stocksRemaining: stocksRemaining.length, //total of whats not eliminated
-                percentStocksRemaining: percentStocksRemaining,
-                totalCurrentTeamsOwned: teamsOwnedMayBeEliminated.lenght, //number teams owned & may have been eliminated
-                totalCurrentTeamsRemaining: teamsOwnedNotEliminated.length, // number of teams that are left in tourn
-                moneyWonToDate: moneyWonToDateAndRemainIpoValue.moneyWon,
-                percentMoneyWonInvested: percentMoneyWonInvested,
-                originalMoneyRemaining: moneyWonToDateAndRemainIpoValue.remIpoVal, //money left from ipo
-                profitLoss: moneyWonToDateAndRemainIpoValue.moneyWon + moneyWonToDateAndRemainIpoValue.remIpoVal - entry.ipoCashSpent - entry.secondaryMarketCashSpent, //money won - ipo - secondary market cash
-                percentMoneyRemaining: (moneyWonToDateAndRemainIpoValue.remIpoVal + moneyWonToDateAndRemainIpoValue.remIpoVal)/(entry.ipoCashSpent + entry.secondaryMarketCashSpent) // allMoney/totalInvestment
-              }
+              }, false)
           })
-          return portfolioSummaries
+
+          const teamsOwnedNotEliminated = tournamentTeams.filter((tournamentTeam) => {
+                return currentStocksOwned.reduce((hasTeam, stock) => {
+                  if (!hasTeam) {
+                      return stock.tournamentTeamId == tournamentTeam.id && !tournamentTeam.isEliminated
+                  }
+              }, false)
+          })
+
+          const percentStocksRemaining = Math.round(initialIpoStocks.length/stocksRemaining.length * 10)/10
+
+          const moneyWonToDateAndRemainIpoValue = stocksRemaining.reduce((result, stock) => {
+              const matchedTournTeam = tournamentTeams.reduce((matchedTeam, tournamentTeam) => {
+                  if (!matchedTeam.team && tournamentTeam.id == stock.tournamentTeamId) {
+                      return tournamentTeam
+                  }
+              }, {})
+              result.moneyWon += matchedTournTeam.milestoneData.dividendPrice
+              result.remIpoVal += matchedTournTeam.price
+              return result
+          }, {moneyWon: 0, remIpoVal: 0})
+
+          const percentMoneyWonInvested = moneyWonToDateAndRemainIpoValue.moneyWon/ipoCashSpent
+
+          return  {
+            ownerName: combinedNames,
+            entryName: entry.name,
+            totalInitalInvestment: initialIpoStockInvestment, // initial ipo investment
+            totalInitialStocksOwned: initialIpoStocks.length, //
+            totalCurrentStocksOwned: currentStocksOwned.length, //total owned and eliminated
+            stocksRemaining: stocksRemaining.length, //total of whats not eliminated
+            percentStocksRemaining: percentStocksRemaining,
+            totalCurrentTeamsOwned: teamsOwnedMayBeEliminated.length, //number teams owned & may have been eliminated
+            totalCurrentTeamsRemaining: teamsOwnedNotEliminated.length, // number of teams that are left in tourn
+            moneyWonToDate: moneyWonToDateAndRemainIpoValue.moneyWon,
+            percentMoneyWonInvested: percentMoneyWonInvested,
+            originalMoneyRemaining: moneyWonToDateAndRemainIpoValue.remIpoVal, //money left from ipo
+            profitLoss: moneyWonToDateAndRemainIpoValue.moneyWon + moneyWonToDateAndRemainIpoValue.remIpoVal - entry.ipoCashSpent - entry.secondaryMarketCashSpent, //money won - ipo - secondary market cash
+            percentMoneyRemaining: (moneyWonToDateAndRemainIpoValue.remIpoVal + moneyWonToDateAndRemainIpoValue.remIpoVal)/(entry.ipoCashSpent + entry.secondaryMarketCashSpent) // allMoney/totalInvestment
+          }
       })
-      return result
+    )
+    console.log("portfolio summaries return: " + JSON.stringify(portfolioSummaries))
+    return portfolioSummaries
   }
 };
 
