@@ -631,7 +631,7 @@ const StockService = {
       });
     // });
 
-    return result;
+    // return result;
   },
   tradeStocks: async (email, entryId, stockIdToTradeFor, quantity, tradableTeams, teamName) => {
     const result = await instance.transaction(async (t) => {
@@ -831,7 +831,7 @@ const StockService = {
 
       const passiveUserEntries = await UserEntry.findAll({
         where: {
-          entryId
+          entryId: otherUserEntryId
         },
         transaction: t
       });
