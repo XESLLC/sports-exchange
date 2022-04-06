@@ -435,183 +435,185 @@ const StockService = {
 
       // check for and execute matched trades
       // search for stocks available that i do not own
-      let matchedBids = await EntryBid.findAll({
-        where: {
-          entryId: {
-            [Op.not]: entryId
-          },
-          tournamentTeamId
-        }
-      });
-      // this is a hack because [Op.gte] is not working correctly
-      matchedBids = matchedBids.filter(bid => bid.price >= newPrice);
-      const totalQuantityOfMatchedBids = matchedBids.reduce((result, bid) => {
-        return result += bid.quantity
-      }, 0);
-
-      const iteratorVal = Math.min(totalQuantityOfMatchedBids, quantity);
-      let trades = [];
-      let transactionCounter = 0;
-      let entryBidQuantityObj = {};
-      for(let bid of matchedBids) {
-        const currentQuantityOfBids = Object.keys(entryBidQuantityObj).reduce((result, entryId) => {
-          return result += entryBidQuantityObj[entryId].quantity;
+      if(newPrice && newPrice > 0) {
+        let matchedBids = await EntryBid.findAll({
+          where: {
+            entryId: {
+              [Op.not]: entryId
+            },
+            tournamentTeamId
+          }
+        });
+        // this is a hack because [Op.gte] is not working correctly
+        matchedBids = matchedBids.filter(bid => bid.price >= newPrice);
+        const totalQuantityOfMatchedBids = matchedBids.reduce((result, bid) => {
+          return result += bid.quantity
         }, 0);
 
-        if(currentQuantityOfBids < iteratorVal) {
-          if(!entryBidQuantityObj[bid.entryId]) {
-            const quantityToAdd = Math.min(bid.quantity, iteratorVal);
-            entryBidQuantityObj[bid.entryId] = quantityToAdd;
+        const iteratorVal = Math.min(totalQuantityOfMatchedBids, quantity);
+        let trades = [];
+        let transactionCounter = 0;
+        let entryBidQuantityObj = {};
+        for(let bid of matchedBids) {
+          const currentQuantityOfBids = Object.keys(entryBidQuantityObj).reduce((result, entryId) => {
+            return result += entryBidQuantityObj[entryId].quantity;
+          }, 0);
+
+          if(currentQuantityOfBids < iteratorVal) {
+            if(!entryBidQuantityObj[bid.entryId]) {
+              const quantityToAdd = Math.min(bid.quantity, iteratorVal);
+              entryBidQuantityObj[bid.entryId] = quantityToAdd;
+            }
           }
         }
-      }
 
-      await Promise.all(
-        Object.keys(entryBidQuantityObj).map(async (buyerEntryId) => {
-          const buyerEntry = await Entry.findOne({
-            where: {
-              id: buyerEntryId
-            }
-          });
-
-          buyerEntry.secondaryMarketCashSpent += (newPrice * entryBidQuantityObj[buyerEntryId]);
-          await buyerEntry.save();
-          entry.secondaryMarketCashSpent -= (newPrice * entryBidQuantityObj[buyerEntryId]);
-          await entry.save();
-        })
-      );
-
-      let buyerEntryForEmail;
-      let amountPerShare;
-      if(transactionCounter < iteratorVal) {
-        const transactionGroupId = uuidv4();
-        for(let i = 0; i < matchedBids.length; i++) {
-          let stockToUpdate;
-          if(i === 0) {
-            stockToUpdate = stocksToUpdate.splice(0, matchedBids[i].quantity);
-          } else {
-            const alreadyUpdatedIndex = matchedBids.reduce((result, bid, _index) => {
-              if(_index < i) {
-                result += bid.quantity;
+        await Promise.all(
+          Object.keys(entryBidQuantityObj).map(async (buyerEntryId) => {
+            const buyerEntry = await Entry.findOne({
+              where: {
+                id: buyerEntryId
               }
-            }, 1);
-            stockToUpdate = stocksToUpdate.splice(alreadyUpdatedIndex, matchedBids[i].quantity);
-          }
+            });
 
-          const buyerEntry = await Entry.findOne({
-            where: {
-              id: matchedBids[i].entryId
-            }
-          });
-          if(!buyerEntry) {
-            throw new Error("Entry for buyer not found");
-          }
-          buyerEntryForEmail = JSON.parse(JSON.stringify(buyerEntry));
+            buyerEntry.secondaryMarketCashSpent += (newPrice * entryBidQuantityObj[buyerEntryId]);
+            await buyerEntry.save();
+            entry.secondaryMarketCashSpent -= (newPrice * entryBidQuantityObj[buyerEntryId]);
+            await entry.save();
+          })
+        );
 
-          await Promise.all(
-            stockToUpdate.map(async (stock) => {
-              const stockEntryToTrade = await StockEntry.findOne({
-                where: {
-                  stockId: stock.id
+        let buyerEntryForEmail;
+        let amountPerShare;
+        if(transactionCounter < iteratorVal) {
+          const transactionGroupId = uuidv4();
+          for(let i = 0; i < matchedBids.length; i++) {
+            let stockToUpdate;
+            if(i === 0) {
+              stockToUpdate = stocksToUpdate.splice(0, matchedBids[i].quantity);
+            } else {
+              const alreadyUpdatedIndex = matchedBids.reduce((result, bid, _index) => {
+                if(_index < i) {
+                  result += bid.quantity;
                 }
-              });
-              if(!stockEntryToTrade) {
-                throw new Error("Stock entry to trade not found");
+              }, 1);
+              stockToUpdate = stocksToUpdate.splice(alreadyUpdatedIndex, matchedBids[i].quantity);
+            }
+
+            const buyerEntry = await Entry.findOne({
+              where: {
+                id: matchedBids[i].entryId
               }
-    
-              stockEntryToTrade.entryId = buyerEntry.id;
-              await stockEntryToTrade.save();
-    
-              const tradePrice = stock.price;
-              amountPerShare = stock.price;
-              stock.price = null;
-              await stock.save();
-    
-              const sellerTransaction = await Transaction.create({
-                entryId,
-                stockId: stock.id,
-                quantity: 1,
-                cost: (tradePrice * -1),
-                groupId: transactionGroupId
-              });
-    
-              const buyerTransaction = await Transaction.create({
-                entryId: buyerEntry.id,
-                stockId: stock.id,
-                quantity: 1,
-                cost: tradePrice,
-                groupId: transactionGroupId
-              });
-    
-              trades.push({
-                ...sellerTransaction.toJSON(),
-                teamName: team.name,
-                tournamentTeamId
-              });
-    
-              trades.push({
-                ...buyerTransaction.toJSON(),
-                teamName: team.name,
-                tournamentTeamId
-              });
-            })
-          );
+            });
+            if(!buyerEntry) {
+              throw new Error("Entry for buyer not found");
+            }
+            buyerEntryForEmail = JSON.parse(JSON.stringify(buyerEntry));
 
-          matchedBids[i].quantity -= stockToUpdate.length;
-          await matchedBids[i].save();
-          transactionCounter += stockToUpdate.length;
-        }
-      }
+            await Promise.all(
+              stockToUpdate.map(async (stock) => {
+                const stockEntryToTrade = await StockEntry.findOne({
+                  where: {
+                    stockId: stock.id
+                  }
+                });
+                if(!stockEntryToTrade) {
+                  throw new Error("Stock entry to trade not found");
+                }
+      
+                stockEntryToTrade.entryId = buyerEntry.id;
+                await stockEntryToTrade.save();
+      
+                const tradePrice = stock.price;
+                amountPerShare = stock.price;
+                stock.price = null;
+                await stock.save();
+      
+                const sellerTransaction = await Transaction.create({
+                  entryId,
+                  stockId: stock.id,
+                  quantity: 1,
+                  cost: (tradePrice * -1),
+                  groupId: transactionGroupId
+                });
+      
+                const buyerTransaction = await Transaction.create({
+                  entryId: buyerEntry.id,
+                  stockId: stock.id,
+                  quantity: 1,
+                  cost: tradePrice,
+                  groupId: transactionGroupId
+                });
+      
+                trades.push({
+                  ...sellerTransaction.toJSON(),
+                  teamName: team.name,
+                  tournamentTeamId
+                });
+      
+                trades.push({
+                  ...buyerTransaction.toJSON(),
+                  teamName: team.name,
+                  tournamentTeamId
+                });
+              })
+            );
 
-      for(let bid of matchedBids) {
-        if(bid.quantity === 0) {
-          await bid.destroy();
-        }
-      }
-
-      if(transactionCounter > 0) {
-        const plural = transactionCounter > 1 ? 's' : '';
-        const message = `You sold ${transactionCounter} share${plural} of ${team.name} to ${buyerEntryForEmail.name} for $${amountPerShare} per share`;
-        const buyerMessage = `You bought ${transactionCounter} share${plural} of ${team.name} from ${entry.name} for $${amountPerShare} per share`;
-    
-        const userEntries = await UserEntry.findAll({
-          where: {
-            entryId
+            matchedBids[i].quantity -= stockToUpdate.length;
+            await matchedBids[i].save();
+            transactionCounter += stockToUpdate.length;
           }
-        });
-    
-        const userIds = userEntries.map(userEntry => userEntry.userId);
-    
-        const users = await User.findAll({
-          where: {
-            id: userIds
-          }
-        });
-    
-        const emailAddressToSendTradeNotification = users.map(user => user.email);
-    
-        for(let email of emailAddressToSendTradeNotification) {
-          await sendEmail(email, 'Trade Notification', message);
         }
 
-        const buyerEntries = await UserEntry.findAll({
-          where: {
-            entryId: buyerEntryForEmail.id
+        for(let bid of matchedBids) {
+          if(bid.quantity === 0) {
+            await bid.destroy();
           }
-        });
+        }
 
-        const buyerUserIds = buyerEntries.map(userEntry => userEntry.userId);
-    
-        const buyerUsers = await User.findAll({
-          where: {
-            id: buyerUserIds
+        if(transactionCounter > 0) {
+          const plural = transactionCounter > 1 ? 's' : '';
+          const message = `You sold ${transactionCounter} share${plural} of ${team.name} to ${buyerEntryForEmail.name} for $${amountPerShare} per share`;
+          const buyerMessage = `You bought ${transactionCounter} share${plural} of ${team.name} from ${entry.name} for $${amountPerShare} per share`;
+      
+          const userEntries = await UserEntry.findAll({
+            where: {
+              entryId
+            }
+          });
+      
+          const userIds = userEntries.map(userEntry => userEntry.userId);
+      
+          const users = await User.findAll({
+            where: {
+              id: userIds
+            }
+          });
+      
+          const emailAddressToSendTradeNotification = users.map(user => user.email);
+      
+          for(let email of emailAddressToSendTradeNotification) {
+            await sendEmail(email, 'Trade Notification', message);
           }
-        });
-    
-        const buyerEmailAddressToSendTradeNotification = buyerUsers.map(user => user.email);
-    
-        for(let email of buyerEmailAddressToSendTradeNotification) {
-          await sendEmail(email, 'Trade Notification', buyerMessage)
+
+          const buyerEntries = await UserEntry.findAll({
+            where: {
+              entryId: buyerEntryForEmail.id
+            }
+          });
+
+          const buyerUserIds = buyerEntries.map(userEntry => userEntry.userId);
+      
+          const buyerUsers = await User.findAll({
+            where: {
+              id: buyerUserIds
+            }
+          });
+      
+          const buyerEmailAddressToSendTradeNotification = buyerUsers.map(user => user.email);
+      
+          for(let email of buyerEmailAddressToSendTradeNotification) {
+            await sendEmail(email, 'Trade Notification', buyerMessage)
+          }
         }
       }
 
