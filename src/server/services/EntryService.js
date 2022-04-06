@@ -411,7 +411,7 @@ const EntryService = {
       }
 
       const adminEmails = ["couvillion@gmail.com", "david.xesllc@gmail.com", "bartsched@gmail.com"];
-      
+
       if(!adminEmails.includes(user.email)) {
         const userEntry = await UserEntry.findOne({
           where: {
@@ -511,8 +511,8 @@ const EntryService = {
     return result;
   },
   portfolioSummaries: async (tournamentId, entryId) => {
-    console.log("starting portfolioSummaries")
-    let entries;
+    console.log("starting portfolioSummaries at ", new Date())
+    let entries
     if (!entryId) {
       entries = await Entry.findAll({
           where: {
@@ -526,7 +526,7 @@ const EntryService = {
           }
       });
     }
-
+    if (!entries && entries.length < 1) {throw new Error('Entries not found')}
     const entryIds = entries.map(entry => entry.id);
 
     const userEntries = await UserEntry.findAll({
@@ -534,133 +534,210 @@ const EntryService = {
           entryId: entryIds
       }
     })
+    if (!userEntries && userEntries.length < 1) {throw new Error('userEntries not found')}
 
-    const userIds = userEntries.map(userEntry => userEntry.userId);
-
+    const userIds = userEntries.map(userEntry => userEntry.userId)
     const users = await User.findAll({
       where: {
         id: userIds
       }
     })
+    if (!users && users.length < 1) {throw new Error('users not found')}
 
     const tournamentTeams = await TournamentTeam.findAll({
       where: {
           tournamentId: tournamentId
       }
     })
-
-    const tournamentTeamIds = tournamentTeams.map(tournamentTeam => tournamentTeam.id);
+    if (!tournamentTeams && tournamentTeams.length < 1) {throw new Error('userEntries not found')}
+    const tournamentTeamIds = tournamentTeams.map(tournamentTeam => tournamentTeam.id)
+    const teamsNotEliminated = tournamentTeams.filter(team => !team.isEliminated)
+    const teamsNotEliminatedIds = teamsNotEliminated.map(team => team.id)
 
     const stocks = await Stock.findAll({
       where: {
         tournamentTeamId: tournamentTeamIds
       }
     });
+    if (!stocks && stocks.length < 1) {throw new Error('userEntries not found')}
+
+    const stocksNotEliminated = stocks.filter(stock => {
+        return teamsNotEliminatedIds.includes(stock.tournamentTeamId)
+    })
+    const stocksNotEliminatedIds = stocksNotEliminated.map(stock => stock.id)
 
     const stockEntries = await StockEntry.findAll({
       where: {
           entryId: entryIds
       }
     })
+    if (!stockEntries && stockEntries.length < 1) {throw new Error('userEntries not found')}
 
-    console.log("before entries map")
+    // don't remove this
+    // const teamMap = stockEntries.reduce((resultMap, stockEntry) => {
+    //     stock = stocks.find(stock => stock.id == stockEntry.stockId)
+    //     matchedTournTeam = tournamentTeams.find(team => team.id == stock.tournamentTeamId)
+    //     if (resultMap[matchedTournTeam.id]) {
+    //         resultMap[matchedTournTeam.id] = resultMap[matchedTournTeam.id] + 1
+    //         return resultMap
+    //     } else {
+    //         resultMap[matchedTournTeam.id] = 1
+    //         return resultMap
+    //     }
+    // }, {})
+    //hard coded below to increase speed of resolver
+
+    const teamMap = {
+      'c749e0b8-6a98-465a-b125-6e3aed0a6346': 658,
+      'c3c6604c-6726-4adc-8d1c-5e894ec17bf3': 903,
+      '077f3ff2-38a2-4517-b313-dd25144d2ee9': 667,
+      'e61e6356-849b-4786-b2bd-a77f77c74bfd': 427,
+      'da2d38fc-97d3-4b65-a173-4f390fab3548': 255,
+      'ff17cf65-8e0a-4cbb-8c97-d292afcb6631': 403,
+      'a26e0284-5de8-4bb2-8bb2-e0dd96e3235f': 1358,
+      '47da00d7-9492-430c-b078-f291932a9da5': 472,
+      'c2ee3bfe-bf95-4983-b8f1-8f4472403cea': 853,
+      'a78a7a40-2001-445a-bbe0-a2a9d69c7064': 266,
+      'd2f4f63a-a93a-40da-a44e-daa906674c20': 467,
+      '7df0dccd-b982-4e93-a335-cc1351b3282d': 165,
+      'be414eef-9fa2-4032-8903-002fde837307': 534,
+      '27f36330-e434-450c-b993-c491250db2e7': 621,
+      'e3af3d43-93fb-4b56-b95e-ae1baf3a6e11': 11,
+      '9d5a9da0-0a45-4ca3-b2d0-bcea005ef356': 548,
+      'ecbd0cc4-4b77-48cd-b4cb-87f913d205a6': 377,
+      'cd509e21-cf32-4d83-8845-55fa00fe11da': 432,
+      '3f45fd20-0f03-4366-8613-3eeb378ef6d7': 167,
+      '4b093674-38aa-4cda-8ebe-d64a5903bcf2': 260,
+      '273d8f72-bf22-44a5-807b-5d542a564a66': 1476,
+      'af5afc52-eb40-42bf-8aae-803cd31334e8': 107,
+      '147fc272-70fe-4d73-9f13-e2826a1ae33a': 619,
+      'a8ec1c75-a08f-4b27-9be2-2ff352c4d341': 315,
+      'add873d4-0609-4f5d-a0a4-e11b26d7f539': 243,
+      '52ed362f-6762-4058-a0ff-c2c9611d1333': 83,
+      'd3d0e1a6-8018-4ab6-af6e-5a0bfc33d937': 273,
+      'db0d2783-1bb0-4c3e-b8fb-25a2f8fd576b': 820,
+      'befefa72-e0e1-4beb-ace7-c4a40799b84d': 864,
+      '24879bbb-0d8c-4ee5-86b5-00a88a9fe673': 244,
+      'bd549359-13a1-49a5-9c7b-6671fe0f0c83': 182,
+      '92eb2c26-4fe6-4cb3-97a7-cf1ea7c4f680': 87,
+      '98376461-43f0-47c9-85ad-f2c31ecbea16': 424,
+      '8a0f28f6-5c1c-4f14-bcd0-21ec9da1ca16': 423,
+      '5b4cb970-744b-4dcc-b921-1733b9a2e268': 584,
+      'f4d7687d-b760-48c2-b386-7caf856028f6': 292,
+      '08fe0cd5-e278-441f-9cd0-b84c0fcc6d9b': 211,
+      '998ca6b0-cd77-4751-be23-c99d15e9be79': 388,
+      'bd79c4d3-6f07-4348-8bbf-106377ab1568': 394,
+      '5fb9a856-2f52-4405-a168-fe53e00b9feb': 976,
+      'ae7cc98f-92aa-40e7-903d-0df15823cfc1': 147,
+      '6421d58b-b65a-4c6e-abaf-80fa9a4b8589': 356,
+      '7a671b5f-aba0-42b4-88b6-52a7894cd479': 988,
+      '4d54dbea-9867-4f5e-ba5c-47b9cee7bb2a': 471,
+      'da3a89c0-f5c5-4c2d-bff2-ae76b5d2c682': 430,
+      'cb2862e9-9e23-4921-86d6-db15c01df6bf': 182,
+      'c2a00621-10db-4fb4-866a-d2f8a1392781': 437,
+      'f30f5443-fd37-4e80-8865-9319fad9389d': 359,
+      '07946ed1-2379-4b26-8d59-423e1c6f2ba4': 245,
+      '6aee9924-d88b-453b-8d44-7e503ec0ad05': 171,
+      '56cf2f24-d5e3-4fea-aff7-1d698f610b06': 198,
+      'eea0c4ab-6d25-4795-ac61-fedfff642028': 174,
+      '0be67dd6-b79b-4233-9991-d664e29d9145': 276,
+      '70049f35-3157-4cd5-a2bc-09ac570deec7': 449,
+      '45015b9c-4f37-4041-af96-f1164c74513c': 175,
+      'c2040731-0720-46e9-8a44-fa0cef7bd48e': 163,
+      'cafdfa26-1f14-4c6a-b6bd-c1bfbafa7649': 331,
+      '12e7180d-25f7-4797-93be-11e550729c1c': 226,
+      '44eae352-8590-4aed-ae90-ab0d76d63fa8': 293,
+      '0934bc19-72bf-478f-96d2-e6ae3843ca43': 181,
+      '6ba55776-15f3-40b0-8326-55c38843e20e': 60,
+      '4b5c5d77-497e-49fc-a65d-df3b30768857': 38,
+      '99d44da7-61f7-4404-83e6-5988ffce3cf6': 94,
+      '3c4e3b73-fff0-47f9-a222-8448eabc88c1': 1,
+      'd5222616-fcdb-4806-9d9d-60f035088fbf': 2,
+      '82a7cc12-8298-4eaf-abac-30cf571dda8c': 2,
+      'cb736876-cadd-41b8-992c-e1ecb83edbfc': 1,
+      'f7442289-62fc-4ddb-85af-7825c34c7d9f': 1
+    }
+
+    console.log("Team Map ", teamMap)
+
     const portfolioSummaries = entries.map((entry) => {
-        // let names = []
-        // for(let userEntry of userEntries) {
-        //     const user = users.find(_user => _user.id = userEntry.userId)
-        //     names.push (user.firstName + " " + user.lastName)
-        // }
-        // const combinedNames = names.reduce((result, userName) => {
-        //     if (result.length > 0) {
-        //         return result + " & " + userName
-        //     }
-        //     return userName
-        // }, "")
+        console.log("Mapping Entries - creating portfolio Summary for >>>> ", entry.id)
 
-        // const initialIpoStocks = stocks.filter(stock => stock.originalIpoEntryId === entry.id)
+        const ipoCashSpent = entry.ipoCashSpent? entry.ipoCashSpent : 0
+        const secondaryMarketCashSpent = entry.secondaryMarketCashSpent? entry.secondaryMarketCashSpent : 0
 
-        // const initialIpoStockInvestment = initialIpoStocks.reduce((cost, stock) => {
-        //     const teams = tournamentTeams.filter((tournamentTeam) => {
-        //         return tournamentTeam.id == stock.tournamentTeamId
-        //     }) // result should always be one team
-        //     return cost += teams[0].price
-        // }, 0)
+        //combining names for multiple users per entry
+        let names = []
+        for(let userEntry of userEntries) {
+            const user = users.find(_user => userEntry.entryId == entry.id && _user.id == userEntry.userId)
+            if (user) {names.push(user.firstname + " " + user.lastname)}
+        }
+        const combinedNames = names.reduce((result, userName) => {
+            if (result.length > 0) {
+                return result + " & " + userName
+            }
+            return userName
+        }, "")
 
-        // const currentStocksOwned = stockEntries.filter(stockEntry => stockEntry.entryId === entry.id)
+        const initialIpoStocks = stocks.filter(stock => stock.originalIpoEntryId == entry.id)
 
-        // const stocksRemaining = currentStocksOwned.filter((stockOwned) => {
-        //     const teams = tournamentTeams.filter(team => {
-        //         const stockMatch = stocks.find(stock => stock.id === stockOwned.stockId)
-        //         return team.id === stockMatch.tournamentTeamId
-        //     }) // result should always be one team
-        //     return teams[0].isEliminated? false : true
-        // })
+        const stockEntriesOwned = stockEntries.filter(stockEntry => stockEntry.entryId == entry.id)
 
-        // const teamsOwnedMayBeEliminated = tournamentTeams.filter((tournamentTeam) => {
-        //       return currentStocksOwned.reduce((hasTeam, stock) => {
-        //         if (!hasTeam) {
-        //             return stock.tournamentTeamId == tournamentTeam.id
-        //         }
-        //     }, false)
-        // })
+        const calcResults = stockEntriesOwned.reduce((result, stockEntry) => {
+            stock = stocks.find(stock => stock.id == stockEntry.stockId)
 
-        // const teamsOwnedNotEliminated = tournamentTeams.filter((tournamentTeam) => {
-        //       return currentStocksOwned.reduce((hasTeam, stock) => {
-        //         if (!hasTeam) {
-        //             return stock.tournamentTeamId == tournamentTeam.id && !tournamentTeam.isEliminated
-        //         }
-        //     }, false)
-        // })
+            matchedTournTeam = tournamentTeams.find(team => team.id == stock.tournamentTeamId)
 
-        // const percentStocksRemaining = Math.round(initialIpoStocks.length/stocksRemaining.length * 10)/10
+            if (!!matchedTournTeam && result.teamsOwned.indexOf(matchedTournTeam.id) === -1) {
+                result.teamsOwned.push(matchedTournTeam.id)
+            }
 
-        // const moneyWonToDateAndRemainIpoValue = stocksRemaining.reduce((result, stock) => {
-        //     const matchedTournTeam = tournamentTeams.reduce((matchedTeam, tournamentTeam) => {
-        //         if (!matchedTeam.team && tournamentTeam.id == stock.tournamentTeamId) {
-        //             return tournamentTeam
-        //         }
-        //     }, {})
-        //     result.moneyWon += matchedTournTeam.milestoneData.dividendPrice
-        //     result.remIpoVal += matchedTournTeam.price
-        //     return result
-        // }, {moneyWon: 0, remIpoVal: 0})
+            matchedTournTeamAlive = teamsNotEliminated.find(team => team.id == stock.tournamentTeamId)
 
-        // const percentMoneyWonInvested = moneyWonToDateAndRemainIpoValue.moneyWon/ipoCashSpent
+            if (!!matchedTournTeamAlive) {
+                if (result.teamsOwnedInTourn.indexOf(matchedTournTeamAlive.id) === -1) {
+                    result.teamsOwnedInTourn.push(matchedTournTeamAlive.id)
+                }
+                result.stockEntriesRemaining += 1
+                result.stockEntriesRemainingMoney += matchedTournTeamAlive.price
+            }
 
-        // return  {
-        //   ownerName: combinedNames,
-        //   entryName: entry.name,
-        //   totalInitalInvestment: initialIpoStockInvestment, // initial ipo investment
-        //   totalInitialStocksOwned: initialIpoStocks.length, //
-        //   totalCurrentStocksOwned: currentStocksOwned.length, //total owned and eliminated
-        //   stocksRemaining: stocksRemaining.length, //total of whats not eliminated
-        //   percentStocksRemaining: percentStocksRemaining,
-        //   totalCurrentTeamsOwned: teamsOwnedMayBeEliminated.length, //number teams owned & may have been eliminated
-        //   totalCurrentTeamsRemaining: teamsOwnedNotEliminated.length, // number of teams that are left in tourn
-        //   moneyWonToDate: moneyWonToDateAndRemainIpoValue.moneyWon,
-        //   percentMoneyWonInvested: percentMoneyWonInvested,
-        //   originalMoneyRemaining: moneyWonToDateAndRemainIpoValue.remIpoVal, //money left from ipo
-        //   profitLoss: moneyWonToDateAndRemainIpoValue.moneyWon + moneyWonToDateAndRemainIpoValue.remIpoVal - entry.ipoCashSpent - entry.secondaryMarketCashSpent, //money won - ipo - secondary market cash
-        //   percentMoneyRemaining: (moneyWonToDateAndRemainIpoValue.remIpoVal + moneyWonToDateAndRemainIpoValue.remIpoVal)/(entry.ipoCashSpent + entry.secondaryMarketCashSpent) // allMoney/totalInvestment
-        // }
+            const entryMoney = matchedTournTeam.milestoneData.reduce((moneyEarned, milestone) => {
+                moneyEarned += milestone.dividendPrice? milestone.dividendPrice : 0
+                return moneyEarned
+            }, 0)
+            numberOfStocksPerTeam = teamMap[matchedTournTeam.id]
+
+            result.moneyWon += Math.floor((entryMoney/numberOfStocksPerTeam)*100)/100
+            return result
+        }, {moneyWon: 0, stockEntriesRemaining: 0, teamsOwned: [], teamsOwnedInTourn: [], stockEntriesRemainingMoney: 0 })
+
+        const percentStocksRemaining = stockEntriesOwned.length > 0? Math.round(calcResults.stockEntriesRemaining/stockEntriesOwned.length * 10000)/100 : 0
+
+        const percentMoneyWonInvested = ipoCashSpent > 0? calcResults.moneyWon / ipoCashSpent : 0
+
+        const profitLoss = Math.round((calcResults.moneyWon - ipoCashSpent - secondaryMarketCashSpent)*100)/100
+
+        const percentMoneyRemaining = (ipoCashSpent)? Math.round((calcResults.moneyWon + calcResults.stockEntriesRemainingMoney + secondaryMarketCashSpent)/(ipoCashSpent)  * 100)/ 100 : 0
+
         return  {
-          ownerName: "",
-          entryName: "",
-          totalInitalInvestment: 0, // initial ipo investment
-          totalInitialStocksOwned: 0, //
-          totalCurrentStocksOwned: 0, //total owned and eliminated
-          stocksRemaining: 0, //total of whats not eliminated
-          percentStocksRemaining: 0,
-          totalCurrentTeamsOwned: 0, //number teams owned & may have been eliminated
-          totalCurrentTeamsRemaining: 0, // number of teams that are left in tourn
-          moneyWonToDate: 0,
-          percentMoneyWonInvested: 0,
-          originalMoneyRemaining: 0, //money left from ipo
-          profitLoss: 0, //money won - ipo - secondary market cash
-          percentMoneyRemaining: 0 // allMoney/totalInvestment
+          ownerName: combinedNames,
+          entryName: entry.name,
+          totalInitialInvestment: ipoCashSpent, // initial ipo investment
+          totalInitialStocksOwned: initialIpoStocks.length, //
+          totalCurrentStocksOwned: stockEntriesOwned.length, //total owned and eliminated
+          stocksRemaining: calcResults.stockEntriesRemaining, //total of whats not eliminated
+          percentStocksRemaining: percentStocksRemaining,
+          totalCurrentTeamsOwned: calcResults.teamsOwned.length, //number teams owned & may have been eliminated
+          totalCurrentTeamsRemaining: calcResults.teamsOwnedInTourn.length , // number of teams that are left in tourn
+          moneyWonToDate: Math.floor(calcResults.moneyWon*100)/100,
+          percentMoneyWonInvested: Math.round(percentMoneyWonInvested*100)/100,//   money won/ ipo money
+          originalMoneyRemaining: Math.round(calcResults.stockEntriesRemainingMoney * 100)/100, //stocks left (at IPO price)
+          profitLoss: profitLoss, //money won - ipo - secondary market cash
+          percentMoneyRemaining:  percentMoneyRemaining // allMoney/initial Ipo Investment
         }
     })
-    console.log("portfolio summaries return: " + JSON.stringify(portfolioSummaries))
+    console.log("finished Portfolio Summaries at ", new Date())
     return portfolioSummaries
   }
 };

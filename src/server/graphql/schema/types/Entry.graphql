@@ -47,7 +47,7 @@ type EntryBid {
 type PortfolioSummary {
   ownerName: String!,
   entryName: String!,
-  totalInitalInvestment: Float!, # initial ipo investment
+  totalInitialInvestment: Float!, # initial ipo investment
   totalInitialStocksOwned: Float!,
   totalCurrentStocksOwned: Float!, #total owned and eliminated
   stocksRemaining: Float!, #total of whats no eliminated
