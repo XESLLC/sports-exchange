@@ -43,6 +43,7 @@ functions:
   graphql:
     # Any web request regardless of path or method will be handled by a single Lambda function
     handler: src/server/app.graphqlHandler
+    timeout: 45
     package:
       individually: true
       exclude:

@@ -30,6 +30,7 @@
     "copy-webpack-plugin": "^8.1.1",
     "dotenv": "^10.0.0",
     "express-openid-connect": "^2.4.0",
+    "fs": "^0.0.1-security",
     "graphql": "^15.5.0",
     "graphql-middleware": "^6.0.10",
     "html-loader": "^2.1.2",

@@ -64,7 +64,7 @@ The project is based on the [Serverless Framework](https://serverless.com) and m
 - [S3 Deploy Plugin](https://github.com/funkybob/serverless-s3-deploy) - Deploy files to S3 buckets. This is used for uploading static content like images and the generated `index.js`.
 
 ### Current AWS Config
-Server graphql endpoint url -  https://o4qfzdpgx0.execute-api.us-west-2.amazonaws.com/dev/graphql
+Server graphql endpoint url -  https://guyaafzm5l.execute-api.us-west-2.amazonaws.com/dev/graphql
 Browser endpoint url - http://serverless-react-sports-serverlessdeploymentbuck-kj23yr3zm351.s3-website-us-west-2.amazonaws.com
 
 
