@@ -477,7 +477,7 @@ const StockService = {
 
             buyerEntry.secondaryMarketCashSpent += (newPrice * entryBidQuantityObj[buyerEntryId]);
             await buyerEntry.save();
-            entry.secondaryMarketCashSpent -= (newPrice * entryBidQuantityObj[buyerEntryId]);
+            entry.secondaryMarketCashIncome += (newPrice * entryBidQuantityObj[buyerEntryId]);
             await entry.save();
           })
         );
@@ -519,15 +519,15 @@ const StockService = {
                 if(!stockEntryToTrade) {
                   throw new Error("Stock entry to trade not found");
                 }
-      
+
                 stockEntryToTrade.entryId = buyerEntry.id;
                 await stockEntryToTrade.save();
-      
+
                 const tradePrice = stock.price;
                 amountPerShare = stock.price;
                 stock.price = null;
                 await stock.save();
-      
+
                 const sellerTransaction = await Transaction.create({
                   entryId,
                   stockId: stock.id,
@@ -535,7 +535,7 @@ const StockService = {
                   cost: (tradePrice * -1),
                   groupId: transactionGroupId
                 });
-      
+
                 const buyerTransaction = await Transaction.create({
                   entryId: buyerEntry.id,
                   stockId: stock.id,
@@ -543,13 +543,13 @@ const StockService = {
                   cost: tradePrice,
                   groupId: transactionGroupId
                 });
-      
+
                 trades.push({
                   ...sellerTransaction.toJSON(),
                   teamName: team.name,
                   tournamentTeamId
                 });
-      
+
                 trades.push({
                   ...buyerTransaction.toJSON(),
                   teamName: team.name,
@@ -574,23 +574,23 @@ const StockService = {
           const plural = transactionCounter > 1 ? 's' : '';
           const message = `You sold ${transactionCounter} share${plural} of ${team.name} to ${buyerEntryForEmail.name} for $${amountPerShare} per share`;
           const buyerMessage = `You bought ${transactionCounter} share${plural} of ${team.name} from ${entry.name} for $${amountPerShare} per share`;
-      
+
           const userEntries = await UserEntry.findAll({
             where: {
               entryId
             }
           });
-      
+
           const userIds = userEntries.map(userEntry => userEntry.userId);
-      
+
           const users = await User.findAll({
             where: {
               id: userIds
             }
           });
-      
+
           const emailAddressToSendTradeNotification = users.map(user => user.email);
-      
+
           for(let email of emailAddressToSendTradeNotification) {
             await sendEmail(email, 'Trade Notification', message);
           }
@@ -602,15 +602,15 @@ const StockService = {
           });
 
           const buyerUserIds = buyerEntries.map(userEntry => userEntry.userId);
-      
+
           const buyerUsers = await User.findAll({
             where: {
               id: buyerUserIds
             }
           });
-      
+
           const buyerEmailAddressToSendTradeNotification = buyerUsers.map(user => user.email);
-      
+
           for(let email of buyerEmailAddressToSendTradeNotification) {
             await sendEmail(email, 'Trade Notification', buyerMessage)
           }
@@ -775,7 +775,7 @@ const StockService = {
         initiatorTradePackage += `${team.quantity} share${plural} of ${team.teamName}${comma}`;
         const stocksAvailableToTrade = userStocks.filter(stock => stock.tournamentTeamId === team.tournamentTeamId);
         const numStocksAvailableToTrade = stocksAvailableToTrade.length;
-        
+
         if(numStocksAvailableToTrade < team.quantity) {
           throw new Error(`You do not have enough stock of ${team.teamName} to process this trade`);
         }
@@ -808,25 +808,25 @@ const StockService = {
       const passiveTradePackage = `${quantity} share${plural} of ${teamName}`;
       const initiatorMessage = `You traded ${initiatorTradePackage} to ${otherUserEntry.name} for ${passiveTradePackage}`;
       const passiveMessage = `You traded ${passiveTradePackage} to ${entry.name} for ${initiatorTradePackage}`;
-  
+
       const initiatorUserEntries = await UserEntry.findAll({
         where: {
           entryId
         },
         transaction: t
       });
-  
+
       const userIds = initiatorUserEntries.map(userEntry => userEntry.userId);
-  
+
       const users = await User.findAll({
         where: {
           id: userIds
         },
         transaction: t
       });
-  
+
       const initiatorEmailAddressToSendTradeNotification = users.map(user => user.email);
-  
+
       for(let email of initiatorEmailAddressToSendTradeNotification) {
         await sendEmail(email, 'Trade Notification', initiatorMessage);
       }
@@ -839,16 +839,16 @@ const StockService = {
       });
 
       const passiveUserIds = passiveUserEntries.map(userEntry => userEntry.userId);
-  
+
       const passiveUsers = await User.findAll({
         where: {
           id: passiveUserIds
         },
         transaction: t
       });
-  
+
       const passiveEmailAddressToSendTradeNotification = passiveUsers.map(user => user.email);
-  
+
       for(let email of passiveEmailAddressToSendTradeNotification) {
         await sendEmail(email, 'Trade Notification', passiveMessage);
       }
@@ -992,7 +992,7 @@ const StockService = {
       const transactionAmount = stockIds.length * pricePerStock;
 
       await entry.update({
-        secondaryMarketCashSpent: entry.secondaryMarketCashSpent - transactionAmount
+        secondaryMarketCashIncome: entry.secondaryMarketCashIncome + transactionAmount
       }, {transaction: t});
 
       await receivingEntry.update({
@@ -1019,7 +1019,7 @@ const StockService = {
             entryId,
             groupId: transactionGroupId
           }, {transaction: t});
-  
+
           await Transaction.create({
             quantity: 1,
             cost: pricePerStock,
@@ -1042,25 +1042,25 @@ const StockService = {
           sellerMessage = `You traded ${transactionCounter} share${plural} of ${team.name} to ${receivingEntry.name}`;
           receivingMessage = `You received ${transactionCounter} share${plural} of ${team.name} from ${entry.name}`;
         }
-    
+
         const userEntries = await UserEntry.findAll({
           where: {
             entryId
           },
           transaction: t
         });
-    
+
         const userIds = userEntries.map(userEntry => userEntry.userId);
-    
+
         const users = await User.findAll({
           where: {
             id: userIds
           },
           transaction: t
         });
-    
+
         const sellerEmailAddressToSendTradeNotification = users.map(user => user.email);
-    
+
         for(let email of sellerEmailAddressToSendTradeNotification) {
           await sendEmail(email, 'Trade Notification', sellerMessage);
         }
@@ -1073,16 +1073,16 @@ const StockService = {
         });
 
         const buyerUserIds = buyerEntries.map(userEntry => userEntry.userId);
-    
+
         const buyerUsers = await User.findAll({
           where: {
             id: buyerUserIds
           },
           transaction: t
         });
-    
+
         const buyerEmailAddressToSendTradeNotification = buyerUsers.map(user => user.email);
-    
+
         for(let email of buyerEmailAddressToSendTradeNotification) {
           await sendEmail(email, 'Trade Notification', receivingMessage)
         }

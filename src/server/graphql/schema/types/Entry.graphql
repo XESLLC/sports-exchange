@@ -5,6 +5,7 @@ type Entry {
   name: String!
   ipoCashSpent: Float!
   secondaryMarketCashSpent: Float!
+  secondaryMarketCashIncome: Float!
 }
 
 input EntryInput {
@@ -68,6 +69,7 @@ type Query {
   getBidsForEntry(entryId: ID!): OfferedBids
   userEntries(email: String!): [Entry]
   portfolioSummaries(tournamentId: ID!, entryId: ID): [PortfolioSummary]
+  createTeamMapFile(tournamentId: ID!): String
 }
 
 type Mutation {
@@ -75,5 +77,5 @@ type Mutation {
   createEntryBid(input: NewEntryBidInput!): EntryBid
   deleteEntryBid(id: ID!): Entry
   ipoPurchase(input: IPOPurchaseInput!): TournamentTeamStock!
-  updateEntryCashSpent(entryId: ID!, ipoCashSpent: Float!, secondaryMarketCashSpent: Float): Entry
+  updateEntryCash(entryId: ID!, ipoCashSpent: Float!, secondaryMarketCashSpent: Float, secondaryMarketCashIncome: Float): Entry
 }
