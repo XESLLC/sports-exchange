@@ -1,0 +1,112 @@
+{
+    "name": "NBA Playoffs 2022",
+    "teams": [
+        {
+            "city": "Miami",
+            "name": "Heat"
+        },
+        {
+            "city": "Boston",
+            "name": "Celtics"
+        },
+        {
+            "city": "Milwaukee",
+            "name": "Bucks"
+        },
+        {
+            "city": "Philadelphia",
+            "name": "76ers"
+        },
+        {
+            "city": "Tornonto",
+            "name": "Raptors"
+        },
+        {
+            "city": "Chicago",
+            "name": "Bulls"
+        },
+        {
+            "city": "Brooklyn",
+            "name": "Nets"
+        },
+        {
+            "city": "Cleveland",
+            "name": "Cavaliers"
+        },
+        {
+            "city": "Atlanta",
+            "name": "Hawks"
+        },
+        {
+            "city": "Charlotte",
+            "name": "Hornets"
+        },
+        {
+            "city": "Phoenix",
+            "name": "Suns"
+        },
+        {
+            "city": "Memphis",
+            "name": "Grizzlies"
+        },
+        {
+            "city": "Golden State",
+            "name": "Warriors"
+        },
+        {
+            "city": "Dallas",
+            "name": "Mavericks"
+        },
+        {
+            "city": "Utah",
+            "name": "Jazz"
+        },
+        {
+            "city": "Denver",
+            "name": "Nuggets"
+        },
+        {
+            "city": "Minnesota",
+            "name": "Timberwolves"
+        },
+        {
+            "city": "LA",
+            "name": "Clippers"
+        },
+        {
+            "city": "New Orleans",
+            "name": "Pelicans"
+        },
+        {
+            "city": "San Antonio",
+            "name": "Spurs"
+        }
+    ],
+    "defaultSettings": {
+        "ipoBudget": 500,
+        "secondaryMarketBudget": null,
+        "useSeed": true,
+        "regions": [
+            "Eastern Conference",
+            "Western Conference"
+        ],
+        "milestones": [
+            {
+                "id": 1,
+                "name": "Conference Semifinal"
+            },
+            {
+                "id": 2,
+                "name": "Conference Final"
+            },
+            {
+                "id": 3,
+                "name": "NBA Final"
+            },
+            {
+                "id": 4,
+                "name": "Championship"
+            }
+        ]
+    }
+}
