@@ -650,7 +650,7 @@ const EntryService = {
             return result
         }, {moneyWon: 0, stockEntriesRemaining: 0, teamsOwned: [], teamsOwnedInTourn: [], stockEntriesRemainingMoney: 0 })
 
-        const percentStocksRemaining = stockEntriesOwned.length > 0? Math.round(calcResults.stockEntriesRemaining/stockEntriesOwned.length * 10000)/100 : 0
+        const percentStocksRemaining = stockEntriesOwned.length > 0? Math.round(calcResults.stockEntriesRemaining/stockEntriesOwned.length * 10000)/10000 : 0
 
         const percentMoneyWonInvested = ipoCashSpent > 0? calcResults.moneyWon / ipoCashSpent : 0
 
