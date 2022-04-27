@@ -435,6 +435,7 @@ const StockService = {
 
       // check for and execute matched trades
       // search for stocks available that i do not own
+      let trades = [];
       if(newPrice && newPrice > 0) {
         let matchedBids = await EntryBid.findAll({
           where: {
@@ -451,7 +452,6 @@ const StockService = {
         }, 0);
 
         const iteratorVal = Math.min(totalQuantityOfMatchedBids, quantity);
-        let trades = [];
         let transactionCounter = 0;
         let entryBidQuantityObj = {};
         for(let bid of matchedBids) {
