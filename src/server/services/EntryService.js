@@ -639,8 +639,8 @@ const EntryService = {
                 result.stockEntriesRemaining += 1
                 result.stockEntriesRemainingMoney += matchedTournTeamAlive.price
             }
-
-            const entryMoney = matchedTournTeam.milestoneData.reduce((moneyEarned, milestone) => {
+            const teamMilestoneData = matchedTournTeam.milestoneData? matchedTournTeam.milestoneData : []
+            const entryMoney = teamMilestoneData.reduce((moneyEarned, milestone) => {
                 moneyEarned += milestone.dividendPrice? milestone.dividendPrice : 0
                 return moneyEarned
             }, 0)
