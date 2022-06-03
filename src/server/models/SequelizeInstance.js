@@ -8,8 +8,8 @@ const password = isNotLocal? 'sports-exchange' : 'test';
 const host = isNotLocal? 'sports-exchange-db.cg3onfdtaa7j.us-west-2.rds.amazonaws.com' : 'localhost';
 const port = '3306';
 
-const instance = new Sequelize(database, username, password, {
-  host: host,
+const instance = new Sequelize('sports_exchange_db', 'admin', 'sports-exchange', {
+  host: 'sports-exchange-db.cg3onfdtaa7j.us-west-2.rds.amazonaws.com',
   port: port,
   dialect: 'mysql',
   pool: {

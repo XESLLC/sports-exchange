@@ -640,23 +640,23 @@ const EntryService = {
                 result.stockEntriesRemainingMoney += matchedTournTeamAlive.price
             }
             const teamMilestoneData = matchedTournTeam.milestoneData? matchedTournTeam.milestoneData : []
-            const entryMoney = teamMilestoneData.reduce((moneyEarned, milestone) => {
-                moneyEarned += milestone.dividendPrice? milestone.dividendPrice : 0
+            const numberOfStocksPerTeam = teamMapFile[matchedTournTeam.id]
+            const entryMoneyPerStock = teamMilestoneData.reduce((moneyEarned, milestone) => {
+                moneyEarned += milestone.dividendPrice? Math.floor((milestone.dividendPrice/numberOfStocksPerTeam)*100)/100 : 0
                 return moneyEarned
             }, 0)
-            numberOfStocksPerTeam = teamMapFile[matchedTournTeam.id]
 
-            result.moneyWon += Math.floor((entryMoney/numberOfStocksPerTeam)*100)/100
+            result.moneyWon += entryMoneyPerStock;
             return result
         }, {moneyWon: 0, stockEntriesRemaining: 0, teamsOwned: [], teamsOwnedInTourn: [], stockEntriesRemainingMoney: 0 })
 
-        const percentStocksRemaining = stockEntriesOwned.length > 0? Math.round(calcResults.stockEntriesRemaining/stockEntriesOwned.length * 10000)/10000 : 0
+        const percentStocksRemaining = stockEntriesOwned.length > 0? Math.round(calcResults.stockEntriesRemaining/stockEntriesOwned.length * 10000)/100 : 0
 
-        const percentMoneyWonInvested = ipoCashSpent > 0? calcResults.moneyWon / ipoCashSpent : 0
+        const percentMoneyWonInvested = ipoCashSpent > 0? calcResults.moneyWon * 100 / ipoCashSpent : 0
 
         const profitLoss = Math.round((calcResults.moneyWon + secondaryMarketCashIncome - ipoCashSpent - secondaryMarketCashSpent)*100)/100
 
-        const percentMoneyRemaining = (ipoCashSpent)? Math.round((calcResults.moneyWon + calcResults.stockEntriesRemainingMoney + secondaryMarketCashIncome)/(ipoCashSpent + secondaryMarketCashSpent)  * 100)/ 100 : 0
+        const percentMoneyRemaining = (ipoCashSpent)? Math.round((calcResults.stockEntriesRemainingMoney)/(ipoCashSpent) * 10000)/100 : 0
 
         return  {
           ownerName: combinedNames,
