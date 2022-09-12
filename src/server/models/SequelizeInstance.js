@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 
-(process.env.ENV !== 'local')
-isNotLocal? aws db : local db
+isNotLocal = (process.env.ENV !== 'local')
+// isNotLocal? aws db : local db
 const database = isNotLocal? 'sports_exchange_db' : 'Exchange';
 const username = isNotLocal? 'admin' : 'root';
 const password = isNotLocal? 'sports-exchange' : 'test';
