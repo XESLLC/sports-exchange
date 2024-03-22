@@ -80,6 +80,7 @@ if (isNotLocal) {
 
     };
 } else {
+  console.log("local setup")
   // local setup
   const server = new ApolloServer({
     typeDefs,
