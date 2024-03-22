@@ -13,7 +13,6 @@ const TeamService = {
           }
       });
 
-      console.log("team: " + JSON.stringify(tournamentTeams[0]))
 
       const tournamentTeamsMap = tournamentTeams.map(async (tournamentTeam) => {
 
@@ -34,7 +33,6 @@ const TeamService = {
               tournamentTeamId: tournamentTeam.id
             }
           });
-
           const numStocksInCirculation = stocksInCirculation && stocksInCirculation.length ? stocksInCirculation.length : 1;
 
           return {

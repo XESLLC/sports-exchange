@@ -4,13 +4,13 @@ configValidationMode: off
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs14.x
   region: ${opt:region, 'us-west-2'}
   stage: ${opt:stage, 'dev'}
   memorySize: 1024
   timeout: 6
   logRetentionInDays: 7
-  lambdaHashingVersion: 20201221 # for upcoming Serverless 3.0.0
+  # lambdaHashingVersion: 20201221 # for upcoming Serverless 3.0.0
   # profile: sports-exchange
 
   apiGateway:

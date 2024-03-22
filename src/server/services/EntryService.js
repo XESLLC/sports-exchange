@@ -642,7 +642,7 @@ const EntryService = {
             const teamMilestoneData = matchedTournTeam.milestoneData? matchedTournTeam.milestoneData : []
             const numberOfStocksPerTeam = teamMapFile[matchedTournTeam.id]
             const entryMoneyPerStock = teamMilestoneData.reduce((moneyEarned, milestone) => {
-                moneyEarned += milestone.dividendPrice? Math.floor((milestone.dividendPrice/numberOfStocksPerTeam)*100)/100 : 0
+                moneyEarned += milestone.dividendPrice? ((milestone.dividendPrice/numberOfStocksPerTeam)*100)/100 : 0
                 return moneyEarned
             }, 0)
 
