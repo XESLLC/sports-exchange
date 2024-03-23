@@ -8,6 +8,8 @@ const jwksClient = require('jwks-rsa');
 const resolvers = require('./graphql/resolvers');
 const { initModels } = require('./models');
 
+const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core')
+
 //Env
 console.log('process.env.ENV ',process.env.ENV)
 isNotLocal = (process.env.ENV !== 'local')
@@ -88,6 +90,7 @@ if (isNotLocal) {
     context: async ({ req }) => ({
       user: await getUser(req.headers.authorization)
     }),
+    plugins: [ApolloServerPluginLandingPageGraphQLPlayground()]
   });
 
   initModels().then(() => {
