@@ -1,6 +1,6 @@
 const { Sequelize } = require('sequelize');
 // === !==
-isNotLocal = (process.env.ENV !== 'local')
+isNotLocal = (process.env.ENV === 'local') //this is for locally rrunning but connecting to production db -careful
 // isNotLocal? aws db : local db
 const database = isNotLocal? 'sports_exchange_db' : 'Exchange';
 const username = isNotLocal? 'admin' : 'root';

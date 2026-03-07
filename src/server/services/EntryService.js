@@ -576,15 +576,11 @@ const EntryService = {
     })
     if (!stockEntries && stockEntries.length < 1) {throw new Error('userEntries not found')}
 
-    console.log(tournamentId)
-
     const teamMapFileRaw = fs.readFileSync( __dirname  +`/../tmp/teamMap${tournamentId}` )
     if (!teamMapFileRaw) {throw new Error("teamMapFileRaw Fatal Error on Read")}
     let teamMapFile = JSON.parse(teamMapFileRaw)
 
-    console.log(teamMapFile);
-
-    // don't remove this - should be creatd manualy using createTeamMapFile resolver
+    // don't remove this - should be created manualy using createTeamMapFile resolver
     // const teamMap = stockEntries.reduce((resultMap, stockEntry) => {
     //     stock = stocks.find(stock => stock.id == stockEntry.stockId)
     //     matchedTournTeam = tournamentTeams.find(team => team.id == stock.tournamentTeamId)

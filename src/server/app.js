@@ -59,28 +59,29 @@ if(isNotLocal) {
 
 if (isNotLocal) {
   //aws setup
-    const server = new ApolloServer({
-      typeDefs,
-      resolvers,
-      context: async ({event, context }) => ({
-          user: await getUser(event.headers.Authorization),
-          context,
-          event
-      })
-    });
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: async ({event, context }) => ({
+        user: await getUser(event.headers.Authorization),
+        context,
+        event
+    })
+  });
 
-    const graphqlHandler = server.createHandler();
+  const graphqlHandler = server.createHandler({
+    cors: {
+      origin: '*',
+      methods: '*',
+      allowedHeaders: '*'
+    }
+  });
 
-    module.exports.graphqlHandler = (event, context, callback) => {
-      context.callbackWaitsForEmptyEventLoop = false;
-      function callbackFilter(error, output) {
-        output.headers['Access-Control-Allow-Origin'] = '*';
-        callback(error, output);
-      }
+  module.exports.graphqlHandler = async (event, context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
+    return await graphqlHandler(event, context)
+  };
 
-      graphqlHandler(event, context, callbackFilter);
-
-    };
 } else {
   console.log("local setup")
   // local setup

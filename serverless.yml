@@ -1,6 +1,7 @@
 ---
 service: serverless-react-sports-exchange
 configValidationMode: off
+frameworkVersion: '3'
 
 provider:
   name: aws
@@ -10,7 +11,7 @@ provider:
   memorySize: 1024
   timeout: 6
   logRetentionInDays: 7
-  # lambdaHashingVersion: 20201221 # for upcoming Serverless 3.0.0
+  lambdaHashingVersion: 20201221 # for upcoming Serverless 3.0.0
   # profile: sports-exchange
 
   apiGateway:
