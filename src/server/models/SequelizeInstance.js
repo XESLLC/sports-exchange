@@ -1,11 +1,11 @@
 const { Sequelize } = require('sequelize');
-
-isNotLocal = (process.env.ENV !== 'local')
+// === !==
+isNotLocal = (process.env.ENV === 'local') //this is for locally rrunning but connecting to production db -careful
 // isNotLocal? aws db : local db
 const database = isNotLocal? 'sports_exchange_db' : 'Exchange';
 const username = isNotLocal? 'admin' : 'root';
-const password = isNotLocal? 'sports-exchange' : 'test';
-const host = isNotLocal? 'sports-exchange-db.cg3onfdtaa7j.us-west-2.rds.amazonaws.com' : 'localhost';
+const password = isNotLocal? 'sports-exchange' : 'deavtdc021076';
+const host = isNotLocal? 'sports-exchange-db.cg3onfdtaa7j.us-west-2.rds.amazonaws.com' : '127.0.0.1';
 const port = '3306';
 
 const instance = new Sequelize(database, username, password, {

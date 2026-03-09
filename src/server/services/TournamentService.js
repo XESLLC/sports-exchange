@@ -147,7 +147,7 @@ const TournamentService = {
       isIpoOpen: true,
       settings: league.defaultSettings
     });
-    
+
     return tournament;
   },
   createTournamentTeam: async (price, seed, region, teamId, tournamentId) => {
@@ -272,9 +272,9 @@ const TournamentService = {
   //   const { createReadStream, filename, mimetype, encoding } = file;
 
   //   const { Location } = await s3.upload({
-  //     Body: createReadStream(),               
+  //     Body: createReadStream(),
   //     Key: Date.now().toString() + filename ,
-  //     ContentType: mimetype                   
+  //     ContentType: mimetype
   //   });
 
 

@@ -1,17 +1,18 @@
 ---
 service: serverless-react-sports-exchange
 configValidationMode: off
+frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs14.x
   region: ${opt:region, 'us-west-2'}
   stage: ${opt:stage, 'dev'}
   memorySize: 1024
   timeout: 6
   logRetentionInDays: 7
   lambdaHashingVersion: 20201221 # for upcoming Serverless 3.0.0
-  profile: sports-exchange
+  # profile: sports-exchange
 
   apiGateway:
     shouldStartNameWithService: true # for upcoming Serverless 3.0.0
@@ -43,6 +44,7 @@ functions:
   graphql:
     # Any web request regardless of path or method will be handled by a single Lambda function
     handler: src/server/app.graphqlHandler
+    timeout: 45
     package:
       individually: true
       exclude:

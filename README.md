@@ -64,7 +64,7 @@ The project is based on the [Serverless Framework](https://serverless.com) and m
 - [S3 Deploy Plugin](https://github.com/funkybob/serverless-s3-deploy) - Deploy files to S3 buckets. This is used for uploading static content like images and the generated `index.js`.
 
 ### Current AWS Config
-Server graphql endpoint url -  https://o4qfzdpgx0.execute-api.us-west-2.amazonaws.com/dev/graphql
+Server graphql endpoint url -  https://guyaafzm5l.execute-api.us-west-2.amazonaws.com/dev/graphql
 Browser endpoint url - http://serverless-react-sports-serverlessdeploymentbuck-kj23yr3zm351.s3-website-us-west-2.amazonaws.com
 
 
@@ -290,3 +290,23 @@ Note: set the aws profile in serverless.yml (if you have more than a default) - 
 ```
 sls deploy function -f graphql
 ```
+
+## Example Queries and Mutations
+query {
+  tournamentTeams (tournamentId: "186f9656-b3f6-495a-803f-a36e92084acd") {id teamName numStocksInCirculation}
+}
+
+mutation {createTournament (input: {name: "NBA Playoffs 2023", leagueId: "44d278ae-4249-44e2-813b-f897645e6ff9"}){id}}
+>>>>> 063a118a-4ef4-44c3-91ba-73b63f5add2c
+
+mutation {createLeague (input:{ name: "NBA Playoffs 2023"}) {id}}
+>>>>> 44d278ae-4249-44e2-813b-f897645e6ff9
+
+mutation{createTeam (input: {name: "Golden State Warriors", leagueId: "44d278ae-4249-44e2-813b-f897645e6ff9"}){id}}
+
+mutation {createBulkTournamentTeams (input:[
+{teamId: "a83fd3b1-c322-4962-8186-4b06489a738c", tournamentId: "063a118a-4ef4-44c3-91ba-73b63f5add2c"},
+{teamId: "ca2b48f4-ad34-4da2-9c58-703ab0691a1a", tournamentId: "063a118a-4ef4-44c3-91ba-73b63f5add2c"},
+{teamId: "61bdacc4-2c12-4f5f-bc73-341d2b09b94a", tournamentId: "063a118a-4ef4-44c3-91ba-73b63f5add2c"},
+{teamId: "2d36bac4-87d1-4b74-8263-df92119b4362", tournamentId: "063a118a-4ef4-44c3-91ba-73b63f5add2c"},
+{teamId: "b4a6af30-e424-4ad8-80d3-ea62434a8b6e", tournamentId: "063a118a-4ef4-44c3-91ba-73b63f5add2c"}]){id}}

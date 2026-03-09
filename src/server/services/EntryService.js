@@ -12,6 +12,7 @@ const { Op } = require('sequelize');
 const Tournament = require('../models/Tournament');
 const { v4: uuidv4 } = require('uuid');
 const {sendEmail} = require ('../util/sendEmail');
+const fs = require ('fs')
 
 const EntryService = {
   createEntry: async (name, userEmails, tournamentId) => {
@@ -28,7 +29,8 @@ const EntryService = {
       tournamentId,
       name,
       ipoCashSpent: 0,
-      secondaryMarketCashSpent: 0
+      secondaryMarketCashSpent: 0,
+      secondaryMarketCashIncome: 0
     });
 
     for(let user of users) {
@@ -121,7 +123,7 @@ const EntryService = {
           throw new Error("Entry for seller not found");
         }
 
-        sellerEntry.secondaryMarketCashSpent -= (price * entryStockQuantityObj[sellerEntryId]);
+        sellerEntry.secondaryMarketCashIncome += (price * entryStockQuantityObj[sellerEntryId]);
         await sellerEntry.save({transaction: t});
         entry.secondaryMarketCashSpent += (price * entryStockQuantityObj[sellerEntryId]);
         await entry.save({transaction: t});
@@ -136,7 +138,7 @@ const EntryService = {
         // capture the current stockentry entryId in order to credit the entry with cash later
         // set the stockentry entryId to entryId
         // get Stock where id === stockentry.stockId, capture the current price in order to decrement/increase cash to entries later
-        // set the stock price to null 
+        // set the stock price to null
         // credit the captured entry with the captured price
         // decrement entryId with the captured price
         // create two new transaction records in the db for seller and buyer, negative cash amount for seller
@@ -204,25 +206,25 @@ const EntryService = {
         const plural = transactionCounter > 1 ? 's' : '';
         const sellerMessage = `You sold ${transactionCounter} share${plural} of ${team.name} to ${entry.name} for $${amountPerShare} per share`;
         const buyerMessage = `You bought ${transactionCounter} share${plural} of ${team.name} from ${sellerEntryForEmail.name} for $${amountPerShare} per share`;
-    
+
         const userEntries = await UserEntry.findAll({
           where: {
             entryId: sellerEntryForEmail.id
           },
           transaction: t
         });
-    
+
         const userIds = userEntries.map(userEntry => userEntry.userId);
-    
+
         const users = await User.findAll({
           where: {
             id: userIds
           },
           transaction: t
         });
-    
+
         const sellerEmailAddressToSendTradeNotification = users.map(user => user.email);
-    
+
         for(let email of sellerEmailAddressToSendTradeNotification) {
           await sendEmail(email, 'Trade Notification', sellerMessage);
         }
@@ -235,21 +237,21 @@ const EntryService = {
         });
 
         const buyerUserIds = buyerEntries.map(userEntry => userEntry.userId);
-    
+
         const buyerUsers = await User.findAll({
           where: {
             id: buyerUserIds
           },
           transaction: t
         });
-    
+
         const buyerEmailAddressToSendTradeNotification = buyerUsers.map(user => user.email);
-    
+
         for(let email of buyerEmailAddressToSendTradeNotification) {
           await sendEmail(email, 'Trade Notification', buyerMessage)
         }
       }
-      
+
       if(iteratorVal === entryBid.quantity) {
         await entryBid.destroy({transaction: t});
       } else {
@@ -410,15 +412,19 @@ const EntryService = {
         throw new Error("User not found");
       }
 
-      const userEntry = await UserEntry.findOne({
-        where: {
-          entryId: entry.id,
-          userId: user.id
-        },
-        transaction: t
-      });
-      if(!userEntry) {
-        throw new Error("Not authorized for entry ipo purchase");
+      const adminEmails = ["couvillion@gmail.com", "david.xesllc@gmail.com", "bartsched@gmail.com"];
+
+      if(!adminEmails.includes(user.email)) {
+        const userEntry = await UserEntry.findOne({
+          where: {
+            entryId: entry.id,
+            userId: user.id
+          },
+          transaction: t
+        });
+        if(!userEntry) {
+          throw new Error("Not authorized for entry ipo purchase");
+        }
       }
 
       const ipoPrice = tournamentTeam.price
@@ -478,7 +484,7 @@ const EntryService = {
         id: entryIds
       }
     });
-    
+
     const result = await Promise.all(
       entries.map(async (entry) => {
         const tournament = await Tournament.findByPk(entry.tournamentId);
@@ -492,19 +498,241 @@ const EntryService = {
 
     return result;
   },
-  updateEntryCashSpent: async (entryId, ipoCashSpent, secondaryMarketCashSpent) => {
+  updateEntryCash: async (entryId, ipoCashSpent, secondaryMarketCashSpent, secondaryMarketCashIncome) => {
     const result = await instance.transaction(async (t) => {
-      const entry = await Entry.findByPk(entryId);
+      const entry = await Entry.findByPk(entryId, {transaction: t});
 
       await entry.update({
         ipoCashSpent,
-        secondaryMarketCashSpent
+        secondaryMarketCashSpent,
+        secondaryMarketCashIncome
       }, {transaction: t});
 
       return entry;
     });
 
     return result;
+  },
+  portfolioSummaries: async (tournamentId, entryId) => {
+    console.log("starting portfolioSummaries at ", new Date())
+    let entries
+    if (!entryId) {
+      entries = await Entry.findAll({
+          where: {
+              tournamentId: tournamentId
+          }
+      });
+    } else {
+      entries = await Entry.findAll({
+          where: {
+              id: entryId
+          }
+      });
+    }
+    if (!entries && entries.length < 1) {throw new Error('Entries not found')}
+    const entryIds = entries.map(entry => entry.id);
+
+    const userEntries = await UserEntry.findAll({
+      where: {
+          entryId: entryIds
+      }
+    })
+    if (!userEntries && userEntries.length < 1) {throw new Error('userEntries not found')}
+
+    const userIds = userEntries.map(userEntry => userEntry.userId)
+    const users = await User.findAll({
+      where: {
+        id: userIds
+      }
+    })
+    if (!users && users.length < 1) {throw new Error('users not found')}
+
+    const tournamentTeams = await TournamentTeam.findAll({
+      where: {
+          tournamentId: tournamentId
+      }
+    })
+    if (!tournamentTeams && tournamentTeams.length < 1) {throw new Error('userEntries not found')}
+    const tournamentTeamIds = tournamentTeams.map(tournamentTeam => tournamentTeam.id)
+    const teamsNotEliminated = tournamentTeams.filter(team => !team.isEliminated)
+    const teamsNotEliminatedIds = teamsNotEliminated.map(team => team.id)
+
+    const stocks = await Stock.findAll({
+      where: {
+        tournamentTeamId: tournamentTeamIds
+      }
+    });
+    if (!stocks && stocks.length < 1) {throw new Error('userEntries not found')}
+
+    const stocksNotEliminated = stocks.filter(stock => {
+        return teamsNotEliminatedIds.includes(stock.tournamentTeamId)
+    })
+    const stocksNotEliminatedIds = stocksNotEliminated.map(stock => stock.id)
+
+    const stockEntries = await StockEntry.findAll({
+      where: {
+          entryId: entryIds
+      }
+    })
+    if (!stockEntries && stockEntries.length < 1) {throw new Error('userEntries not found')}
+
+    const teamMapFileRaw = fs.readFileSync( __dirname  +`/../tmp/teamMap${tournamentId}` )
+    if (!teamMapFileRaw) {throw new Error("teamMapFileRaw Fatal Error on Read")}
+    let teamMapFile = JSON.parse(teamMapFileRaw)
+
+    // don't remove this - should be created manualy using createTeamMapFile resolver
+    // const teamMap = stockEntries.reduce((resultMap, stockEntry) => {
+    //     stock = stocks.find(stock => stock.id == stockEntry.stockId)
+    //     matchedTournTeam = tournamentTeams.find(team => team.id == stock.tournamentTeamId)
+    //     if (resultMap[matchedTournTeam.id]) {
+    //         resultMap[matchedTournTeam.id] = resultMap[matchedTournTeam.id] + 1
+    //         return resultMap
+    //     } else {
+    //         resultMap[matchedTournTeam.id] = 1
+    //         return resultMap
+    //     }
+    // }, {})
+
+    const portfolioSummaries = entries.map((entry) => {
+        console.log("Mapping Entries - creating portfolio Summary for >>>> ", entry.id)
+
+        const ipoCashSpent = entry.ipoCashSpent? entry.ipoCashSpent : 0
+        const secondaryMarketCashSpent = entry.secondaryMarketCashSpent? entry.secondaryMarketCashSpent : 0
+        const secondaryMarketCashIncome = entry.secondaryMarketCashIncome? entry.secondaryMarketCashIncome : 0
+
+        //combining names for multiple users per entry
+        let names = []
+        for(let userEntry of userEntries) {
+            const user = users.find(_user => userEntry.entryId == entry.id && _user.id == userEntry.userId)
+            if (user) {names.push(user.firstname + " " + user.lastname)}
+        }
+        const combinedNames = names.reduce((result, userName) => {
+            if (result.length > 0) {
+                return result + " & " + userName
+            }
+            return userName
+        }, "")
+
+        const initialIpoStocks = stocks.filter(stock => stock.originalIpoEntryId == entry.id)
+
+        const stockEntriesOwned = stockEntries.filter(stockEntry => stockEntry.entryId == entry.id)
+
+        const calcResults = stockEntriesOwned.reduce((result, stockEntry) => {
+            stock = stocks.find(stock => stock.id == stockEntry.stockId)
+
+            matchedTournTeam = tournamentTeams.find(team => team.id == stock.tournamentTeamId)
+
+            if (!!matchedTournTeam && result.teamsOwned.indexOf(matchedTournTeam.id) === -1) {
+                result.teamsOwned.push(matchedTournTeam.id)
+            }
+
+            matchedTournTeamAlive = teamsNotEliminated.find(team => team.id == stock.tournamentTeamId)
+
+            if (!!matchedTournTeamAlive) {
+                if (result.teamsOwnedInTourn.indexOf(matchedTournTeamAlive.id) === -1) {
+                    result.teamsOwnedInTourn.push(matchedTournTeamAlive.id)
+                }
+                result.stockEntriesRemaining += 1
+                result.stockEntriesRemainingMoney += matchedTournTeamAlive.price
+            }
+            const teamMilestoneData = matchedTournTeam.milestoneData? matchedTournTeam.milestoneData : []
+            const numberOfStocksPerTeam = teamMapFile[matchedTournTeam.id]
+            const entryMoneyPerStock = teamMilestoneData.reduce((moneyEarned, milestone) => {
+                moneyEarned += milestone.dividendPrice? ((milestone.dividendPrice/numberOfStocksPerTeam)*100)/100 : 0
+                return moneyEarned
+            }, 0)
+
+            result.moneyWon += entryMoneyPerStock;
+            return result
+        }, {moneyWon: 0, stockEntriesRemaining: 0, teamsOwned: [], teamsOwnedInTourn: [], stockEntriesRemainingMoney: 0 })
+
+        const percentStocksRemaining = stockEntriesOwned.length > 0? Math.round(calcResults.stockEntriesRemaining/stockEntriesOwned.length * 10000)/100 : 0
+
+        const percentMoneyWonInvested = ipoCashSpent > 0? calcResults.moneyWon * 100 / ipoCashSpent : 0
+
+        const profitLoss = Math.round((calcResults.moneyWon + secondaryMarketCashIncome - ipoCashSpent - secondaryMarketCashSpent)*100)/100
+
+        const percentMoneyRemaining = (ipoCashSpent)? Math.round((calcResults.stockEntriesRemainingMoney)/(ipoCashSpent) * 10000)/100 : 0
+
+        return  {
+          ownerName: combinedNames,
+          entryName: entry.name,
+          totalInitialInvestment: ipoCashSpent, // initial ipo investment
+          totalInitialStocksOwned: initialIpoStocks.length, //
+          totalCurrentStocksOwned: stockEntriesOwned.length, //total owned and eliminated
+          stocksRemaining: calcResults.stockEntriesRemaining, //total of whats not eliminated
+          percentStocksRemaining: percentStocksRemaining,
+          totalCurrentTeamsOwned: calcResults.teamsOwned.length, //number teams owned & may have been eliminated
+          totalCurrentTeamsRemaining: calcResults.teamsOwnedInTourn.length , // number of teams that are left in tourn
+          moneyWonToDate: Math.floor(calcResults.moneyWon*100)/100,
+          percentMoneyWonInvested: Math.round(percentMoneyWonInvested*100)/100,//   money won/ ipo money
+          originalMoneyRemaining: Math.round(calcResults.stockEntriesRemainingMoney * 100)/100, //stocks left (at IPO price)
+          profitLoss: profitLoss, //money won - ipo - secondary market cash
+          percentMoneyRemaining:  percentMoneyRemaining // allMoney/Investment
+        }
+    })
+    console.log("finished Portfolio Summaries at ", new Date())
+    return portfolioSummaries
+  },
+  createTeamMapFile: async (tournamentId) => {
+      console.log("starting teamMapFile at ", new Date())
+
+      const entries = await Entry.findAll({
+          where: {
+              tournamentId: tournamentId
+          }
+      });
+      if (!entries && entries.length < 1) {throw new Error('Entries not found')}
+      const entryIds = entries.map(entry => entry.id);
+
+      const userEntries = await UserEntry.findAll({
+        where: {
+            entryId: entryIds
+        }
+      })
+      if (!userEntries && userEntries.length < 1) {throw new Error('userEntries not found')}
+
+      const tournamentTeams = await TournamentTeam.findAll({
+        where: {
+            tournamentId: tournamentId
+        }
+      })
+      if (!tournamentTeams && tournamentTeams.length < 1) {throw new Error('userEntries not found')}
+      const tournamentTeamIds = tournamentTeams.map(tournamentTeam => tournamentTeam.id)
+
+      const stocks = await Stock.findAll({
+        where: {
+          tournamentTeamId: tournamentTeamIds
+        }
+      });
+      if (!stocks && stocks.length < 1) {throw new Error('userEntries not found')}
+
+      const stockEntries = await StockEntry.findAll({
+        where: {
+            entryId: entryIds
+        }
+      })
+      if (!stockEntries && stockEntries.length < 1) {throw new Error('userEntries not found')}
+
+      console.log("Creating TeamMapFile for " + tournamentId)
+      const teamMap = stockEntries.reduce((resultMap, stockEntry) => {
+          stock = stocks.find(stock => stock.id == stockEntry.stockId)
+          matchedTournTeam = tournamentTeams.find(team => team.id == stock.tournamentTeamId)
+          if (resultMap[matchedTournTeam.id]) {
+              resultMap[matchedTournTeam.id] = resultMap[matchedTournTeam.id] + 1
+              return resultMap
+          } else {
+              resultMap[matchedTournTeam.id] = 1
+              return resultMap
+          }
+      }, {})
+      fs.writeFileSync(__dirname  +`/../tmp/teamMap${tournamentId}`, JSON.stringify(teamMap), function (err) {
+          if (err) {console.log(err)}
+          console.log("data created and written to file", teamMap)
+      });
+
+      console.log("finished create TeamMapFile at ", new Date())
+      return "Success"
   }
 };
 

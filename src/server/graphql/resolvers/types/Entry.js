@@ -21,6 +21,17 @@ const Entry = {
       const email = input.email;
       const userEntries = await EntryService.userEntries(email);
       return userEntries;
+    },
+    portfolioSummaries: async (_, input) => {
+      const tournamentId = input.tournamentId;
+      const entryId = input.entryId;
+      const portfolioSummaries = await EntryService.portfolioSummaries(tournamentId, entryId);
+      return portfolioSummaries;
+    },
+    createTeamMapFile: async (_, input) => {
+      const tournamentId = input.tournamentId;
+      const createTeamMapFile = await EntryService.createTeamMapFile(tournamentId);
+      return createTeamMapFile;
     }
   },
 
@@ -45,8 +56,8 @@ const Entry = {
       const tournamentTeamStock = await EntryService.ipoPurchase(tournamentTeamId, quantity, userEmail, entryId);
       return tournamentTeamStock;
     },
-    updateEntryCashSpent: async (_, { entryId, ipoCashSpent, secondaryMarketCashSpent } ) => {
-      const entry = await EntryService.updateEntryCashSpent(entryId, ipoCashSpent, secondaryMarketCashSpent);
+    updateEntryCash: async (_, { entryId, ipoCashSpent, secondaryMarketCashSpent, secondaryMarketCashIncome } ) => {
+      const entry = await EntryService.updateEntryCash(entryId, ipoCashSpent, secondaryMarketCashSpent, secondaryMarketCashIncome);
       return entry;
     }
   }

@@ -1,0 +1,137 @@
+{"8a041b60-cb88-4832-9763-e52126f8b749":170,"dd969aff-4491-442e-ad54-59d14f464930":221,"42b4e69a-3226-4063-aa73-9992e3cf5ecb":292,"9ef0bc9f-2b82-4bb2-aa9e-4bc233236f51":143,"a40b1abc-799f-45d8-9741-888e8041b6bf":376,"fed5f29d-3d68-4a1c-81da-e6c7041602fc":258,"f91bad84-29b6-489a-9da6-c558eb2f6243":177,"1660bcb4-4442-4857-9a5f-2ad34c4674da":177,"eef9dbf7-209e-4ea4-9493-e01ee92be4f2":144,"25f3be03-1e78-4d37-9f95-d310e2f26607":365,"7643f30e-a6e9-4ed7-bede-01b7618225fc":735,"d59b1a86-bb33-4c43-b00d-76c31681740a":51,"475d0005-b4ad-499d-8ee3-4d0d4f3a3493":63,"643da397-a321-4795-be83-d89637eec0d8":291,"549a57bd-d45d-47e0-95f9-db46db69ec69":93,"d22ff84d-74dc-4ad9-a3ff-ca32ce809d43":225,"87ade106-24bb-4433-ac9a-31d7789d4982":270,"36a1b5f8-e081-4d62-96be-d882752226ef":88,"5682292e-72fa-419a-b9c7-872b2b1763bd":221,"f2f0fe4c-f6eb-40ab-9bc2-c228c9e2f6ea":238,"31515f60-5964-49b1-ab6a-5a724090bf29":153,"174a79db-7e8f-4616-94a7-bc89691fcd44":225,"d152f99e-5560-4273-af3e-cc5ee5cd9104":121,"676f4225-3fb0-48c8-8d32-9b9fff45233e":151,"3b5b7a65-481f-46c8-ba0e-466655817f3f":178,"3d7da6e2-f5bf-4615-a29d-3154bc114b8a":88,"88b4ba6e-ff83-45eb-9bbb-0e35a5158f4b":176,"d35b2b16-323d-4da2-9875-9e5f4e46b462":180,"bee39485-62ad-4a52-88c8-18bbc20314f7":148,"48b8a938-a196-4391-8dbb-758325bb0c65":100,"cb4f3e05-4e3d-4c5c-aed6-9039d13523d3":59,"a9b89d46-09e4-42bc-8b86-772b357b047b":72}
+
+
+{
+  "data": {
+    "tournamentTeams": [
+      {
+        "id": "1660bcb4-4442-4857-9a5f-2ad34c4674da",
+        "teamName": "Buffalo Bills"
+      },
+      {
+        "id": "174a79db-7e8f-4616-94a7-bc89691fcd44",
+        "teamName": "Carolina Panthers"
+      },
+      {
+        "id": "25f3be03-1e78-4d37-9f95-d310e2f26607",
+        "teamName": "Jacksonville Jaguars"
+      },
+      {
+        "id": "31515f60-5964-49b1-ab6a-5a724090bf29",
+        "teamName": "Houston Texans"
+      },
+      {
+        "id": "36a1b5f8-e081-4d62-96be-d882752226ef",
+        "teamName": "Detroit Lions"
+      },
+      {
+        "id": "3b5b7a65-481f-46c8-ba0e-466655817f3f",
+        "teamName": "Indianapolis Colts"
+      },
+      {
+        "id": "3d7da6e2-f5bf-4615-a29d-3154bc114b8a",
+        "teamName": "Dallas Cowboys"
+      },
+      {
+        "id": "42b4e69a-3226-4063-aa73-9992e3cf5ecb",
+        "teamName": "Chicago Bears"
+      },
+      {
+        "id": "475d0005-b4ad-499d-8ee3-4d0d4f3a3493",
+        "teamName": "Pittsburgh Steelers"
+      },
+      {
+        "id": "48b8a938-a196-4391-8dbb-758325bb0c65",
+        "teamName": "New Orleans Saints"
+      },
+      {
+        "id": "549a57bd-d45d-47e0-95f9-db46db69ec69",
+        "teamName": "San Francisco 49ers"
+      },
+      {
+        "id": "5682292e-72fa-419a-b9c7-872b2b1763bd",
+        "teamName": "Atlanta Falcons"
+      },
+      {
+        "id": "643da397-a321-4795-be83-d89637eec0d8",
+        "teamName": "Los Angeles Chargers"
+      },
+      {
+        "id": "676f4225-3fb0-48c8-8d32-9b9fff45233e",
+        "teamName": "New England Patriots"
+      },
+      {
+        "id": "7643f30e-a6e9-4ed7-bede-01b7618225fc",
+        "teamName": "Denver Broncos"
+      },
+      {
+        "id": "87ade106-24bb-4433-ac9a-31d7789d4982",
+        "teamName": "Las Vegas Raiders"
+      },
+      {
+        "id": "88b4ba6e-ff83-45eb-9bbb-0e35a5158f4b",
+        "teamName": "Washington Football Team"
+      },
+      {
+        "id": "8a041b60-cb88-4832-9763-e52126f8b749",
+        "teamName": "Philadelphia Eagles"
+      },
+      {
+        "id": "9ef0bc9f-2b82-4bb2-aa9e-4bc233236f51",
+        "teamName": "Tampa Bay Buccaneers"
+      },
+      {
+        "id": "a40b1abc-799f-45d8-9741-888e8041b6bf",
+        "teamName": "Green Bay Packers"
+      },
+      {
+        "id": "a9b89d46-09e4-42bc-8b86-772b357b047b",
+        "teamName": "New York Giants"
+      },
+      {
+        "id": "bee39485-62ad-4a52-88c8-18bbc20314f7",
+        "teamName": "New York Jets"
+      },
+      {
+        "id": "cb4f3e05-4e3d-4c5c-aed6-9039d13523d3",
+        "teamName": "Cleveland Browns"
+      },
+      {
+        "id": "d152f99e-5560-4273-af3e-cc5ee5cd9104",
+        "teamName": "Cincinnati Bengals"
+      },
+      {
+        "id": "d22ff84d-74dc-4ad9-a3ff-ca32ce809d43",
+        "teamName": "Minnesota Vikings"
+      },
+      {
+        "id": "d35b2b16-323d-4da2-9875-9e5f4e46b462",
+        "teamName": "Seattle Seahawks"
+      },
+      {
+        "id": "d59b1a86-bb33-4c43-b00d-76c31681740a",
+        "teamName": "Miami Dolphins"
+      },
+      {
+        "id": "dd969aff-4491-442e-ad54-59d14f464930",
+        "teamName": "Baltimore Ravens"
+      },
+      {
+        "id": "eef9dbf7-209e-4ea4-9493-e01ee92be4f2",
+        "teamName": "Kansas City Chiefs"
+      },
+      {
+        "id": "f2f0fe4c-f6eb-40ab-9bc2-c228c9e2f6ea",
+        "teamName": "Los Angeles Rams"
+      },
+      {
+        "id": "f91bad84-29b6-489a-9da6-c558eb2f6243",
+        "teamName": "Tennessee Titans"
+      },
+      {
+        "id": "fed5f29d-3d68-4a1c-81da-e6c7041602fc",
+        "teamName": "Arizona Cardinals"
+      }
+    ]
+  }
+}

@@ -7,7 +7,7 @@ module.exports = {
   mode: slsw.lib.webpack.isLocal ? "development" : "production",
   optimization: {
     // We don't need to minimize our Lambda code.
-    minimize: false,
+    minimize: true,
   },
   performance: {
     // Turn off size warnings for entry points

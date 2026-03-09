@@ -39,6 +39,18 @@ const Tournament = {
       const tournamentTeam = await TournamentService.createTournamentTeam(price, seed, region, teamId, tournamentId);
       return tournamentTeam;
     },
+    createBulkTournamentTeams: async (_, { input }) => {
+      const bulkTeamInput = input;
+      const price = 0
+      const seed = 1
+      const region = ""
+      const tournamentTeams = await Promise.all(bulkTeamInput.map(async (team) => {
+        const teamId = team.teamId;
+        const tournamentId = team.tournamentId;
+        return await TournamentService.createTournamentTeam(price, seed, region, teamId, tournamentId);
+      }))
+      return tournamentTeams;
+    },
     updateTournament: async (_, { input }) => {
       const { id, name, leagueId } = input;
       const updateId = await TournamentService.updateTournament(id, name, leagueId);

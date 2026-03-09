@@ -31,6 +31,10 @@ const Entry = SequelizeInstance.define('Entry', {
     type: DataTypes.FLOAT,
     allowNull: false
   },
+  secondaryMarketCashIncome: {
+    type: DataTypes.FLOAT,
+    allowNull: true
+  },
 }, {
   freezeTableName: true
 });

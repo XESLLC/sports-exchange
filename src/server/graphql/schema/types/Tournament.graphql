@@ -59,6 +59,11 @@ input TournamentTeamInput {
   tournamentId: ID!
 }
 
+input BulkTournamentTeamInput {
+  teamId: ID!
+  tournamentId: ID!
+}
+
 input TournamentTeamMilestoneInput {
   id: ID!
   milestoneInput: MilestoneDataInput
@@ -84,6 +89,7 @@ type Mutation {
   createOrUpdateMilestoneData(input: TournamentTeamMilestoneInput!): Team
   createTournament(input: TournamentInput!): Tournament!
   createTournamentTeam(input: TournamentTeamInput!): TournamentTeam!
+  createBulkTournamentTeams(input: [BulkTournamentTeamInput]!): [TournamentTeam]!
   updateTournament(input: UpdateTournamentInput!): ID!
   deleteTournament(input: DeleteTournamentInput!): ID
   toggleIsIpoOpen(tournamentId: ID!, isIpoOpen: Boolean!): Tournament

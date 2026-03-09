@@ -8,6 +8,8 @@ const jwksClient = require('jwks-rsa');
 const resolvers = require('./graphql/resolvers');
 const { initModels } = require('./models');
 
+const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core')
+
 //Env
 console.log('process.env.ENV ',process.env.ENV)
 isNotLocal = (process.env.ENV !== 'local')
@@ -57,29 +59,31 @@ if(isNotLocal) {
 
 if (isNotLocal) {
   //aws setup
-    const server = new ApolloServer({
-      typeDefs,
-      resolvers,
-      context: async ({event, context }) => ({
-          user: await getUser(event.headers.Authorization),
-          context,
-          event
-      })
-    });
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: async ({event, context }) => ({
+        user: await getUser(event.headers.Authorization),
+        context,
+        event
+    })
+  });
 
-    const graphqlHandler = server.createHandler();
+  const graphqlHandler = server.createHandler({
+    cors: {
+      origin: '*',
+      methods: '*',
+      allowedHeaders: '*'
+    }
+  });
 
-    module.exports.graphqlHandler = (event, context, callback) => {
-      context.callbackWaitsForEmptyEventLoop = false;
-      function callbackFilter(error, output) {
-        output.headers['Access-Control-Allow-Origin'] = '*';
-        callback(error, output);
-      }
+  module.exports.graphqlHandler = async (event, context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
+    return await graphqlHandler(event, context)
+  };
 
-      graphqlHandler(event, context, callbackFilter);
-
-    };
 } else {
+  console.log("local setup")
   // local setup
   const server = new ApolloServer({
     typeDefs,
@@ -87,6 +91,7 @@ if (isNotLocal) {
     context: async ({ req }) => ({
       user: await getUser(req.headers.authorization)
     }),
+    plugins: [ApolloServerPluginLandingPageGraphQLPlayground()]
   });
 
   initModels().then(() => {

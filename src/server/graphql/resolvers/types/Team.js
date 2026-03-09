@@ -22,7 +22,7 @@ const Team = {
       const { name, leagueId } = input;
       const team = await TeamService.createTeam(name, leagueId);
       return team;
-    },
+    }, 
     deleteTeam: async (_, args) => {
       const name = args.name
       const leagueId = args.leagueId
