@@ -1,0 +1,29 @@
+type TournamentMessage {
+  id: ID!
+  tournamentId: ID!
+  entryId: ID
+  entryName: String
+  userId: ID!
+  authorFirstName: String
+  authorLastName: String
+  body: String!
+  notifiedByEmail: Boolean!
+  createdAt: String!
+}
+
+input CreateTournamentMessageInput {
+  tournamentId: ID!
+  body: String!
+  # If true, every other entrant in the tournament is emailed about this post.
+  sendEmail: Boolean
+}
+
+type Query {
+  # Accessible only to users who have (or co-own) an entry in this tournament.
+  tournamentMessages(tournamentId: ID!): [TournamentMessage]
+}
+
+type Mutation {
+  # Accessible only to users who have (or co-own) an entry in this tournament.
+  createTournamentMessage(input: CreateTournamentMessageInput!): TournamentMessage
+}
