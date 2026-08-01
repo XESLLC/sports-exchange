@@ -17,6 +17,7 @@ type LeagueSettings {
 type Milestone {
   id: String
   name: String
+  poolPercent: Float
 }
 
 input CreateLeagueInput {

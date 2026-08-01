@@ -36,6 +36,42 @@ type TournamentTeam {
   region: String
 }
 
+type RegularSeasonDividendPreviewTeam {
+  tournamentTeamId: ID!
+  teamId: ID!
+  teamName: String
+  matched: Boolean!
+  wins: Int!
+  losses: Int!
+  ties: Int!
+  dividendPrice: Float!
+}
+
+type RegularSeasonDividendPreview {
+  totalPoolInvested: Float!
+  totalLeagueWins: Int!
+  perWinRate: Float!
+  unmatchedTeamNames: [String]!
+  teams: [RegularSeasonDividendPreviewTeam]!
+}
+
+type MilestoneAchievementPreviewTeam {
+  tournamentTeamId: ID!
+  teamId: ID!
+  teamName: String
+  matched: Boolean!
+  achieved: Boolean!
+  dividendPrice: Float!
+}
+
+type MilestoneAchievementPreview {
+  totalPoolInvested: Float!
+  poolPercent: Float!
+  flatBonus: Float!
+  unmatchedTeamNames: [String]!
+  teams: [MilestoneAchievementPreviewTeam]!
+}
+
 input TournamentInput {
   name: String!
   leagueId: String!
@@ -83,10 +119,14 @@ type Query {
   getTournamentTransactions(tournamentId: ID!): [Transaction]
   tournaments: [TournamentWithLeagueName]
   tournament(id: ID!): Tournament
+  previewRegularSeasonDividends(tournamentId: ID!): RegularSeasonDividendPreview
+  previewDivisionTitleDividends(tournamentId: ID!): MilestoneAchievementPreview
+  previewConfSeed1Dividends(tournamentId: ID!): MilestoneAchievementPreview
 }
 
 type Mutation {
   createOrUpdateMilestoneData(input: TournamentTeamMilestoneInput!): Team
+  updateMilestonePoolPercent(tournamentId: ID!, milestoneId: String!, poolPercent: Float!): Tournament
   createTournament(input: TournamentInput!): Tournament!
   createTournamentTeam(input: TournamentTeamInput!): TournamentTeam!
   createBulkTournamentTeams(input: [BulkTournamentTeamInput]!): [TournamentTeam]!

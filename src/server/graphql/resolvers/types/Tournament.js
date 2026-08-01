@@ -20,6 +20,21 @@ const Tournament = {
       const id = input.id;
       const tournament = await TournamentService.tournament(id);
       return tournament;
+    },
+    previewRegularSeasonDividends: async (_, input) => {
+      const tournamentId = input.tournamentId;
+      const preview = await TournamentService.previewRegularSeasonDividends(tournamentId);
+      return preview;
+    },
+    previewDivisionTitleDividends: async (_, input) => {
+      const tournamentId = input.tournamentId;
+      const preview = await TournamentService.previewDivisionTitleDividends(tournamentId);
+      return preview;
+    },
+    previewConfSeed1Dividends: async (_, input) => {
+      const tournamentId = input.tournamentId;
+      const preview = await TournamentService.previewConfSeed1Dividends(tournamentId);
+      return preview;
     }
   },
 
@@ -28,6 +43,11 @@ const Tournament = {
       const { id, milestoneInput } = input;
       const tournamentTeam = await TournamentService.createOrUpdateMilestoneData(id, milestoneInput);
       return tournamentTeam;
+    },
+    updateMilestonePoolPercent: async (_, input) => {
+      const { tournamentId, milestoneId, poolPercent } = input;
+      const tournament = await TournamentService.updateMilestonePoolPercent(tournamentId, milestoneId, poolPercent);
+      return tournament;
     },
     createTournament: async (_, { input }) => {
       const { name, leagueId } = input;
