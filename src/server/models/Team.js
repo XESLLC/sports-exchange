@@ -34,11 +34,20 @@ const Team = SequelizeInstance.define('Team', {
 
   name: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+    allowNull: false
   }
 }, {
-  freezeTableName: true
+  freezeTableName: true,
+  indexes: [
+    // Team names only need to be unique within a league - see migration
+    // 20260730000000-scope-team-name-uniqueness-to-league for why this
+    // isn't a plain `unique: true` on the column.
+    {
+      unique: true,
+      fields: ['name', 'leagueId'],
+      name: 'team_name_league_id_unique'
+    }
+  ]
 });
 
 module.exports = Team;

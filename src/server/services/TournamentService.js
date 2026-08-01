@@ -444,6 +444,89 @@ const TournamentService = {
 
     return tournamentTeam;
   },
+  // Lets an admin build out (or add to) a tournament's field of teams,
+  // mixing teams the league already knows about with brand-new ones - e.g.
+  // NCAA tournament schools making their first appearance. Each entry needs
+  // exactly one of existingTeamId/newTeamName. Safe to call more than once
+  // for the same tournament: a team that's already attached just gets its
+  // seed/region/price updated rather than erroring or duplicating, so an
+  // admin can re-run this to fix a mistake or add late entries (e.g. First
+  // Four results) without disturbing teams already set up.
+  setupTournamentTeams: async (tournamentId, entries) => {
+    const tournament = await Tournament.findByPk(tournamentId);
+    if (!tournament) {
+      throw new Error(`tournament not found for id: ${tournamentId}`);
+    }
+
+    entries.forEach((entry) => {
+      const hasExisting = !!entry.existingTeamId;
+      const hasNew = !!(entry.newTeamName && entry.newTeamName.trim());
+      if (hasExisting === hasNew) {
+        throw new Error(
+          `Each team entry needs exactly one of existingTeamId or newTeamName (got: ${JSON.stringify(entry)})`
+        );
+      }
+    });
+
+    const results = await Promise.all(entries.map(async (entry) => {
+      let team;
+      if (entry.existingTeamId) {
+        // Scoped to this tournament's league so a team can't accidentally
+        // get attached from a different sport/league by a stray id.
+        team = await Team.findOne({
+          where: { id: entry.existingTeamId, leagueId: tournament.leagueId }
+        });
+        if (!team) {
+          throw new Error(
+            `Team ${entry.existingTeamId} was not found in this tournament's league.`
+          );
+        }
+      } else {
+        // findOrCreate on (name, leagueId) means retyping an existing
+        // team's exact name re-attaches that team instead of duplicating it.
+        [team] = await Team.findOrCreate({
+          where: { name: entry.newTeamName.trim(), leagueId: tournament.leagueId }
+        });
+      }
+
+      const [tournamentTeam] = await TournamentTeam.findOrCreate({
+        where: { teamId: team.id, tournamentId },
+        defaults: {
+          price: entry.price || 0,
+          seed: entry.seed || 0,
+          region: entry.region || null,
+          isEliminated: false
+        }
+      });
+
+      // findOrCreate leaves an already-existing row untouched - apply any
+      // edited seed/region/price so re-running this acts like a real upsert.
+      if (entry.price != null) { tournamentTeam.price = entry.price; }
+      if (entry.seed != null) { tournamentTeam.seed = entry.seed; }
+      if (entry.region != null) { tournamentTeam.region = entry.region; }
+      await tournamentTeam.save();
+
+      const stocksInCirculation = await Stock.findAll({
+        where: { tournamentTeamId: tournamentTeam.id }
+      });
+      const numStocksInCirculation = stocksInCirculation.length ? stocksInCirculation.length : 1;
+
+      return {
+        id: tournamentTeam.id,
+        teamId: team.id,
+        teamName: team.name,
+        seed: tournamentTeam.seed,
+        ipoPrice: tournamentTeam.price,
+        region: tournamentTeam.region,
+        tournament: tournament.name,
+        isEliminated: tournamentTeam.isEliminated,
+        milestoneData: tournamentTeam.milestoneData,
+        numStocksInCirculation
+      };
+    }));
+
+    return results;
+  },
   toggleTournamentTeamEliminated: async (tournamentTeamId, isEliminated) => {
     const tournamentTeam = await TournamentTeam.findByPk(tournamentTeamId);
     if(!tournamentTeam) {
