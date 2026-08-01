@@ -71,6 +71,10 @@ const Tournament = {
       }))
       return tournamentTeams;
     },
+    setupTournamentTeams: async (_, { tournamentId, input }) => {
+      const tournamentTeams = await TournamentService.setupTournamentTeams(tournamentId, input);
+      return tournamentTeams;
+    },
     updateTournament: async (_, { input }) => {
       const { id, name, leagueId } = input;
       const updateId = await TournamentService.updateTournament(id, name, leagueId);

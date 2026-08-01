@@ -100,6 +100,15 @@ input BulkTournamentTeamInput {
   tournamentId: ID!
 }
 
+input TournamentTeamSetupInput {
+  # Exactly one of existingTeamId / newTeamName must be set per entry.
+  existingTeamId: ID
+  newTeamName: String
+  seed: Int
+  region: String
+  price: Float
+}
+
 input TournamentTeamMilestoneInput {
   id: ID!
   milestoneInput: MilestoneDataInput
@@ -170,6 +179,7 @@ type Mutation {
   createTournament(input: TournamentInput!): Tournament!
   createTournamentTeam(input: TournamentTeamInput!): TournamentTeam!
   createBulkTournamentTeams(input: [BulkTournamentTeamInput]!): [TournamentTeam]!
+  setupTournamentTeams(tournamentId: ID!, input: [TournamentTeamSetupInput!]!): [TournamentTeam]!
   updateTournament(input: UpdateTournamentInput!): ID!
   deleteTournament(input: DeleteTournamentInput!): ID
   toggleIsIpoOpen(tournamentId: ID!, isIpoOpen: Boolean!): Tournament
