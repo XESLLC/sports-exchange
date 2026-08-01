@@ -114,6 +114,45 @@ input MilestoneDataInput {
   ties: Int
 }
 
+type EmailAttachment {
+  filename: String
+  key: String
+}
+
+type EmailBlast {
+  id: ID!
+  tournamentId: ID!
+  subject: String!
+  htmlBody: String!
+  senderName: String
+  recipientCount: Int!
+  failedCount: Int!
+  unresolvedParticipants: [String]!
+  attachments: [EmailAttachment]!
+  status: String!
+  errorMessage: String
+  createdAt: String!
+}
+
+type PresignedUpload {
+  uploadUrl: String!
+  key: String!
+  publicUrl: String!
+}
+
+input SendTournamentEmailInput {
+  tournamentId: ID!
+  subject: String!
+  htmlBody: String!
+  attachmentKeys: [String]!
+}
+
+input EmailAttachmentUploadInput {
+  tournamentId: ID!
+  filename: String!
+  contentType: String!
+}
+
 type Query {
   getTournamentsByLeagueId(leagueId: ID!): [Tournament]
   getTournamentTransactions(tournamentId: ID!): [Transaction]
@@ -122,6 +161,7 @@ type Query {
   previewRegularSeasonDividends(tournamentId: ID!): RegularSeasonDividendPreview
   previewDivisionTitleDividends(tournamentId: ID!): MilestoneAchievementPreview
   previewConfSeed1Dividends(tournamentId: ID!): MilestoneAchievementPreview
+  emailBlasts(tournamentId: ID!): [EmailBlast]
 }
 
 type Mutation {
@@ -136,5 +176,7 @@ type Mutation {
   toggleIsTournamentActive(tournamentId: ID!, isActive: Boolean!): Tournament
   updateTournamentTeam(input: TournamentTeamInput!): TournamentTeam
   toggleTournamentTeamEliminated(tournamentTeamId: ID!, isEliminated: Boolean!): TournamentTeam
+  sendTournamentEmail(input: SendTournamentEmailInput!): EmailBlast!
+  getEmailAttachmentUploadUrl(input: EmailAttachmentUploadInput!): PresignedUpload!
   # uploadFile(tournamentId: ID!, sheetType: String!, file: Upload!): Tournament
 }
