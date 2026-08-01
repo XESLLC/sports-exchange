@@ -23,6 +23,7 @@ const ses = new AWS.SES({ region: process.env.AWS_REGION || 'us-west-2' });
 const transporter = nodemailer.createTransport({ SES: { ses, aws: AWS } });
 
 const FROM_EMAIL = process.env.SES_FROM_EMAIL;
+const ADMIN_EMAILS = ['couvillion@gmail.com', 'david.xesllc@gmail.com', 'bartsched@gmail.com'];
 
 // SES will throttle a burst of 30+ simultaneous sends (especially in
 // sandbox mode, where the default is 1 msg/sec). Batch it instead of
@@ -91,6 +92,7 @@ const EmailService = {
         batch.map((recipient) =>
           transporter.sendMail({
             from: FROM_EMAIL,
+            replyTo: ADMIN_EMAILS.join(', '),
             to: recipient.email,
             subject,
             html: htmlBody,
