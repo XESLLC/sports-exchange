@@ -19,11 +19,19 @@ const EmailBlast = require('../models/EmailBlast');
 const ParticipantEmailService = require('./ParticipantEmailService');
 const EmailAttachmentUploadService = require('./EmailAttachmentUploadService');
 
-const ses = new AWS.SES({ region: process.env.AWS_REGION || 'us-west-2' });
-const transporter = nodemailer.createTransport({ SES: { ses, aws: AWS } });
-
 const FROM_EMAIL = process.env.SES_FROM_EMAIL;
 const ADMIN_EMAILS = ['couvillion@gmail.com', 'david.xesllc@gmail.com', 'bartsched@gmail.com'];
+
+// Lazy-initialized so the SES transport isn't created at module load time
+// (which fails locally where aws-sdk v2 SES isn't available).
+let _transporter = null;
+function getTransporter() {
+  if (!_transporter) {
+    const ses = new AWS.SES({ region: process.env.AWS_REGION || 'us-west-2' });
+    _transporter = nodemailer.createTransport({ SES: { ses, aws: AWS } });
+  }
+  return _transporter;
+}
 
 // SES will throttle a burst of 30+ simultaneous sends (especially in
 // sandbox mode, where the default is 1 msg/sec). Batch it instead of
@@ -86,6 +94,7 @@ const EmailService = {
 
     let failedCount = 0;
     const failedEmails = [];
+    const transporter = getTransporter();
 
     for (const batch of chunk(resolved, BATCH_SIZE)) {
       const results = await Promise.allSettled(
