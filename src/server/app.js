@@ -50,6 +50,17 @@ const getUser = async token => {
   });
 };
 
+// Stub user for local development — bypasses Auth0 token validation so the
+// GraphQL playground and local frontend work without a real JWT.
+const LOCAL_DEV_USER = {
+  sub: 'local|dev',
+  name: 'Local Dev',
+  email: 'exigentemail@gmail.com',
+  'https://sports-exchange/roles': ['ADMIN'],
+  'https://sports-exchange/firstname': 'Local',
+  'https://sports-exchange/lastname': 'Dev'
+};
+
 let typeDefs;
 if(isNotLocal) {
   typeDefs = require('./graphql/schema');
@@ -84,12 +95,12 @@ if (isNotLocal) {
 
 } else {
   console.log("local setup")
-  // local setup
+  // local setup — auth is stubbed with LOCAL_DEV_USER, no JWT needed
   const server = new ApolloServer({
     typeDefs,
     resolvers,
     context: async ({ req }) => ({
-      user: await getUser(req.headers.authorization)
+      user: LOCAL_DEV_USER
     }),
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()]
   });
