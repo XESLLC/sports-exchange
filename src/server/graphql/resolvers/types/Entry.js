@@ -59,6 +59,16 @@ const Entry = {
     updateEntryCash: async (_, { entryId, ipoCashSpent, secondaryMarketCashSpent, secondaryMarketCashIncome } ) => {
       const entry = await EntryService.updateEntryCash(entryId, ipoCashSpent, secondaryMarketCashSpent, secondaryMarketCashIncome);
       return entry;
+    },
+    addEntryOwner: async (_, { input }) => {
+      const { entryId, email } = input;
+      const entry = await EntryService.addEntryOwner(entryId, email);
+      return entry;
+    },
+    removeEntryOwner: async (_, { input }) => {
+      const { entryId, userId } = input;
+      const entry = await EntryService.removeEntryOwner(entryId, userId);
+      return entry;
     }
   }
 };

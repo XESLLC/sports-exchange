@@ -14,6 +14,16 @@ input EntryInput {
   tournamentId: ID!
 }
 
+input AddEntryOwnerInput {
+  entryId: ID!
+  email: String!
+}
+
+input RemoveEntryOwnerInput {
+  entryId: ID!
+  userId: ID!
+}
+
 input IPOPurchaseInput {
   tournamentTeamId: ID!
   quantity: Int!
@@ -78,4 +88,6 @@ type Mutation {
   deleteEntryBid(id: ID!): Entry
   ipoPurchase(input: IPOPurchaseInput!): TournamentTeamStock!
   updateEntryCash(entryId: ID!, ipoCashSpent: Float!, secondaryMarketCashSpent: Float, secondaryMarketCashIncome: Float): Entry
+  addEntryOwner(input: AddEntryOwnerInput!): Entry
+  removeEntryOwner(input: RemoveEntryOwnerInput!): Entry
 }

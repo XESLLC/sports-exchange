@@ -25,6 +25,16 @@ const EntryService = {
       throw new Error("users not found");
     }
 
+    // Every requested owner email needs an existing account - fail loudly
+    // and name the culprits, rather than silently creating the entry with
+    // only whichever emails happened to match (e.g. a typo in a co-owner's
+    // email used to be dropped without any indication).
+    const foundEmails = users.map(user => user.email);
+    const missingEmails = userEmails.filter(email => !foundEmails.includes(email));
+    if(missingEmails.length > 0) {
+      throw new Error(`No account found for: ${missingEmails.join(', ')} - they need to sign up first, then can be added as an owner.`);
+    }
+
     const entry = await Entry.create({
       tournamentId,
       name,
@@ -497,6 +507,75 @@ const EntryService = {
     )
 
     return result;
+  },
+  // Links an existing user (by email) to an entry they don't already own,
+  // via the UserEntry join table. Once linked, that user's own
+  // `userEntries(email)` lookup (used on Home/League/Portfolio) will
+  // include this entry, and entry actions that check UserEntry membership
+  // (e.g. ipoPurchase) will work for them - no other changes needed.
+  addEntryOwner: async (entryId, email) => {
+    const entry = await Entry.findByPk(entryId);
+    if(!entry) {
+      throw new Error("Entry not found");
+    }
+
+    const user = await User.findOne({
+      where: {
+        email
+      }
+    });
+    if(!user) {
+      throw new Error(`No account found for ${email} - they need to sign up first, then can be added as an owner.`);
+    }
+
+    const existingUserEntry = await UserEntry.findOne({
+      where: {
+        entryId,
+        userId: user.id
+      }
+    });
+    if(existingUserEntry) {
+      throw new Error(`${email} is already an owner of this entry`);
+    }
+
+    await UserEntry.create({
+      entryId,
+      userId: user.id
+    });
+
+    return entry;
+  },
+  // Unlinks a user from an entry. Refuses to remove the last remaining
+  // owner so an entry can never end up with zero owners - add a
+  // replacement owner first, or delete the entry instead.
+  removeEntryOwner: async (entryId, userId) => {
+    const entry = await Entry.findByPk(entryId);
+    if(!entry) {
+      throw new Error("Entry not found");
+    }
+
+    const ownerCount = await UserEntry.count({
+      where: {
+        entryId
+      }
+    });
+    if(ownerCount <= 1) {
+      throw new Error("Can't remove the last owner of an entry - add another owner first, or delete the entry instead.");
+    }
+
+    const userEntry = await UserEntry.findOne({
+      where: {
+        entryId,
+        userId
+      }
+    });
+    if(!userEntry) {
+      throw new Error("That user is not an owner of this entry");
+    }
+
+    await userEntry.destroy();
+
+    return entry;
   },
   updateEntryCash: async (entryId, ipoCashSpent, secondaryMarketCashSpent, secondaryMarketCashIncome) => {
     const result = await instance.transaction(async (t) => {
