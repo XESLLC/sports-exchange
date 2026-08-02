@@ -15,8 +15,8 @@ console.log('process.env.ENV ',process.env.ENV)
 isNotLocal = (process.env.ENV !== 'local')
 const { ApolloServer, gql, AuthenticationError } = isNotLocal? require('apollo-server-lambda') : require('apollo-server');
 
-const AUTH0_CLIENT_ID = !!process.env.AUTH0_CLIENT_ID? process.env.AUTH0_CLIENT_ID : 'undvcjb2Ky8Kt4byZegdWY4V5OoYhEWA'
-const AUTH0_DOMAIN = !!process.env.AUTH0_DOMAIN? process.env.AUTH0_DOMAIN : 'dev-8duzx03a.us.auth0.com'
+const AUTH0_CLIENT_ID = !!process.env.AUTH0_CLIENT_ID? process.env.AUTH0_CLIENT_ID : '0nb53uZPa4bpSwMbzbTndGjtBEM4V1hG'
+const AUTH0_DOMAIN = !!process.env.AUTH0_DOMAIN? process.env.AUTH0_DOMAIN : 'dev-ehkm7png7xnycn0h.us.auth0.com'
 console.log('AUTH0_CLIENT_ID -', AUTH0_CLIENT_ID, "AUTH0_DOMAIN -", AUTH0_DOMAIN)
 //Auth Obj on server
 const client = jwksClient({
@@ -33,7 +33,7 @@ const getKey = (header, cb) => {
 }
 
 const options = {
-  audience: 'undvcjb2Ky8Kt4byZegdWY4V5OoYhEWA',
+  audience: '0nb53uZPa4bpSwMbzbTndGjtBEM4V1hG',
   issuer: `https://${AUTH0_DOMAIN}/`,
   algorithms: ['RS256']
 };
