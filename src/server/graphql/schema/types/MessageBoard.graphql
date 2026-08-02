@@ -6,20 +6,24 @@ type TournamentMessage {
   userId: ID!
   authorFirstName: String
   authorLastName: String
+  title: String
   body: String!
+  parentId: ID
+  replies: [TournamentMessage]
   notifiedByEmail: Boolean!
   createdAt: String!
 }
 
 input CreateTournamentMessageInput {
   tournamentId: ID!
+  title: String
   body: String!
-  # If true, every other entrant in the tournament is emailed about this post.
-  sendEmail: Boolean
+  parentId: ID
 }
 
 type Query {
-  # Accessible only to users who have (or co-own) an entry in this tournament.
+  # Returns top-level threads with nested replies. Accessible only to users
+  # who have (or co-own) an entry in this tournament.
   tournamentMessages(tournamentId: ID!): [TournamentMessage]
 }
 

@@ -14,10 +14,6 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;');
 }
 
-// Sole access gate for the board: confirms the authenticated email belongs
-// to a User who owns (or co-owns, since Entry <-> User is many-to-many via
-// UserEntry) at least one Entry in this tournament. Used by both reads and
-// posts - nobody outside the tournament can see or write to its board.
 async function verifyTournamentAccess(tournamentId, email) {
   if (!email) {
     throw new Error('Not authenticated');
@@ -46,12 +42,10 @@ async function verifyTournamentAccess(tournamentId, email) {
     throw new Error('You do not have an entry in this tournament');
   }
 
-  // A user could in theory co-own more than one entry in the same
-  // tournament - just attribute the post to the first one found.
   return { user, entry: entries[0] };
 }
 
-function toGraphQLShape(message, entry, author) {
+function toGraphQLShape(message, entry, author, replies = []) {
   return {
     id: message.id,
     tournamentId: message.tournamentId,
@@ -60,7 +54,10 @@ function toGraphQLShape(message, entry, author) {
     userId: message.userId,
     authorFirstName: author ? author.firstname : null,
     authorLastName: author ? author.lastname : null,
+    title: message.title || null,
     body: message.body,
+    parentId: message.parentId || null,
+    replies,
     notifiedByEmail: message.notifiedByEmail,
     createdAt: message.createdAt.toISOString()
   };
@@ -70,28 +67,42 @@ const MessageBoardService = {
   tournamentMessages: async (tournamentId, email) => {
     await verifyTournamentAccess(tournamentId, email);
 
-    const messages = await TournamentMessage.findAll({
+    const allMessages = await TournamentMessage.findAll({
       where: { tournamentId },
       order: [['createdAt', 'ASC']]
     });
 
-    const userIds = [...new Set(messages.map(m => m.userId))];
+    const userIds = [...new Set(allMessages.map(m => m.userId))];
     const users = userIds.length > 0 ? await User.findAll({ where: { id: userIds } }) : [];
     const usersById = new Map(users.map(u => [u.id, u]));
 
-    const entryIds = [...new Set(messages.map(m => m.entryId).filter(Boolean))];
+    const entryIds = [...new Set(allMessages.map(m => m.entryId).filter(Boolean))];
     const entries = entryIds.length > 0 ? await Entry.findAll({ where: { id: entryIds } }) : [];
     const entriesById = new Map(entries.map(e => [e.id, e]));
 
-    return messages.map(message =>
-      toGraphQLShape(message, entriesById.get(message.entryId), usersById.get(message.userId))
-    );
+    // Build reply map: parentId -> list of shaped replies
+    const replyMap = new Map();
+    for (const message of allMessages) {
+      if (message.parentId) {
+        if (!replyMap.has(message.parentId)) replyMap.set(message.parentId, []);
+        replyMap.get(message.parentId).push(
+          toGraphQLShape(message, entriesById.get(message.entryId), usersById.get(message.userId))
+        );
+      }
+    }
+
+    // Return only top-level threads with their replies attached
+    return allMessages
+      .filter(m => !m.parentId)
+      .map(m => toGraphQLShape(
+        m,
+        entriesById.get(m.entryId),
+        usersById.get(m.userId),
+        replyMap.get(m.id) || []
+      ));
   },
 
-  // Creates the post, then (only if sendEmailFlag is set) emails every
-  // OTHER entrant in the tournament using the app's existing SES-backed
-  // sendEmail util - same one Trade Notifications already use.
-  createTournamentMessage: async (tournamentId, email, body, sendEmailFlag) => {
+  createTournamentMessage: async (tournamentId, email, title, body, parentId) => {
     const trimmedBody = (body || '').trim();
     if (trimmedBody.length < 1) {
       throw new Error('Message cannot be empty');
@@ -100,17 +111,25 @@ const MessageBoardService = {
       throw new Error(`Message is too long (max ${MAX_MESSAGE_LENGTH} characters)`);
     }
 
+    const trimmedTitle = (title || '').trim() || null;
+    if (!parentId && !trimmedTitle) {
+      throw new Error('New threads must have a title');
+    }
+
     const { user, entry } = await verifyTournamentAccess(tournamentId, email);
 
     const message = await TournamentMessage.create({
       tournamentId,
       entryId: entry.id,
       userId: user.id,
+      title: trimmedTitle,
       body: trimmedBody,
+      parentId: parentId || null,
       notifiedByEmail: false
     });
 
-    if (sendEmailFlag) {
+    // Email opted-in users about new top-level threads only
+    if (!parentId) {
       const tournament = await Tournament.findByPk(tournamentId);
       const tournamentEntries = await Entry.findAll({ where: { tournamentId } });
       const tournamentEntryIds = tournamentEntries.map(e => e.id);
@@ -119,24 +138,26 @@ const MessageBoardService = {
         ? await UserEntry.findAll({ where: { entryId: tournamentEntryIds } })
         : [];
 
-      // Notify every other entrant - not the poster themselves.
       const recipientUserIds = [...new Set(userEntries.map(ue => ue.userId))]
         .filter(id => id !== user.id);
 
       const recipients = recipientUserIds.length > 0
-        ? await User.findAll({ where: { id: recipientUserIds } })
+        ? await User.findAll({ where: { id: recipientUserIds, notifyOnMessageBoard: true } })
         : [];
 
-      const authorName = `${user.firstname} ${user.lastname}`;
-      const tournamentName = tournament ? tournament.name : 'your tournament';
-      const emailMessage = `<p><strong>${escapeHtml(authorName)}</strong> posted a new message on the ${escapeHtml(tournamentName)} message board:</p><p>${escapeHtml(trimmedBody)}</p>`;
+      if (recipients.length > 0) {
+        const authorName = `${user.firstname} ${user.lastname}`;
+        const tournamentName = tournament ? tournament.name : 'your tournament';
+        const subject = `New post on ${tournamentName} message board: ${trimmedTitle}`;
+        const emailBody = `<p><strong>${escapeHtml(authorName)}</strong> posted a new thread on the <strong>${escapeHtml(tournamentName)}</strong> message board:</p><h3>${escapeHtml(trimmedTitle)}</h3><p>${escapeHtml(trimmedBody)}</p>`;
 
-      for (const recipient of recipients) {
-        await sendEmail(recipient.email, 'New Message Board Post', emailMessage);
+        for (const recipient of recipients) {
+          await sendEmail(recipient.email, subject, emailBody);
+        }
+
+        message.notifiedByEmail = true;
+        await message.save();
       }
-
-      message.notifiedByEmail = true;
-      await message.save();
     }
 
     return toGraphQLShape(message, entry, user);

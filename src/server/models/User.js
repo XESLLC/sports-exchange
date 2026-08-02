@@ -40,6 +40,16 @@ const User = SequelizeInstance.define('User', {
   phoneNumber: {
     type: DataTypes.STRING,
     allowNull: true
+  },
+  notifyOnMessageBoard: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+  isAdmin: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
   }
 }, {
   freezeTableName: true

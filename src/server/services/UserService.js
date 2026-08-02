@@ -1,4 +1,3 @@
-const { transformCommentsToDescriptions } = require('graphql-tools');
 const Tournament = require('../models/Tournament');
 const TournamentTeam = require('../models/TournamentTeam')
 const Team = require('../models/Team')
@@ -11,7 +10,7 @@ const Entry = require('../models/Entry');
 
 const UserService = {
   users: async () => {
-    return await User.findAll();
+    return await User.findAll({ order: [['lastname', 'ASC'], ['firstname', 'ASC']] });
   },
   user: async email => {
     return await User.findOne({
@@ -85,7 +84,7 @@ const UserService = {
 
     return users;
   },
-  updateUser: async (firstname, lastname, email, username, phoneNumber) => {
+  updateUser: async (firstname, lastname, email, username, phoneNumber, notifyOnMessageBoard) => {
     const user = await User.findOne({
       where: {
         email
@@ -99,8 +98,20 @@ const UserService = {
     user.lastname = lastname;
     user.username = username;
     user.phoneNumber = phoneNumber;
+    if (notifyOnMessageBoard !== undefined) {
+      user.notifyOnMessageBoard = notifyOnMessageBoard;
+    }
     await user.save();
 
+    return user;
+  },
+  setUserAdmin: async (email, isAdmin) => {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    user.isAdmin = isAdmin;
+    await user.save();
     return user;
   }
 };

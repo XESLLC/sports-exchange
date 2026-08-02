@@ -12,8 +12,8 @@ const MessageBoard = {
   Mutation: {
     createTournamentMessage: async (_, { input }, context) => {
       const email = context.user && context.user.email;
-      const { tournamentId, body, sendEmail } = input;
-      const message = await MessageBoardService.createTournamentMessage(tournamentId, email, body, !!sendEmail);
+      const { tournamentId, title, body, parentId } = input;
+      const message = await MessageBoardService.createTournamentMessage(tournamentId, email, title, body, parentId || null);
       return message;
     }
   }

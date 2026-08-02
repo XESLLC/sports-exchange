@@ -39,11 +39,18 @@ const TournamentMessage = SequelizeInstance.define('TournamentMessage', {
       key: 'id'
     }
   },
+  title: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  parentId: {
+    type: DataTypes.UUID,
+    allowNull: true
+  },
   body: {
     type: DataTypes.TEXT,
     allowNull: false
   },
-  // Whether the "email everyone" option was used when this post was made.
   notifiedByEmail: {
     type: DataTypes.BOOLEAN,
     allowNull: false,

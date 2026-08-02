@@ -6,13 +6,9 @@ type User {
   email: String
   username: String
   phoneNumber: String
+  notifyOnMessageBoard: Boolean
+  isAdmin: Boolean
 }
-
-# input TournamentUserInput {
-#   firstname: String!
-#   lastname: String
-#   tournamentId: ID!
-# }
 
 input UserInput {
   firstname: String!
@@ -21,16 +17,18 @@ input UserInput {
   email: String!
   username: String!
   phoneNumber: String
+  notifyOnMessageBoard: Boolean
 }
 
 type Query {
   user(email: String!): User!
+  users: [User]
   usersByEntryId(entryId: ID!): [User]
 }
 
 type Mutation {
-  # createTournamentUser(input: TournamentUserInput!): User!
   updateUserCash(userId: ID!, cash: Int!): Boolean!
   createUser(input: UserInput!): User!
   updateUser(input: UserInput!): User!
+  setUserAdmin(email: String!, isAdmin: Boolean!): User!
 }
