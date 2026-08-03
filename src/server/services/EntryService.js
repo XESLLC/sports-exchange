@@ -641,14 +641,19 @@ const EntryService = {
     const teamsById = new Map(tournamentTeams.map(t => [t.id, t]));
     const notEliminatedSet = new Set(tournamentTeams.filter(t => !t.isEliminated).map(t => t.id));
 
-    // Group stockEntries and initialIpoStock counts by entryId
+    // Group stockEntries by entryId
     const stockEntriesByEntryId = new Map();
-    const teamStockCount = {}; // tournamentTeamId -> total stocks ever issued (for dividend division)
     for (const se of stockEntries) {
       if (!stockEntriesByEntryId.has(se.entryId)) stockEntriesByEntryId.set(se.entryId, []);
       stockEntriesByEntryId.get(se.entryId).push(se);
-      const stock = stocksById.get(se.stockId);
-      if (stock) teamStockCount[stock.tournamentTeamId] = (teamStockCount[stock.tournamentTeamId] || 0) + 1;
+    }
+
+    // teamStockCount: total stocks ever issued per team — must use all tournament stocks,
+    // not stockEntries (which is scoped to the requested entry/entries and would give a
+    // wrong divisor when called with a single entryId)
+    const teamStockCount = {};
+    for (const stock of stocks) {
+      teamStockCount[stock.tournamentTeamId] = (teamStockCount[stock.tournamentTeamId] || 0) + 1;
     }
 
     const ipoCountByEntryId = new Map();
