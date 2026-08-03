@@ -601,160 +601,141 @@ const EntryService = {
     return result;
   },
   portfolioSummaries: async (tournamentId, entryId) => {
-    console.log("starting portfolioSummaries at ", new Date())
-    let entries
-    if (!entryId) {
-      entries = await Entry.findAll({
-          where: {
-              tournamentId: tournamentId
-          }
-      });
-    } else {
-      entries = await Entry.findAll({
-          where: {
-              id: entryId
-          }
-      });
-    }
-    if (!entries && entries.length < 1) {throw new Error('Entries not found')}
-    const entryIds = entries.map(entry => entry.id);
+    const t0 = Date.now();
 
-    const userEntries = await UserEntry.findAll({
-      where: {
-          entryId: entryIds
-      }
-    })
-    if (!userEntries && userEntries.length < 1) {throw new Error('userEntries not found')}
-
-    const userIds = userEntries.map(userEntry => userEntry.userId)
-    const users = await User.findAll({
-      where: {
-        id: userIds
-      }
-    })
-    if (!users && users.length < 1) {throw new Error('users not found')}
-
-    const tournamentTeams = await TournamentTeam.findAll({
-      where: {
-          tournamentId: tournamentId
-      }
-    })
-    if (!tournamentTeams && tournamentTeams.length < 1) {throw new Error('userEntries not found')}
-    const tournamentTeamIds = tournamentTeams.map(tournamentTeam => tournamentTeam.id)
-    const teamsNotEliminated = tournamentTeams.filter(team => !team.isEliminated)
-    const teamsNotEliminatedIds = teamsNotEliminated.map(team => team.id)
-
-    const stocks = await Stock.findAll({
-      where: {
-        tournamentTeamId: tournamentTeamIds
-      }
+    // --- DB queries: raw + minimal attributes to cut RDS→Lambda transfer ---
+    const entries = await Entry.findAll({
+      where: entryId ? { id: entryId } : { tournamentId },
+      attributes: ['id', 'name', 'ipoCashSpent', 'secondaryMarketCashSpent', 'secondaryMarketCashIncome'],
+      raw: true
     });
-    if (!stocks && stocks.length < 1) {throw new Error('userEntries not found')}
+    if (!entries.length) return [];
+    const entryIds = entries.map(e => e.id);
 
-    const stocksNotEliminated = stocks.filter(stock => {
-        return teamsNotEliminatedIds.includes(stock.tournamentTeamId)
-    })
-    const stocksNotEliminatedIds = stocksNotEliminated.map(stock => stock.id)
+    const [userEntries, tournamentTeams, stocks] = await Promise.all([
+      UserEntry.findAll({ where: { entryId: entryIds }, attributes: ['userId', 'entryId'], raw: true }),
+      TournamentTeam.findAll({ where: { tournamentId }, attributes: ['id', 'isEliminated', 'price', 'milestoneData'], raw: true }),
+      Stock.findAll({
+        where: { tournamentTeamId: (await TournamentTeam.findAll({ where: { tournamentId }, attributes: ['id'], raw: true })).map(t => t.id) },
+        attributes: ['id', 'tournamentTeamId', 'originalIpoEntryId'],
+        raw: true
+      })
+    ]);
 
-    const stockEntries = await StockEntry.findAll({
-      where: {
-          entryId: entryIds
+    const userIds = [...new Set(userEntries.map(ue => ue.userId))];
+    const [users, stockEntries] = await Promise.all([
+      User.findAll({ where: { id: userIds }, attributes: ['id', 'firstname', 'lastname'], raw: true }),
+      StockEntry.findAll({ where: { entryId: entryIds }, attributes: ['entryId', 'stockId'], raw: true })
+    ]);
+
+    // --- Pre-build lookup Maps for O(1) access in the hot loop ---
+    const stocksById = new Map(stocks.map(s => [s.id, s]));
+    const usersById = new Map(users.map(u => [u.id, u]));
+
+    // milestoneData may arrive as a JSON string with raw:true
+    for (const team of tournamentTeams) {
+      if (typeof team.milestoneData === 'string') {
+        try { team.milestoneData = JSON.parse(team.milestoneData); } catch { team.milestoneData = []; }
       }
-    })
-    if (!stockEntries && stockEntries.length < 1) {throw new Error('userEntries not found')}
+    }
+    const teamsById = new Map(tournamentTeams.map(t => [t.id, t]));
+    const notEliminatedSet = new Set(tournamentTeams.filter(t => !t.isEliminated).map(t => t.id));
 
-    // Build teamMap inline: tournamentTeamId -> total stocks owned across all entries.
-    // Used to divide dividend payouts per stock. Previously read from a file on disk,
-    // which broke on Lambda where /tmp is ephemeral.
-    const teamMapFile = stockEntries.reduce((resultMap, stockEntry) => {
-      const stock = stocks.find(s => s.id == stockEntry.stockId);
-      if (!stock) return resultMap;
-      const matchedTournTeam = tournamentTeams.find(team => team.id == stock.tournamentTeamId);
-      if (!matchedTournTeam) return resultMap;
-      resultMap[matchedTournTeam.id] = (resultMap[matchedTournTeam.id] || 0) + 1;
-      return resultMap;
-    }, {});
+    // Group stockEntries and initialIpoStock counts by entryId
+    const stockEntriesByEntryId = new Map();
+    const teamStockCount = {}; // tournamentTeamId -> total stocks ever issued (for dividend division)
+    for (const se of stockEntries) {
+      if (!stockEntriesByEntryId.has(se.entryId)) stockEntriesByEntryId.set(se.entryId, []);
+      stockEntriesByEntryId.get(se.entryId).push(se);
+      const stock = stocksById.get(se.stockId);
+      if (stock) teamStockCount[stock.tournamentTeamId] = (teamStockCount[stock.tournamentTeamId] || 0) + 1;
+    }
 
-    const portfolioSummaries = entries.map((entry) => {
-        console.log("Mapping Entries - creating portfolio Summary for >>>> ", entry.id)
+    const ipoCountByEntryId = new Map();
+    for (const stock of stocks) {
+      if (stock.originalIpoEntryId) {
+        ipoCountByEntryId.set(stock.originalIpoEntryId, (ipoCountByEntryId.get(stock.originalIpoEntryId) || 0) + 1);
+      }
+    }
 
-        const ipoCashSpent = entry.ipoCashSpent? entry.ipoCashSpent : 0
-        const secondaryMarketCashSpent = entry.secondaryMarketCashSpent? entry.secondaryMarketCashSpent : 0
-        const secondaryMarketCashIncome = entry.secondaryMarketCashIncome? entry.secondaryMarketCashIncome : 0
+    // Group user names by entryId
+    const namesByEntryId = new Map();
+    for (const ue of userEntries) {
+      const user = usersById.get(ue.userId);
+      if (!user) continue;
+      if (!namesByEntryId.has(ue.entryId)) namesByEntryId.set(ue.entryId, []);
+      namesByEntryId.get(ue.entryId).push(`${user.firstname} ${user.lastname}`);
+    }
 
-        //combining names for multiple users per entry
-        let names = []
-        for(let userEntry of userEntries) {
-            const user = users.find(_user => userEntry.entryId == entry.id && _user.id == userEntry.userId)
-            if (user) {names.push(user.firstname + " " + user.lastname)}
+    // Pre-compute dividend earned per stock owned for each team (same for all entries)
+    const dividendPerStock = new Map();
+    for (const team of tournamentTeams) {
+      const totalStocks = teamStockCount[team.id] || 1;
+      const milestones = team.milestoneData || [];
+      const earned = milestones.reduce((sum, m) => {
+        return sum + (m.dividendPrice ? Math.floor((m.dividendPrice / totalStocks) * 100) / 100 : 0);
+      }, 0);
+      dividendPerStock.set(team.id, earned);
+    }
+
+    // --- Per-entry calculation (now all O(1) lookups) ---
+    const portfolioSummaries = entries.map(entry => {
+      const ipoCashSpent = entry.ipoCashSpent || 0;
+      const secondaryMarketCashSpent = entry.secondaryMarketCashSpent || 0;
+      const secondaryMarketCashIncome = entry.secondaryMarketCashIncome || 0;
+
+      const ownerName = (namesByEntryId.get(entry.id) || []).join(' & ');
+      const stockEntriesOwned = stockEntriesByEntryId.get(entry.id) || [];
+
+      const teamsOwned = new Set();
+      const teamsOwnedInTourn = new Set();
+      let moneyWon = 0, stockEntriesRemaining = 0, stockEntriesRemainingMoney = 0;
+
+      for (const se of stockEntriesOwned) {
+        const stock = stocksById.get(se.stockId);
+        if (!stock) continue;
+        const teamId = stock.tournamentTeamId;
+        const team = teamsById.get(teamId);
+        if (!team) continue;
+
+        teamsOwned.add(teamId);
+
+        if (notEliminatedSet.has(teamId)) {
+          teamsOwnedInTourn.add(teamId);
+          stockEntriesRemaining++;
+          stockEntriesRemainingMoney += team.price || 0;
         }
-        const combinedNames = names.reduce((result, userName) => {
-            if (result.length > 0) {
-                return result + " & " + userName
-            }
-            return userName
-        }, "")
 
-        const initialIpoStocks = stocks.filter(stock => stock.originalIpoEntryId == entry.id)
+        moneyWon += dividendPerStock.get(teamId) || 0;
+      }
 
-        const stockEntriesOwned = stockEntries.filter(stockEntry => stockEntry.entryId == entry.id)
+      const percentStocksRemaining = stockEntriesOwned.length > 0
+        ? Math.round(stockEntriesRemaining / stockEntriesOwned.length * 10000) / 100 : 0;
+      const percentMoneyWonInvested = ipoCashSpent > 0 ? moneyWon * 100 / ipoCashSpent : 0;
+      const profitLoss = Math.round((moneyWon + secondaryMarketCashIncome - ipoCashSpent - secondaryMarketCashSpent) * 100) / 100;
+      const percentMoneyRemaining = ipoCashSpent > 0
+        ? Math.round(stockEntriesRemainingMoney / ipoCashSpent * 10000) / 100 : 0;
 
-        const calcResults = stockEntriesOwned.reduce((result, stockEntry) => {
-            stock = stocks.find(stock => stock.id == stockEntry.stockId)
+      return {
+        ownerName,
+        entryName: entry.name,
+        totalInitialInvestment: ipoCashSpent,
+        totalInitialStocksOwned: ipoCountByEntryId.get(entry.id) || 0,
+        totalCurrentStocksOwned: stockEntriesOwned.length,
+        stocksRemaining: stockEntriesRemaining,
+        percentStocksRemaining,
+        totalCurrentTeamsOwned: teamsOwned.size,
+        totalCurrentTeamsRemaining: teamsOwnedInTourn.size,
+        moneyWonToDate: Math.floor(moneyWon * 100) / 100,
+        percentMoneyWonInvested: Math.round(percentMoneyWonInvested * 100) / 100,
+        originalMoneyRemaining: Math.round(stockEntriesRemainingMoney * 100) / 100,
+        profitLoss,
+        percentMoneyRemaining
+      };
+    });
 
-            matchedTournTeam = tournamentTeams.find(team => team.id == stock.tournamentTeamId)
-
-            if (!!matchedTournTeam && result.teamsOwned.indexOf(matchedTournTeam.id) === -1) {
-                result.teamsOwned.push(matchedTournTeam.id)
-            }
-
-            matchedTournTeamAlive = teamsNotEliminated.find(team => team.id == stock.tournamentTeamId)
-
-            if (!!matchedTournTeamAlive) {
-                if (result.teamsOwnedInTourn.indexOf(matchedTournTeamAlive.id) === -1) {
-                    result.teamsOwnedInTourn.push(matchedTournTeamAlive.id)
-                }
-                result.stockEntriesRemaining += 1
-                result.stockEntriesRemainingMoney += matchedTournTeamAlive.price
-            }
-            const teamMilestoneData = matchedTournTeam.milestoneData? matchedTournTeam.milestoneData : []
-            const numberOfStocksPerTeam = teamMapFile[matchedTournTeam.id]
-            const entryMoneyPerStock = teamMilestoneData.reduce((moneyEarned, milestone) => {
-                moneyEarned += milestone.dividendPrice? ((milestone.dividendPrice/numberOfStocksPerTeam)*100)/100 : 0
-                return moneyEarned
-            }, 0)
-
-            result.moneyWon += entryMoneyPerStock;
-            return result
-        }, {moneyWon: 0, stockEntriesRemaining: 0, teamsOwned: [], teamsOwnedInTourn: [], stockEntriesRemainingMoney: 0 })
-
-        const percentStocksRemaining = stockEntriesOwned.length > 0? Math.round(calcResults.stockEntriesRemaining/stockEntriesOwned.length * 10000)/100 : 0
-
-        const percentMoneyWonInvested = ipoCashSpent > 0? calcResults.moneyWon * 100 / ipoCashSpent : 0
-
-        const profitLoss = Math.round((calcResults.moneyWon + secondaryMarketCashIncome - ipoCashSpent - secondaryMarketCashSpent)*100)/100
-
-        const percentMoneyRemaining = (ipoCashSpent)? Math.round((calcResults.stockEntriesRemainingMoney)/(ipoCashSpent) * 10000)/100 : 0
-
-        return  {
-          ownerName: combinedNames,
-          entryName: entry.name,
-          totalInitialInvestment: ipoCashSpent, // initial ipo investment
-          totalInitialStocksOwned: initialIpoStocks.length, //
-          totalCurrentStocksOwned: stockEntriesOwned.length, //total owned and eliminated
-          stocksRemaining: calcResults.stockEntriesRemaining, //total of whats not eliminated
-          percentStocksRemaining: percentStocksRemaining,
-          totalCurrentTeamsOwned: calcResults.teamsOwned.length, //number teams owned & may have been eliminated
-          totalCurrentTeamsRemaining: calcResults.teamsOwnedInTourn.length , // number of teams that are left in tourn
-          moneyWonToDate: Math.floor(calcResults.moneyWon*100)/100,
-          percentMoneyWonInvested: Math.round(percentMoneyWonInvested*100)/100,//   money won/ ipo money
-          originalMoneyRemaining: Math.round(calcResults.stockEntriesRemainingMoney * 100)/100, //stocks left (at IPO price)
-          profitLoss: profitLoss, //money won - ipo - secondary market cash
-          percentMoneyRemaining:  percentMoneyRemaining // allMoney/Investment
-        }
-    })
-    console.log("finished Portfolio Summaries at ", new Date())
-    return portfolioSummaries
+    console.log(`portfolioSummaries(${tournamentId}): ${entries.length} entries, ${stockEntries.length} stockEntries — ${Date.now() - t0}ms`);
+    return portfolioSummaries;
   },
   createTeamMapFile: async (tournamentId) => {
       console.log("starting teamMapFile at ", new Date())
