@@ -11,6 +11,8 @@ const { Op } = require('sequelize');
 const EntryBid = require('../models/EntryBid');
 const { v4: uuidv4 } = require('uuid');
 const {sendEmail} = require ('../util/sendEmail');
+const Tournament = require('../models/Tournament');
+const { assertTournamentTradingOpen } = require('../util/tournamentStatus');
 
 const StockService = {
   removeExpiredBidsAndAsks:async (tournamentId) => {
@@ -213,6 +215,9 @@ const StockService = {
       throw new Error("Entry not found");
     }
 
+    const tournament = await Tournament.findByPk(entry.tournamentId);
+    assertTournamentTradingOpen(tournament);
+
     const userEntry = await UserEntry.findOne({
       where: {
         entryId: entry.id,
@@ -327,6 +332,9 @@ const StockService = {
       if(!tournamentTeam) {
         throw new Error("tournament team not found");
       }
+
+      const tournament = await Tournament.findByPk(tournamentTeam.tournamentId);
+      assertTournamentTradingOpen(tournament);
 
       const team = await Team.findByPk(tournamentTeam.teamId);
       if(!team) {
@@ -656,6 +664,9 @@ const StockService = {
       if(!entry) {
         throw new Error("Entry not found");
       }
+
+      const tournament = await Tournament.findByPk(entry.tournamentId, {transaction: t});
+      assertTournamentTradingOpen(tournament);
 
       const userEntry = await UserEntry.findOne({
         where: {

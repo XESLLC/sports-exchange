@@ -8,6 +8,7 @@ const League = require('../models/League');
 const Entry = require('../models/Entry');
 const Transaction = require('../models/Transaction');
 const StandingsService = require('./StandingsService');
+const { assertTournamentTradingOpen } = require('../util/tournamentStatus');
 
 // Matches the spreadsheet's payout structure: each milestone gets a
 // percentage of the tournament's total invested pool. These are the
@@ -93,6 +94,7 @@ const TournamentService = {
     if (!tournament) {
       throw new Error(`tournament not found for id: ${tournamentId}`);
     }
+    assertTournamentTradingOpen(tournament);
 
     const existingMilestones = (tournament.settings && tournament.settings.milestones) || [];
     const milestonesById = new Map(existingMilestones.map(m => [String(m.id), m]));
@@ -252,6 +254,10 @@ const TournamentService = {
     if(!tournamentTeam) {
       throw new Error(`tournament team not found for id: ${id}`)
     }
+
+    const tournament = await Tournament.findByPk(tournamentTeam.tournamentId);
+    assertTournamentTradingOpen(tournament);
+
     const team = await Team.findByPk(tournamentTeam.teamId);
     if(!team) {
       throw new Error(`team not found for id: ${tournamentTeam.teamId}`)
@@ -566,13 +572,18 @@ const TournamentService = {
 
     return tournament;
   },
-  toggleIsTournamentActive: async (tournamentId, isActive) => {
+  updateTournamentStatus: async (tournamentId, status) => {
+    const VALID_STATUSES = ['active', 'inactive', 'closed'];
+    if (!VALID_STATUSES.includes(status)) {
+      throw new Error(`Invalid tournament status: ${status}`);
+    }
+
     const tournament = await Tournament.findByPk(tournamentId);
     if(!tournament) {
       throw new Error(`tournament not found for id: ${tournamentId}`);
     }
 
-    tournament.isActive = isActive;
+    tournament.status = status;
     await tournament.save();
 
     return tournament;

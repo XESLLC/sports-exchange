@@ -1,3 +1,9 @@
+enum TournamentStatus {
+  active
+  inactive
+  closed
+}
+
 type Tournament {
   id: ID!
   name: String!
@@ -5,7 +11,7 @@ type Tournament {
   isIpoOpen: Boolean!
   settings: LeagueSettings
   createdAt: String!
-  isActive: Boolean!
+  status: TournamentStatus!
   masterSheetUpload: String
   pricingSheetUpload: String
   rulesSheetUpload: String
@@ -19,7 +25,7 @@ type TournamentWithLeagueName {
   leagueId: ID!
   leagueName: String
   createdAt: String!
-  isActive: Boolean!
+  status: TournamentStatus!
   masterSheetUpload: String
   pricingSheetUpload: String
   rulesSheetUpload: String
@@ -183,7 +189,7 @@ type Mutation {
   updateTournament(input: UpdateTournamentInput!): ID!
   deleteTournament(input: DeleteTournamentInput!): ID
   toggleIsIpoOpen(tournamentId: ID!, isIpoOpen: Boolean!): Tournament
-  toggleIsTournamentActive(tournamentId: ID!, isActive: Boolean!): Tournament
+  updateTournamentStatus(tournamentId: ID!, status: TournamentStatus!): Tournament
   updateTournamentTeam(input: TournamentTeamInput!): TournamentTeam
   toggleTournamentTeamEliminated(tournamentTeamId: ID!, isEliminated: Boolean!): TournamentTeam
   sendTournamentEmail(input: SendTournamentEmailInput!): EmailBlast!

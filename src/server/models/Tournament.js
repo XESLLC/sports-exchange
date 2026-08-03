@@ -33,8 +33,10 @@ const Tournament = SequelizeInstance.define('Tournament', {
   isIpoOpen: {
     type: DataTypes.BOOLEAN
   },
-  isActive: {
-    type: DataTypes.BOOLEAN
+  status: {
+    type: DataTypes.ENUM('active', 'inactive', 'closed'),
+    allowNull: false,
+    defaultValue: 'active'
   },
   masterSheetUpload: {
     type: DataTypes.STRING

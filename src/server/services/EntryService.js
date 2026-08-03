@@ -13,9 +13,13 @@ const Tournament = require('../models/Tournament');
 const { v4: uuidv4 } = require('uuid');
 const {sendEmail} = require ('../util/sendEmail');
 const fs = require ('fs')
+const { assertTournamentTradingOpen, assertTournamentAcceptingNewEntries } = require('../util/tournamentStatus');
 
 const EntryService = {
   createEntry: async (name, userEmails, tournamentId) => {
+    const tournament = await Tournament.findByPk(tournamentId);
+    assertTournamentAcceptingNewEntries(tournament);
+
     const users = await User.findAll({
       where: {
         email: userEmails
@@ -64,6 +68,9 @@ const EntryService = {
       if(!entry) {
         throw new Error("entry not found");
       }
+
+      const tournament = await Tournament.findByPk(entry.tournamentId, {transaction: t});
+      assertTournamentTradingOpen(tournament);
 
       const tournamentTeam = await TournamentTeam.findByPk(tournamentTeamId, {transaction: t});
       if(!tournamentTeam) {
@@ -401,6 +408,7 @@ const EntryService = {
       if(tournament.isIpoOpen === false) {
         throw new Error("IPO purchasing window is closed");
       }
+      assertTournamentTradingOpen(tournament);
 
       const entry = await Entry.findOne({
         where: {

@@ -92,10 +92,10 @@ const Tournament = {
       const tournament = await TournamentService.toggleIsIpoOpen(tournamentId, isIpoOpen);
       return tournament;
     },
-    toggleIsTournamentActive: async (_, input) => {
+    updateTournamentStatus: async (_, input) => {
       const tournamentId = input.tournamentId;
-      const isActive = input.isActive;
-      const tournament = await TournamentService.toggleIsTournamentActive(tournamentId, isActive);
+      const status = input.status;
+      const tournament = await TournamentService.updateTournamentStatus(tournamentId, status);
       return tournament;
     },
     updateTournamentTeam: async (_, { input }) => {
