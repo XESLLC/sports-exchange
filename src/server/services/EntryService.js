@@ -663,22 +663,17 @@ const EntryService = {
     })
     if (!stockEntries && stockEntries.length < 1) {throw new Error('userEntries not found')}
 
-    const teamMapFileRaw = fs.readFileSync( __dirname  +`/../tmp/teamMap${tournamentId}` )
-    if (!teamMapFileRaw) {throw new Error("teamMapFileRaw Fatal Error on Read")}
-    let teamMapFile = JSON.parse(teamMapFileRaw)
-
-    // don't remove this - should be created manualy using createTeamMapFile resolver
-    // const teamMap = stockEntries.reduce((resultMap, stockEntry) => {
-    //     stock = stocks.find(stock => stock.id == stockEntry.stockId)
-    //     matchedTournTeam = tournamentTeams.find(team => team.id == stock.tournamentTeamId)
-    //     if (resultMap[matchedTournTeam.id]) {
-    //         resultMap[matchedTournTeam.id] = resultMap[matchedTournTeam.id] + 1
-    //         return resultMap
-    //     } else {
-    //         resultMap[matchedTournTeam.id] = 1
-    //         return resultMap
-    //     }
-    // }, {})
+    // Build teamMap inline: tournamentTeamId -> total stocks owned across all entries.
+    // Used to divide dividend payouts per stock. Previously read from a file on disk,
+    // which broke on Lambda where /tmp is ephemeral.
+    const teamMapFile = stockEntries.reduce((resultMap, stockEntry) => {
+      const stock = stocks.find(s => s.id == stockEntry.stockId);
+      if (!stock) return resultMap;
+      const matchedTournTeam = tournamentTeams.find(team => team.id == stock.tournamentTeamId);
+      if (!matchedTournTeam) return resultMap;
+      resultMap[matchedTournTeam.id] = (resultMap[matchedTournTeam.id] || 0) + 1;
+      return resultMap;
+    }, {});
 
     const portfolioSummaries = entries.map((entry) => {
         console.log("Mapping Entries - creating portfolio Summary for >>>> ", entry.id)
