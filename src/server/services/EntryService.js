@@ -801,6 +801,15 @@ const EntryService = {
 
       console.log("finished create TeamMapFile at ", new Date())
       return "Success"
+  },
+  deleteEntry: async (id) => {
+    await instance.transaction(async (t) => {
+      await StockEntry.destroy({ where: { entryId: id }, transaction: t });
+      await EntryBid.destroy({ where: { entryId: id }, transaction: t });
+      await UserEntry.destroy({ where: { entryId: id }, transaction: t });
+      await Transaction.destroy({ where: { entryId: id }, transaction: t });
+      await Entry.destroy({ where: { id }, transaction: t });
+    });
   }
 };
 

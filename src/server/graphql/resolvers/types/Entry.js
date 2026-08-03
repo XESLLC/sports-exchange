@@ -69,6 +69,10 @@ const Entry = {
       const { entryId, userId } = input;
       const entry = await EntryService.removeEntryOwner(entryId, userId);
       return entry;
+    },
+    deleteEntry: async (_, { id }) => {
+      await EntryService.deleteEntry(id);
+      return true;
     }
   }
 };

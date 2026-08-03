@@ -90,4 +90,5 @@ type Mutation {
   updateEntryCash(entryId: ID!, ipoCashSpent: Float!, secondaryMarketCashSpent: Float, secondaryMarketCashIncome: Float): Entry
   addEntryOwner(input: AddEntryOwnerInput!): Entry
   removeEntryOwner(input: RemoveEntryOwnerInput!): Entry
+  deleteEntry(id: ID!): Boolean
 }
