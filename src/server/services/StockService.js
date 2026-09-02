@@ -150,6 +150,23 @@ const StockService = {
       }
     });
 
+    // Latest transaction (by createdAt) per stockId for this entry - reflects what this
+    // entry actually paid for a stock it acquired via trade, cash purchase, or bid accept.
+    // Stocks never transferred to this entry (still held since IPO) have no transaction here.
+    const transactions = await Transaction.findAll({
+      where: {
+        entryId,
+        stockId: stockIds
+      }
+    });
+    const latestCostByStockId = {};
+    for (const transaction of transactions) {
+      const existing = latestCostByStockId[transaction.stockId];
+      if (!existing || new Date(transaction.createdAt) > new Date(existing.createdAt)) {
+        latestCostByStockId[transaction.stockId] = transaction;
+      }
+    }
+
     const stocksTournamentTeamFrequencyObj = stocks.reduce((result, stock) => {
       if(result && result[stock.tournamentTeamId]) {
         result[stock.tournamentTeamId]["quantity"] += 1;
@@ -172,6 +189,10 @@ const StockService = {
       const seed = tournamentTeam.seed;
       const region = tournamentTeam.region;
       const stockIds = stocksTournamentTeamFrequencyObj[tournamentTeamId].stockIds;
+      const actualTotalCost = stockIds.reduce((sum, stockId) => {
+        const transaction = latestCostByStockId[stockId];
+        return sum + (transaction ? transaction.cost : ipoPrice);
+      }, 0);
 
       return {
         teamName: team.name,
@@ -181,7 +202,8 @@ const StockService = {
         quantity,
         seed,
         region,
-        stockIds
+        stockIds,
+        actualTotalCost
       }
     });
 

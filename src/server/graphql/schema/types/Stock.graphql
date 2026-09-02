@@ -8,6 +8,7 @@ type TournamentTeamStock {
   seed: Int
   region: String
   stockIds: [ID!]!
+  actualTotalCost: Float
 }
 
 type Stock {
