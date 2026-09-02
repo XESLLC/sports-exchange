@@ -7,6 +7,7 @@ const User = require('../models/User')
 const { v4: uuidv4 } = require('uuid');
 const UserEntry = require('../models/UserEntry');
 const Entry = require('../models/Entry');
+const { sendEmail } = require('../util/sendEmail');
 
 const UserService = {
   users: async () => {
@@ -112,6 +113,33 @@ const UserService = {
     }
     user.isAdmin = isAdmin;
     await user.save();
+    return user;
+  },
+  sendEmailConfirmation: async (email) => {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const token = uuidv4();
+    user.emailConfirmationToken = token;
+    await user.save();
+
+    const confirmationLink = `https://www.fantasysportsstockexchange.com/confirm-email/${token}`;
+    const message = `If this landed in your spam folder, please mark it "Not Spam" before clicking the link below - that helps make sure future emails from us reach your inbox.<br/><br/><a href="${confirmationLink}">Confirm your email</a>`;
+
+    return await sendEmail(email, 'Confirm Your Email', message);
+  },
+  confirmEmail: async (token) => {
+    const user = await User.findOne({ where: { emailConfirmationToken: token } });
+    if (!user) {
+      throw new Error("This confirmation link is invalid or has already been used");
+    }
+
+    user.emailConfirmedAt = new Date();
+    user.emailConfirmationToken = null;
+    await user.save();
+
     return user;
   }
 };

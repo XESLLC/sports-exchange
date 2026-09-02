@@ -31,10 +31,10 @@ exports.sendEmail = async(emailAddress, notificationEnum, message) => {
     const command = new SendEmailCommand(params);
 
     try {
-        const response = await client.send(command);
+        await client.send(command);
+        return true;
     } catch (error) {
-        console.log(error)
-    } finally {
-        // finally.
+        console.error(`Failed to send email to ${emailAddress}:`, error);
+        return false;
     }
 };

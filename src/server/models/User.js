@@ -50,6 +50,14 @@ const User = SequelizeInstance.define('User', {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false
+  },
+  emailConfirmationToken: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  emailConfirmedAt: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   freezeTableName: true

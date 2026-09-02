@@ -37,6 +37,12 @@ const User = {
     },
     setUserAdmin: async (_, { email, isAdmin }, context) => {
       return await UserService.setUserAdmin(email, isAdmin);
+    },
+    sendEmailConfirmation: async (_, { email }) => {
+      return await UserService.sendEmailConfirmation(email);
+    },
+    confirmEmail: async (_, { token }) => {
+      return await UserService.confirmEmail(token);
     }
   }
 };

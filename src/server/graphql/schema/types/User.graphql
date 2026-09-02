@@ -8,6 +8,7 @@ type User {
   phoneNumber: String
   notifyOnMessageBoard: Boolean
   isAdmin: Boolean
+  emailConfirmedAt: String
 }
 
 input UserInput {
@@ -31,4 +32,6 @@ type Mutation {
   createUser(input: UserInput!): User!
   updateUser(input: UserInput!): User!
   setUserAdmin(email: String!, isAdmin: Boolean!): User!
+  sendEmailConfirmation(email: String!): Boolean!
+  confirmEmail(token: String!): User!
 }
