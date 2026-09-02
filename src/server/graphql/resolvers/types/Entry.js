@@ -42,14 +42,18 @@ const Entry = {
       return entry;
     },
     createEntryBid: async (_, { input }) => {
-      const { entryId, tournamentTeamId, price, quantity, expiresAt } = input;
-      const entryBid = await EntryService.createEntryBid(entryId, tournamentTeamId, price, quantity, expiresAt);
+      const { entryId, tournamentTeamId, price, quantity, expiresAt, tradableTeams } = input;
+      const entryBid = await EntryService.createEntryBid(entryId, tournamentTeamId, price, quantity, expiresAt, tradableTeams);
       return entryBid;
     },
     deleteEntryBid: async (_, input) => {
       const id = input.id;
       const entry = await EntryService.deleteEntryBid(id);
       return entry;
+    },
+    acceptStockBid: async (_, { bidId, entryId }) => {
+      const trades = await EntryService.acceptStockBid(bidId, entryId);
+      return trades;
     },
     ipoPurchase: async (_, { input }) => {
       const { tournamentTeamId, quantity, userEmail, entryId } = input;

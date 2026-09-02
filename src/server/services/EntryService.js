@@ -56,8 +56,11 @@ const EntryService = {
 
     return entry;
   },
-  createEntryBid: async (entryId, tournamentTeamId, price, quantity, expiresAt) => {
+  createEntryBid: async (entryId, tournamentTeamId, price, quantity, expiresAt, tradableTeams) => {
     console.log("create entry bid")
+    if(!price && !tradableTeams) {
+      throw new Error("Bid price or tradable teams must be provided");
+    }
     const result = await instance.transaction(async (t) => {
       const entry = await Entry.findOne({
         where: {
@@ -87,7 +90,8 @@ const EntryService = {
         tournamentTeamId,
         price,
         quantity,
-        expiresAt
+        expiresAt,
+        tradableTeams: tradableTeams ? JSON.parse(JSON.stringify(tradableTeams)) : null
       }, {transaction: t});
 
       // check for and execute matched trades
@@ -283,7 +287,8 @@ const EntryService = {
         price: entryBid.price,
         quantity: entryBid.quantity,
         teamName: team.name,
-        trades
+        trades,
+        tradableTeams: entryBid.tradableTeams
       }
     });
 
@@ -323,6 +328,135 @@ const EntryService = {
     await entryBid.destroy();
 
     return entry;
+  },
+  acceptStockBid: async (bidId, entryId) => {
+    const result = await instance.transaction(async (t) => {
+      const bid = await EntryBid.findByPk(bidId, {transaction: t});
+      if(!bid) {
+        throw new Error("Bid not found");
+      }
+      if(!bid.tradableTeams) {
+        throw new Error("This bid does not offer stock in trade");
+      }
+      if(bid.entryId === entryId) {
+        throw new Error("Cannot accept your own bid");
+      }
+
+      const acceptingEntry = await Entry.findByPk(entryId, {transaction: t});
+      if(!acceptingEntry) {
+        throw new Error("Entry not found");
+      }
+      const bidderEntry = await Entry.findByPk(bid.entryId, {transaction: t});
+      if(!bidderEntry) {
+        throw new Error("Bidder entry not found");
+      }
+
+      const tournament = await Tournament.findByPk(acceptingEntry.tournamentId, {transaction: t});
+      assertTournamentTradingOpen(tournament);
+
+      const tournamentTeam = await TournamentTeam.findByPk(bid.tournamentTeamId, {transaction: t});
+      if(!tournamentTeam) {
+        throw new Error("tournament team not found");
+      }
+      const team = await Team.findByPk(tournamentTeam.teamId, {transaction: t});
+      if(!team) {
+        throw new Error("team not found");
+      }
+
+      // stock the accepting entry is giving up (what the bidder wants)
+      const acceptingEntryStockEntries = await StockEntry.findAll({
+        where: { entryId },
+        transaction: t
+      });
+      const acceptingEntryStocks = await Stock.findAll({
+        where: { id: acceptingEntryStockEntries.map(se => se.stockId) },
+        transaction: t
+      });
+      const stocksAvailableToGive = acceptingEntryStocks.filter(stock => stock.tournamentTeamId === bid.tournamentTeamId);
+      if(stocksAvailableToGive.length < bid.quantity) {
+        throw new Error(`You do not have enough stock of ${team.name} to accept this bid`);
+      }
+
+      // stock the bidder is giving up (what was promised in tradableTeams)
+      const bidderStockEntries = await StockEntry.findAll({
+        where: { entryId: bid.entryId },
+        transaction: t
+      });
+      const bidderStocks = await Stock.findAll({
+        where: { id: bidderStockEntries.map(se => se.stockId) },
+        transaction: t
+      });
+      for(const tradableTeam of bid.tradableTeams) {
+        const availableCount = bidderStocks.filter(stock => stock.tournamentTeamId === tradableTeam.tournamentTeamId).length;
+        if(availableCount < tradableTeam.quantity) {
+          throw new Error(`Bidder no longer has enough stock of ${tradableTeam.teamName} to fulfill this bid`);
+        }
+      }
+
+      const transactionGroupId = uuidv4();
+      const trades = [];
+
+      // move the wanted team's stock: accepting entry -> bidder
+      const stockEntriesToGive = acceptingEntryStockEntries.filter(se =>
+        stocksAvailableToGive.slice(0, bid.quantity).some(stock => stock.id === se.stockId)
+      );
+      for(const stockEntry of stockEntriesToGive) {
+        const stock = acceptingEntryStocks.find(s => s.id === stockEntry.stockId);
+        await stock.update({ offerExpiresAt: null, price: null, tradableTeams: null }, {transaction: t});
+        await stockEntry.update({ entryId: bid.entryId }, {transaction: t});
+
+        const trade = await Transaction.create({
+          quantity: 1,
+          cost: 0,
+          stockId: stockEntry.stockId,
+          entryId: bid.entryId,
+          groupId: transactionGroupId
+        }, {transaction: t});
+        trades.push({ ...trade.toJSON(), teamName: team.name, tournamentTeamId: bid.tournamentTeamId });
+      }
+
+      // move each tradableTeam's stock: bidder -> accepting entry
+      for(const tradableTeam of bid.tradableTeams) {
+        const stocksToTrade = bidderStocks.filter(stock => stock.tournamentTeamId === tradableTeam.tournamentTeamId).slice(0, tradableTeam.quantity);
+        for(const stock of stocksToTrade) {
+          const stockEntry = bidderStockEntries.find(se => se.stockId === stock.id);
+          await stock.update({ offerExpiresAt: null, price: null, tradableTeams: null }, {transaction: t});
+          await stockEntry.update({ entryId }, {transaction: t});
+
+          const trade = await Transaction.create({
+            quantity: 1,
+            cost: 0,
+            stockId: stock.id,
+            entryId,
+            groupId: transactionGroupId
+          }, {transaction: t});
+          trades.push({ ...trade.toJSON(), teamName: tradableTeam.teamName, tournamentTeamId: tradableTeam.tournamentTeamId });
+        }
+      }
+
+      await bid.destroy({transaction: t});
+
+      const tradableTeamsDescription = bid.tradableTeams.map(tt => `${tt.quantity} share${tt.quantity > 1 ? 's' : ''} of ${tt.teamName}`).join(', ');
+      const wantedDescription = `${bid.quantity} share${bid.quantity > 1 ? 's' : ''} of ${team.name}`;
+      const acceptingMessage = `You traded ${wantedDescription} to ${bidderEntry.name} for ${tradableTeamsDescription}`;
+      const bidderMessage = `You traded ${tradableTeamsDescription} to ${acceptingEntry.name} for ${wantedDescription}`;
+
+      const acceptingUserEntries = await UserEntry.findAll({ where: { entryId }, transaction: t });
+      const acceptingUsers = await User.findAll({ where: { id: acceptingUserEntries.map(ue => ue.userId) }, transaction: t });
+      for(const user of acceptingUsers) {
+        await sendEmail(user.email, 'Trade Notification', acceptingMessage);
+      }
+
+      const bidderUserEntries = await UserEntry.findAll({ where: { entryId: bid.entryId }, transaction: t });
+      const bidderUsers = await User.findAll({ where: { id: bidderUserEntries.map(ue => ue.userId) }, transaction: t });
+      for(const user of bidderUsers) {
+        await sendEmail(user.email, 'Trade Notification', bidderMessage);
+      }
+
+      return trades;
+    });
+
+    return result;
   },
   getBidsForEntry: async (entryId) => {
     const entry = await Entry.findByPk(entryId);
@@ -714,17 +848,19 @@ const EntryService = {
         moneyWon += dividendPerStock.get(teamId) || 0;
       }
 
+      const totalCashInvested = ipoCashSpent + secondaryMarketCashSpent - secondaryMarketCashIncome;
       const percentStocksRemaining = stockEntriesOwned.length > 0
         ? Math.round(stockEntriesRemaining / stockEntriesOwned.length * 10000) / 100 : 0;
-      const percentMoneyWonInvested = ipoCashSpent > 0 ? moneyWon * 100 / ipoCashSpent : 0;
+      const percentMoneyWonInvested = totalCashInvested > 0 ? moneyWon * 100 / totalCashInvested : 0;
       const profitLoss = Math.round((moneyWon + secondaryMarketCashIncome - ipoCashSpent - secondaryMarketCashSpent) * 100) / 100;
-      const percentMoneyRemaining = ipoCashSpent > 0
-        ? Math.round(stockEntriesRemainingMoney / ipoCashSpent * 10000) / 100 : 0;
+      const percentMoneyRemaining = totalCashInvested > 0
+        ? Math.round(stockEntriesRemainingMoney / totalCashInvested * 10000) / 100 : 0;
 
       return {
         ownerName,
         entryName: entry.name,
         totalInitialInvestment: ipoCashSpent,
+        totalCashInvested: Math.round(totalCashInvested * 100) / 100,
         totalInitialStocksOwned: ipoCountByEntryId.get(entry.id) || 0,
         totalCurrentStocksOwned: stockEntriesOwned.length,
         stocksRemaining: stockEntriesRemaining,

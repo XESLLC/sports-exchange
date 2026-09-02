@@ -39,6 +39,9 @@ const EntryBid = SequelizeInstance.define('EntryBid', {
   },
   expiresAt: {
     type: DataTypes.DATE
+  },
+  tradableTeams: {
+    type: DataTypes.JSON
   }
 }, {
   freezeTableName: true

@@ -34,9 +34,10 @@ input IPOPurchaseInput {
 input NewEntryBidInput {
   entryId: ID!
   tournamentTeamId: ID!
-  price: Float!
+  price: Float
   quantity: Int!
   expiresAt: Float
+  tradableTeams: [TradableTeamInput]
 }
 
 type OfferedBids {
@@ -49,10 +50,11 @@ type EntryBid {
   entryId: ID!
   tournamentTeamId: ID!
   teamName: String!
-  price: Float!
+  price: Float
   quantity: Int!
   trades: [Transaction]
   expiresAt: String
+  tradableTeams: [TradableTeam]
 }
 
 type PortfolioSummary {
@@ -70,6 +72,7 @@ type PortfolioSummary {
   originalMoneyRemaining: Float!, #money left from ipo
   profitLoss: Float!, #money won - ipo - secondary market cash
   percentMoneyRemaining: Float!, #originalMoneyr
+  totalCashInvested: Float!, #ipoCashSpent + secondaryMarketCashSpent - secondaryMarketCashIncome
 }
 
 
@@ -86,6 +89,7 @@ type Mutation {
   createEntry(input: EntryInput!): Entry
   createEntryBid(input: NewEntryBidInput!): EntryBid
   deleteEntryBid(id: ID!): Entry
+  acceptStockBid(bidId: ID!, entryId: ID!): [Transaction]!
   ipoPurchase(input: IPOPurchaseInput!): TournamentTeamStock!
   updateEntryCash(entryId: ID!, ipoCashSpent: Float!, secondaryMarketCashSpent: Float, secondaryMarketCashIncome: Float): Entry
   addEntryOwner(input: AddEntryOwnerInput!): Entry
