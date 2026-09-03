@@ -17,6 +17,7 @@ type Tournament {
   rulesSheetUpload: String
   projectedPayoutSheetUpload: String
   stockPayoutSheetUpload: String
+  totalPot: Float!
 }
 
 type TournamentWithLeagueName {

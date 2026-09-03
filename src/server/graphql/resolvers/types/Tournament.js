@@ -1,6 +1,12 @@
 const TournamentService = require('../../../services/TournamentService');
 
 const Tournament = {
+  Tournament: {
+    totalPot: async (tournament) => {
+      return await TournamentService.getTotalPot(tournament.id);
+    }
+  },
+
   Query: {
     getTournamentsByLeagueId: async (_, input) => {
       const leagueId = input.leagueId;

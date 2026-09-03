@@ -41,6 +41,10 @@ function round2(value) {
   return Math.round(value * 100) / 100;
 }
 
+function computeTotalPoolInvested(entries) {
+  return entries.reduce((sum, entry) => sum + (entry.ipoCashSpent || 0), 0);
+}
+
 async function getDividendPreviewContext(tournamentId) {
   const tournament = await Tournament.findByPk(tournamentId);
   if (!tournament) {
@@ -59,7 +63,7 @@ async function getDividendPreviewContext(tournamentId) {
   const teamsById = new Map(teams.map(team => [team.id, team]));
 
   const entries = await Entry.findAll({ where: { tournamentId } });
-  const totalPoolInvested = entries.reduce((sum, entry) => sum + (entry.ipoCashSpent || 0), 0);
+  const totalPoolInvested = computeTotalPoolInvested(entries);
 
   const standingsByTeamName = await StandingsService.fetchNflStandings();
 
@@ -587,6 +591,10 @@ const TournamentService = {
     await tournament.save();
 
     return tournament;
+  },
+  getTotalPot: async (tournamentId) => {
+    const entries = await Entry.findAll({ where: { tournamentId } });
+    return computeTotalPoolInvested(entries);
   },
   // uploadFile: async (tournamentId, sheetType, file) => {
   //   aws.config.update({
