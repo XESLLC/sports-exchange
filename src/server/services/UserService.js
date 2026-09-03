@@ -125,7 +125,7 @@ const UserService = {
     user.emailConfirmationToken = token;
     await user.save();
 
-    const confirmationLink = `https://www.fantasysportsstockexchange.com/confirm-email/${token}`;
+    const confirmationLink = `https://fantasysportsstockexchange.com/confirm-email/${token}`;
     const message = `If this landed in your spam folder, please mark it "Not Spam" before clicking the link below - that helps make sure future emails from us reach your inbox.<br/><br/><a href="${confirmationLink}">Confirm your email</a>`;
 
     return await sendEmail(email, 'Confirm Your Email', message);
