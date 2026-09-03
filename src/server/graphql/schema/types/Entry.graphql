@@ -6,6 +6,7 @@ type Entry {
   ipoCashSpent: Float!
   secondaryMarketCashSpent: Float!
   secondaryMarketCashIncome: Float!
+  createdAt: String
 }
 
 input EntryInput {
