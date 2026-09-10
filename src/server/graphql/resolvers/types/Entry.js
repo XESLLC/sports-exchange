@@ -28,6 +28,9 @@ const Entry = {
       const portfolioSummaries = await EntryService.portfolioSummaries(tournamentId, entryId);
       return portfolioSummaries;
     },
+    tournamentOwnership: async (_, input) => {
+      return await EntryService.tournamentOwnership(input.tournamentId);
+    },
     createTeamMapFile: async (_, input) => {
       const tournamentId = input.tournamentId;
       const createTeamMapFile = await EntryService.createTeamMapFile(tournamentId);

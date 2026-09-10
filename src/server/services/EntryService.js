@@ -878,6 +878,101 @@ const EntryService = {
     console.log(`portfolioSummaries(${tournamentId}): ${entries.length} entries, ${stockEntries.length} stockEntries — ${Date.now() - t0}ms`);
     return portfolioSummaries;
   },
+  // Currently-held share counts per (portfolio, team) across the whole
+  // tournament. Ownership is read from StockEntry (who holds the share
+  // now), so trades already show up. Sparse: portfolios only list teams
+  // they actually own.
+  tournamentOwnership: async (tournamentId) => {
+    const entries = await Entry.findAll({
+      where: { tournamentId },
+      attributes: ['id', 'name'],
+      raw: true
+    });
+    if (!entries.length) {
+      return { teams: [], portfolios: [] };
+    }
+    const entryIds = entries.map(e => e.id);
+
+    const tournamentTeams = await TournamentTeam.findAll({
+      where: { tournamentId },
+      attributes: ['id', 'teamId', 'isEliminated'],
+      raw: true
+    });
+    const teamRecords = await Team.findAll({
+      where: { id: tournamentTeams.map(tt => tt.teamId) },
+      attributes: ['id', 'name'],
+      raw: true
+    });
+    const teamNameById = new Map(teamRecords.map(t => [t.id, t.name]));
+
+    const [userEntries, stocks] = await Promise.all([
+      UserEntry.findAll({ where: { entryId: entryIds }, attributes: ['userId', 'entryId'], raw: true }),
+      Stock.findAll({
+        where: { tournamentTeamId: tournamentTeams.map(tt => tt.id) },
+        attributes: ['id', 'tournamentTeamId'],
+        raw: true
+      })
+    ]);
+
+    const userIds = [...new Set(userEntries.map(ue => ue.userId))];
+    const [users, stockEntries] = await Promise.all([
+      User.findAll({ where: { id: userIds }, attributes: ['id', 'firstname', 'lastname'], raw: true }),
+      StockEntry.findAll({ where: { entryId: entryIds }, attributes: ['entryId', 'stockId'], raw: true })
+    ]);
+
+    const stockTeamById = new Map(stocks.map(s => [s.id, s.tournamentTeamId]));
+    const usersById = new Map(users.map(u => [u.id, u]));
+
+    const namesByEntryId = new Map();
+    for (const ue of userEntries) {
+      const user = usersById.get(ue.userId);
+      if (!user) continue;
+      if (!namesByEntryId.has(ue.entryId)) namesByEntryId.set(ue.entryId, []);
+      namesByEntryId.get(ue.entryId).push(`${user.firstname} ${user.lastname}`);
+    }
+
+    // sharesByEntryTeam: entryId -> (tournamentTeamId -> count)
+    const sharesByEntryTeam = new Map();
+    const totalByTeam = new Map();
+    for (const se of stockEntries) {
+      const ttId = stockTeamById.get(se.stockId);
+      if (!ttId) continue;
+      if (!sharesByEntryTeam.has(se.entryId)) sharesByEntryTeam.set(se.entryId, new Map());
+      const row = sharesByEntryTeam.get(se.entryId);
+      row.set(ttId, (row.get(ttId) || 0) + 1);
+      totalByTeam.set(ttId, (totalByTeam.get(ttId) || 0) + 1);
+    }
+
+    const teams = tournamentTeams
+      .map(tt => ({
+        tournamentTeamId: tt.id,
+        teamName: teamNameById.get(tt.teamId) || 'Unknown',
+        isEliminated: !!tt.isEliminated,
+        totalShares: totalByTeam.get(tt.id) || 0
+      }))
+      .sort((a, b) => a.teamName.localeCompare(b.teamName));
+
+    const portfolios = entries
+      .map(entry => {
+        const row = sharesByEntryTeam.get(entry.id) || new Map();
+        const holdings = [];
+        let totalShares = 0;
+        for (const [ttId, shares] of row.entries()) {
+          holdings.push({ tournamentTeamId: ttId, shares });
+          totalShares += shares;
+        }
+        return {
+          entryId: entry.id,
+          entryName: entry.name,
+          ownerName: (namesByEntryId.get(entry.id) || []).join(' & '),
+          totalShares,
+          holdings
+        };
+      })
+      .sort((a, b) => a.entryName.localeCompare(b.entryName));
+
+    return { teams, portfolios };
+  },
   createTeamMapFile: async (tournamentId) => {
       console.log("starting teamMapFile at ", new Date())
 

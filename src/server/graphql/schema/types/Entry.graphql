@@ -77,12 +77,41 @@ type PortfolioSummary {
 }
 
 
+type OwnershipHolding {
+  tournamentTeamId: ID!
+  shares: Int!
+}
+
+type OwnershipTeam {
+  tournamentTeamId: ID!
+  teamName: String!
+  isEliminated: Boolean!
+  totalShares: Int!
+}
+
+type OwnershipPortfolio {
+  entryId: ID!
+  entryName: String!
+  ownerName: String!
+  totalShares: Int!
+  holdings: [OwnershipHolding!]!
+}
+
+# Who currently holds how many shares of each team, for the whole
+# tournament - powers the Ownership by Portfolio grid so participants can
+# spot trade partners.
+type TournamentOwnership {
+  teams: [OwnershipTeam!]!
+  portfolios: [OwnershipPortfolio!]!
+}
+
 type Query {
   entry(id: ID!): Entry
   entriesByTournamentId(tournamentId: ID!): [Entry]
   getBidsForEntry(entryId: ID!): OfferedBids
   userEntries(email: String!): [Entry]
   portfolioSummaries(tournamentId: ID!, entryId: ID): [PortfolioSummary]
+  tournamentOwnership(tournamentId: ID!): TournamentOwnership!
   createTeamMapFile(tournamentId: ID!): String
 }
 
