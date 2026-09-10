@@ -20,6 +20,8 @@ const ParticipantEmailService = require('./ParticipantEmailService');
 const EmailAttachmentUploadService = require('./EmailAttachmentUploadService');
 
 const FROM_EMAIL = process.env.SES_FROM_EMAIL;
+// Display name shown in recipients' inboxes (the address has no inbox).
+const FROM_NAME = 'Stock Exchange Commissioner';
 // Where replies to a tournament email blast go. The From address
 // (commissioner@fantasysportsstockexchange.com) has no inbox, so a
 // participant hitting "reply" reaches these people directly.
@@ -104,7 +106,7 @@ const EmailService = {
       const results = await Promise.allSettled(
         batch.map((recipient) =>
           transporter.sendMail({
-            from: FROM_EMAIL,
+            from: { name: FROM_NAME, address: FROM_EMAIL },
             replyTo: REPLY_TO_EMAILS.join(', '),
             to: recipient.email,
             subject,
