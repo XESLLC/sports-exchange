@@ -75,8 +75,11 @@ functions:
   # the handler no-ops outside the Thu-afternoon .. Tue-morning window and
   # whenever nothing changed. EventBridge scheduled triggers are not
   # billed and the invocations sit well inside the Lambda free tier.
-  refreshRegularSeasonMilestone:
+  refreshRegSeason:
     handler: src/server/refreshMilestonesHandler.handler
+    # provider.runtime is still nodejs14.x for the existing graphql function;
+    # AWS no longer allows creating new functions on 14.x, so pin this one.
+    runtime: nodejs20.x
     timeout: 120
     package:
       individually: true
