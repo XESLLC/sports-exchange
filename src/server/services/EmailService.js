@@ -20,7 +20,10 @@ const ParticipantEmailService = require('./ParticipantEmailService');
 const EmailAttachmentUploadService = require('./EmailAttachmentUploadService');
 
 const FROM_EMAIL = process.env.SES_FROM_EMAIL;
-const ADMIN_EMAILS = ['couvillion@gmail.com', 'david.xesllc@gmail.com', 'bartsched@gmail.com'];
+// Where replies to a tournament email blast go. The From address
+// (commissioner@fantasysportsstockexchange.com) has no inbox, so a
+// participant hitting "reply" reaches these people directly.
+const REPLY_TO_EMAILS = ['couvillion@gmail.com', 'couvya@gmail.com', 'mmsegeneral@gmail.com'];
 
 // Lazy-initialized so the SES transport isn't created at module load time
 // (which fails locally where aws-sdk v2 SES isn't available).
@@ -101,7 +104,7 @@ const EmailService = {
         batch.map((recipient) =>
           transporter.sendMail({
             from: FROM_EMAIL,
-            replyTo: ADMIN_EMAILS.join(', '),
+            replyTo: REPLY_TO_EMAILS.join(', '),
             to: recipient.email,
             subject,
             html: htmlBody,

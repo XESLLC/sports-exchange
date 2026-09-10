@@ -22,6 +22,11 @@ provider:
     SERVERLESS_REGION: ${self:provider.region}
     SERVERLESS_STAGE: ${self:provider.stage}
     USE_RDS: "true"
+    # Visible From address for tournament email blasts. The whole
+    # fantasysportsstockexchange.com domain is verified in SES, so any
+    # address on it works. Replies are directed elsewhere via Reply-To
+    # (see EmailService.js REPLY_TO_EMAILS).
+    SES_FROM_EMAIL: commissioner@fantasysportsstockexchange.com
 
     #APP_DIST_URL: ${self:custom.distBucketUrl.${self:provider.region}, self:custom.distBucketUrl.default}
     #APP_PUBLIC_URL: ${self:custom.distBucketUrl.${self:provider.region}, self:custom.distBucketUrl.default}
