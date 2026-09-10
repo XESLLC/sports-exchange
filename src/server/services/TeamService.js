@@ -33,7 +33,10 @@ const TeamService = {
               tournamentTeamId: tournamentTeam.id
             }
           });
-          const numStocksInCirculation = stocksInCirculation && stocksInCirculation.length ? stocksInCirculation.length : 1;
+          const stocksPurchased = stocksInCirculation ? stocksInCirculation.length : 0;
+          // numStocksInCirculation is a price divisor elsewhere, so it floors at 1;
+          // stocksPurchased is the true count (0 when nobody bought the team).
+          const numStocksInCirculation = stocksPurchased || 1;
 
           return {
               id: tournamentTeam.id,
@@ -45,7 +48,8 @@ const TeamService = {
               tournament: tournament.name,
               isEliminated: tournamentTeam.isEliminated,
               milestoneData: tournamentTeam.milestoneData,
-              numStocksInCirculation
+              numStocksInCirculation,
+              stocksPurchased
           }
       })
       return tournamentTeamsMap
@@ -76,7 +80,10 @@ const TeamService = {
       }
     });
 
-    const numStocksInCirculation = stocksInCirculation && stocksInCirculation.length ? stocksInCirculation.length : 1;
+    const stocksPurchased = stocksInCirculation ? stocksInCirculation.length : 0;
+    // numStocksInCirculation is a price divisor elsewhere, so it floors at 1;
+    // stocksPurchased is the true count (0 when nobody bought the team).
+    const numStocksInCirculation = stocksPurchased || 1;
 
     return {
       id: tournamentTeam.id,
@@ -87,7 +94,8 @@ const TeamService = {
       tournament: tournament.name,
       isEliminated: tournamentTeam.isEliminated,
       milestoneData: tournamentTeam.milestoneData,
-      numStocksInCirculation
+      numStocksInCirculation,
+      stocksPurchased
     }
   },
   teams: async () => {

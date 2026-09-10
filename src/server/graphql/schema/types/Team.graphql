@@ -14,6 +14,7 @@ type TournamentTeam {
   milestoneData: [MilestoneData]
   isEliminated: Boolean!
   numStocksInCirculation: Int
+  stocksPurchased: Int
 }
 
 type MilestoneData {
