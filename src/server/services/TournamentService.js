@@ -14,14 +14,44 @@ const { assertTournamentTradingOpen } = require('../util/tournamentStatus');
 // percentage of the tournament's total invested pool. These are the
 // defaults from the 2025 sheet - admins can override per-tournament via
 // updateMilestonePoolPercent, stored in Tournament.settings.milestones.
+// poolPercent is a milestone's TOTAL share of the tournament pool. The
+// per-slot payout is poolPercent * pot / slotCount, where slotCount is the
+// number of qualifying units for a full season (272 regular-season wins,
+// 8 division titles, 2 conference #1 seeds, etc). Admins override both
+// per-tournament via updateMilestoneConfig, stored in
+// Tournament.settings.milestones.
 const DEFAULT_MILESTONE_POOL_PERCENTS = {
-  '1': 0.54,  // Reg Season Wins (distributed proportional to wins, see below)
-  '2': 0.05,  // Division Title - per division winner (4 AFC + 4 NFC)
-  '3': 0.03,  // Conf #1 Seed - per conference's top playoff seed (1 AFC + 1 NFC)
+  '1': 0.54,  // Reg Season Wins - split across every regular-season win
+  '2': 0.40,  // Division Title - 8 winners share this (was 5% each = 40%)
+  '3': 0.06,  // Conf #1 Seed - 2 winners share this (was 3% each = 6%)
   '4': 0.01,  // Divisional Round
   '5': 0.025, // Conference Finals
   '6': 0.06,  // Conference Champ
   '7': 0.15   // SB Champ
+};
+
+// Number of qualifying "slots" per milestone for a full season. The
+// milestone pool is divided evenly across these. Admins adjust this to
+// handle ties (e.g. a tied regular-season game drops slot 1 to 271) or
+// a change in playoff format.
+const DEFAULT_MILESTONE_SLOT_COUNTS = {
+  '1': 272, // regular-season games = 32 teams * 17 games / 2 (= total wins, absent ties)
+  '2': 8,   // division winners
+  '3': 2,   // conference #1 seeds
+  '4': 8,   // divisional round teams
+  '5': 4,   // conference finalists
+  '6': 2,   // conference champions
+  '7': 1    // Super Bowl champion
+};
+
+const DEFAULT_MILESTONE_NAMES = {
+  '1': 'Reg Season Wins',
+  '2': 'Division Title',
+  '3': 'Conf #1 Seed',
+  '4': 'Divisional Round',
+  '5': 'Conference Finals',
+  '6': 'Conference Champ',
+  '7': 'SB Champ'
 };
 
 function getMilestonePoolPercent(tournament, milestoneId) {
@@ -31,6 +61,26 @@ function getMilestonePoolPercent(tournament, milestoneId) {
     return configured.poolPercent;
   }
   return DEFAULT_MILESTONE_POOL_PERCENTS[String(milestoneId)] || 0;
+}
+
+function getMilestoneSlotCount(tournament, milestoneId) {
+  const milestones = (tournament.settings && tournament.settings.milestones) || [];
+  const configured = milestones.find(m => String(m.id) === String(milestoneId));
+  if (configured && typeof configured.slotCount === 'number' && configured.slotCount > 0) {
+    return configured.slotCount;
+  }
+  return DEFAULT_MILESTONE_SLOT_COUNTS[String(milestoneId)] || 1;
+}
+
+// Per-slot payout for a milestone: its total pool share divided evenly
+// across its full-season slot count. Regular-season wins (milestone 1)
+// floor to the cent per win; the flat-bonus milestones round to the cent.
+function getMilestonePerSlotPayout(tournament, milestoneId, totalPot) {
+  const poolPercent = getMilestonePoolPercent(tournament, milestoneId);
+  const slotCount = getMilestoneSlotCount(tournament, milestoneId);
+  if (slotCount <= 0) return 0;
+  const raw = (poolPercent * totalPot) / slotCount;
+  return String(milestoneId) === '1' ? roundDown2(raw) : round2(raw);
 }
 
 function roundDown2(value) {
@@ -89,11 +139,12 @@ function matchTeamsToStandings(tournamentTeams, teamsById, standingsByTeamName) 
 }
 
 const TournamentService = {
-  // Lets an admin override the % of the pot any milestone pays out, per
-  // tournament. Backfills the other milestones with their defaults the
-  // first time this is called for a tournament, so the settings JSON always
-  // ends up with a complete, explicit list rather than partial data.
-  updateMilestonePoolPercent: async (tournamentId, milestoneId, poolPercent) => {
+  // Lets an admin override a milestone's total pool share (poolPercent)
+  // and/or its full-season slot count, per tournament. Backfills every
+  // milestone with its defaults the first time this is called for a
+  // tournament, so the settings JSON always ends up with a complete,
+  // explicit list rather than partial data.
+  updateMilestoneConfig: async (tournamentId, milestoneId, { poolPercent, slotCount } = {}) => {
     const tournament = await Tournament.findByPk(tournamentId);
     if (!tournament) {
       throw new Error(`tournament not found for id: ${tournamentId}`);
@@ -106,17 +157,29 @@ const TournamentService = {
     // Ensure every known milestone is represented so the admin page always
     // has a full picture, not just the one being edited.
     Object.keys(DEFAULT_MILESTONE_POOL_PERCENTS).forEach((id) => {
-      if (!milestonesById.has(id)) {
-        const existing = existingMilestones.find(m => String(m.id) === id);
-        milestonesById.set(id, existing || { id, name: null, poolPercent: DEFAULT_MILESTONE_POOL_PERCENTS[id] });
-      }
+      const existing = milestonesById.get(id);
+      milestonesById.set(id, {
+        id,
+        name: (existing && existing.name) || DEFAULT_MILESTONE_NAMES[id] || null,
+        poolPercent: existing && typeof existing.poolPercent === 'number'
+          ? existing.poolPercent
+          : DEFAULT_MILESTONE_POOL_PERCENTS[id],
+        slotCount: existing && typeof existing.slotCount === 'number' && existing.slotCount > 0
+          ? existing.slotCount
+          : DEFAULT_MILESTONE_SLOT_COUNTS[id]
+      });
     });
 
     const target = milestonesById.get(String(milestoneId));
     if (!target) {
       throw new Error(`Unknown milestoneId: ${milestoneId}`);
     }
-    target.poolPercent = poolPercent;
+    if (typeof poolPercent === 'number') {
+      target.poolPercent = poolPercent;
+    }
+    if (typeof slotCount === 'number' && slotCount > 0) {
+      target.slotCount = slotCount;
+    }
     milestonesById.set(String(milestoneId), target);
 
     tournament.settings = {
@@ -126,6 +189,65 @@ const TournamentService = {
     // Sequelize doesn't deep-track JSON column mutations, so mark it dirty explicitly.
     tournament.changed('settings', true);
     await tournament.save();
+
+    return tournament;
+  },
+  // Back-compat wrapper - older callers that only set the pool percent.
+  updateMilestonePoolPercent: async (tournamentId, milestoneId, poolPercent) => {
+    return TournamentService.updateMilestoneConfig(tournamentId, milestoneId, { poolPercent });
+  },
+  // Computes each team's milestone dividend from the results an admin
+  // entered (regular-season wins, or an achieved flag for the flat-bonus
+  // milestones) and writes them to TournamentTeam.milestoneData. The dollar
+  // amounts are derived here from the milestone's pool share and slot count
+  // so a client can never push its own numbers. Payout math downstream
+  // (EntryService.portfolioSummaries) still just reads dividendPrice.
+  saveMilestoneResults: async (tournamentId, milestoneId, milestoneName, teamResults) => {
+    const tournament = await Tournament.findByPk(tournamentId);
+    if (!tournament) {
+      throw new Error(`tournament not found for id: ${tournamentId}`);
+    }
+    assertTournamentTradingOpen(tournament);
+
+    const entries = await Entry.findAll({ where: { tournamentId } });
+    const totalPot = computeTotalPoolInvested(entries);
+    const perSlot = getMilestonePerSlotPayout(tournament, milestoneId, totalPot);
+    const isRegSeason = String(milestoneId) === '1';
+    const index = parseInt(milestoneId, 10) - 1;
+    const resolvedName = milestoneName || DEFAULT_MILESTONE_NAMES[String(milestoneId)] || `Milestone ${milestoneId}`;
+
+    for (const teamResult of teamResults) {
+      const tournamentTeam = await TournamentTeam.findByPk(teamResult.tournamentTeamId);
+      if (!tournamentTeam || String(tournamentTeam.tournamentId) !== String(tournamentId)) {
+        throw new Error(`tournament team not found for id: ${teamResult.tournamentTeamId}`);
+      }
+
+      const wins = teamResult.wins || 0;
+      const achieved = !!teamResult.achieved;
+      const dividendPrice = isRegSeason
+        ? round2(wins * perSlot)
+        : (achieved ? perSlot : 0);
+
+      const milestoneEntry = {
+        milestoneId: String(milestoneId),
+        milestoneName: resolvedName,
+        dividendPrice,
+        wins,
+        losses: teamResult.losses || 0,
+        ties: teamResult.ties || 0,
+        achieved
+      };
+
+      const data = tournamentTeam.milestoneData ? [...tournamentTeam.milestoneData] : [];
+      if (data.length > index) {
+        data.splice(index, 1, milestoneEntry);
+      } else {
+        data.splice(index, 0, milestoneEntry);
+      }
+      tournamentTeam.milestoneData = data;
+      tournamentTeam.changed('milestoneData', true);
+      await tournamentTeam.save();
+    }
 
     return tournament;
   },
@@ -150,15 +272,25 @@ const TournamentService = {
 
     const unmatchedTeamNames = matchedTeams.filter(t => !t.matched).map(t => t.teamName);
 
-    // Only matched teams' wins count toward the pool math, so an unmatched
-    // team can't silently shrink everyone else's payout.
+    // Wins so far across matched teams - informational only now, so the
+    // admin can see how much of the season has been played before saving.
     const totalLeagueWins = matchedTeams
       .filter(t => t.matched)
       .reduce((sum, t) => sum + t.wins, 0);
 
-    const perWinRate = totalLeagueWins > 0
-      ? roundDown2(getMilestonePoolPercent(tournament, '1') * totalPoolInvested / totalLeagueWins)
-      : 0;
+    // Each tie game removes one leaguewide win from the season total, so
+    // surface the count and a suggested slot value.
+    const totalTies = matchedTeams
+      .filter(t => t.matched)
+      .reduce((sum, t) => sum + t.ties, 0);
+    const tieGames = Math.round(totalTies / 2);
+
+    // Per-win rate is the milestone's pool share spread across the FULL
+    // season's win slots (default 272), not the wins played to date - so
+    // running this mid-season accrues value instead of paying the whole
+    // pool out early. Admins adjust slotCount for ties.
+    const slotCount = getMilestoneSlotCount(tournament, '1');
+    const perWinRate = getMilestonePerSlotPayout(tournament, '1', totalPoolInvested);
 
     const teamsWithDividends = matchedTeams.map(t => ({
       ...t,
@@ -168,6 +300,8 @@ const TournamentService = {
     return {
       totalPoolInvested: round2(totalPoolInvested),
       totalLeagueWins,
+      slotCount,
+      tieGames,
       perWinRate,
       unmatchedTeamNames,
       teams: teamsWithDividends
@@ -200,7 +334,8 @@ const TournamentService = {
     );
 
     const poolPercent = getMilestonePoolPercent(tournament, '2');
-    const flatBonus = round2(poolPercent * totalPoolInvested);
+    const slotCount = getMilestoneSlotCount(tournament, '2');
+    const flatBonus = getMilestonePerSlotPayout(tournament, '2', totalPoolInvested);
 
     const teams = matched.map(t => ({
       tournamentTeamId: t.tournamentTeamId,
@@ -214,6 +349,7 @@ const TournamentService = {
     return {
       totalPoolInvested: round2(totalPoolInvested),
       poolPercent,
+      slotCount,
       flatBonus,
       unmatchedTeamNames,
       teams
@@ -234,7 +370,8 @@ const TournamentService = {
     );
 
     const poolPercent = getMilestonePoolPercent(tournament, '3');
-    const flatBonus = round2(poolPercent * totalPoolInvested);
+    const slotCount = getMilestoneSlotCount(tournament, '3');
+    const flatBonus = getMilestonePerSlotPayout(tournament, '3', totalPoolInvested);
 
     const teams = matched.map(t => ({
       tournamentTeamId: t.tournamentTeamId,
@@ -248,6 +385,7 @@ const TournamentService = {
     return {
       totalPoolInvested: round2(totalPoolInvested),
       poolPercent,
+      slotCount,
       flatBonus,
       unmatchedTeamNames,
       teams

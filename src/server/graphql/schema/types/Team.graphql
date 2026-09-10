@@ -24,6 +24,7 @@ type MilestoneData {
   wins: Int
   losses: Int
   ties: Int
+  achieved: Boolean
 }
 
 input CreateTeamInput {

@@ -92,6 +92,15 @@ const Tournament = {
       const deleteId = await TournamentService.deleteTournament(id);
       return deleteId;
     },
+    saveMilestoneResults: async (_, { input }) => {
+      const { tournamentId, milestoneId, milestoneName, teams } = input;
+      return await TournamentService.saveMilestoneResults(tournamentId, milestoneId, milestoneName, teams);
+    },
+    updateMilestoneConfig: async (_, input) => {
+      const { tournamentId, milestoneId, poolPercent, slotCount } = input;
+      const tournament = await TournamentService.updateMilestoneConfig(tournamentId, milestoneId, { poolPercent, slotCount });
+      return tournament;
+    },
     toggleIsIpoOpen: async (_, input) => {
       const tournamentId = input.tournamentId;
       const isIpoOpen = input.isIpoOpen;

@@ -18,6 +18,7 @@ type Milestone {
   id: String
   name: String
   poolPercent: Float
+  slotCount: Int
 }
 
 input CreateLeagueInput {

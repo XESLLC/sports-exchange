@@ -57,6 +57,8 @@ type RegularSeasonDividendPreviewTeam {
 type RegularSeasonDividendPreview {
   totalPoolInvested: Float!
   totalLeagueWins: Int!
+  slotCount: Int!
+  tieGames: Int!
   perWinRate: Float!
   unmatchedTeamNames: [String]!
   teams: [RegularSeasonDividendPreviewTeam]!
@@ -74,6 +76,7 @@ type MilestoneAchievementPreviewTeam {
 type MilestoneAchievementPreview {
   totalPoolInvested: Float!
   poolPercent: Float!
+  slotCount: Int!
   flatBonus: Float!
   unmatchedTeamNames: [String]!
   teams: [MilestoneAchievementPreviewTeam]!
@@ -128,6 +131,22 @@ input MilestoneDataInput {
   wins: Int
   losses: Int
   ties: Int
+  achieved: Boolean
+}
+
+input MilestoneTeamResultInput {
+  tournamentTeamId: ID!
+  wins: Int
+  losses: Int
+  ties: Int
+  achieved: Boolean
+}
+
+input MilestoneResultsInput {
+  tournamentId: ID!
+  milestoneId: String!
+  milestoneName: String!
+  teams: [MilestoneTeamResultInput!]!
 }
 
 type EmailAttachment {
@@ -182,7 +201,9 @@ type Query {
 
 type Mutation {
   createOrUpdateMilestoneData(input: TournamentTeamMilestoneInput!): Team
+  saveMilestoneResults(input: MilestoneResultsInput!): Tournament
   updateMilestonePoolPercent(tournamentId: ID!, milestoneId: String!, poolPercent: Float!): Tournament
+  updateMilestoneConfig(tournamentId: ID!, milestoneId: String!, poolPercent: Float, slotCount: Int): Tournament
   createTournament(input: TournamentInput!): Tournament!
   createTournamentTeam(input: TournamentTeamInput!): TournamentTeam!
   createBulkTournamentTeams(input: [BulkTournamentTeamInput]!): [TournamentTeam]!
