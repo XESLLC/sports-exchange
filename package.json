@@ -20,6 +20,7 @@
   "dependencies": {
     "@apollo/client": "^3.9.8",
     "@aws-sdk/client-ses": "^3.535.0",
+    "@aws-sdk/client-sesv2": "3.535.0",
     "@graphql-tools/load-files": "^7.0.0",
     "@graphql-tools/merge": "^9.0.3",
     "apollo-server": "^3.13.0",

@@ -1,9 +1,9 @@
 // Sends the actual tournament update emails via AWS SES, and logs every
 // send attempt to EmailBlast for an audit trail admins can review later.
 //
-// Requires: `npm install nodemailer` (aws-sdk v2 is already bundled in the
-// Lambda runtime, but list it in package.json too so `npm install` works
-// the same locally).
+// Requires: `nodemailer` and `@aws-sdk/client-sesv2` in package.json
+// (bundled into the deploy package - the nodejs14.x runtime does not ship
+// the v3 SDK). nodemailer 9's SES transport expects a v2 SES client.
 //
 // Before this works you need, in the SES console for this AWS account:
 //   1. A verified sending identity (single email address is enough to
@@ -13,7 +13,7 @@
 //      sandbox mode caps you at 200 emails/day to verified recipients only.
 
 const nodemailer = require('nodemailer');
-const AWS = require('aws-sdk');
+const { SESv2Client, SendEmailCommand } = require('@aws-sdk/client-sesv2');
 const Tournament = require('../models/Tournament');
 const EmailBlast = require('../models/EmailBlast');
 const ParticipantEmailService = require('./ParticipantEmailService');
@@ -25,13 +25,14 @@ const FROM_EMAIL = process.env.SES_FROM_EMAIL;
 // participant hitting "reply" reaches these people directly.
 const REPLY_TO_EMAILS = ['couvillion@gmail.com', 'couvya@gmail.com', 'mmsegeneral@gmail.com'];
 
-// Lazy-initialized so the SES transport isn't created at module load time
-// (which fails locally where aws-sdk v2 SES isn't available).
+// Lazy-initialized so the SES client isn't created at module load time.
+// nodemailer 9 dropped the aws-sdk v2 SES transport; it now wants an
+// @aws-sdk/client-sesv2 client + the SendEmailCommand class.
 let _transporter = null;
 function getTransporter() {
   if (!_transporter) {
-    const ses = new AWS.SES({ region: process.env.AWS_REGION || 'us-west-2' });
-    _transporter = nodemailer.createTransport({ SES: { ses, aws: AWS } });
+    const sesClient = new SESv2Client({ region: process.env.AWS_REGION || 'us-west-2' });
+    _transporter = nodemailer.createTransport({ SES: { sesClient, SendEmailCommand } });
   }
   return _transporter;
 }
