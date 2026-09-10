@@ -149,6 +149,16 @@ input MilestoneResultsInput {
   teams: [MilestoneTeamResultInput!]!
 }
 
+# Result of a single tournament's Regular Season Wins auto-refresh.
+# status: updated | unchanged | skipped-unmatched | skipped-complete | error
+type MilestoneRefreshResult {
+  tournamentId: ID!
+  status: String!
+  message: String
+  totalLeagueWins: Int
+  unmatchedTeamNames: [String]
+}
+
 type EmailAttachment {
   filename: String
   key: String
@@ -204,6 +214,8 @@ type Mutation {
   saveMilestoneResults(input: MilestoneResultsInput!): Tournament
   updateMilestonePoolPercent(tournamentId: ID!, milestoneId: String!, poolPercent: Float!): Tournament
   updateMilestoneConfig(tournamentId: ID!, milestoneId: String!, poolPercent: Float, slotCount: Int): Tournament
+  setTournamentAutoRefresh(tournamentId: ID!, enabled: Boolean!): Tournament
+  runRegularSeasonAutoRefresh(tournamentId: ID!): MilestoneRefreshResult!
   createTournament(input: TournamentInput!): Tournament!
   createTournamentTeam(input: TournamentTeamInput!): TournamentTeam!
   createBulkTournamentTeams(input: [BulkTournamentTeamInput]!): [TournamentTeam]!

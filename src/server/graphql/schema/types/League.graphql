@@ -12,6 +12,7 @@ type LeagueSettings {
   secondaryMarketBudget: Float
   regions: [String]
   useSeed: Boolean
+  autoRefreshRegularSeason: Boolean
 }
 
 type Milestone {

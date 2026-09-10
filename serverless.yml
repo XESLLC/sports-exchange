@@ -70,6 +70,21 @@ functions:
             headers: ['*']
             allowCredentials: true
 
+  # Scheduled: refresh the Regular Season Wins milestone from live ESPN
+  # standings for tournaments that opted in. Fires every 15 min Thu-Tue;
+  # the handler no-ops outside the Thu-afternoon .. Tue-morning window and
+  # whenever nothing changed. EventBridge scheduled triggers are not
+  # billed and the invocations sit well inside the Lambda free tier.
+  refreshRegularSeasonMilestone:
+    handler: src/server/refreshMilestonesHandler.handler
+    timeout: 120
+    package:
+      individually: true
+      exclude:
+        - "src/browser/**"
+    events:
+      - schedule: cron(0/15 * ? * THU,FRI,SAT,SUN,MON,TUE *)
+
 custom:
   #distBucketUrl:
   #  default:

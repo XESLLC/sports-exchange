@@ -391,6 +391,92 @@ const TournamentService = {
       teams
     };
   },
+  // Pulls live ESPN standings and saves the Regular Season Wins milestone
+  // for one tournament, the same as an admin clicking Auto-fill + Save.
+  // Guards: never saves when a team can't be matched to standings (would
+  // zero its wins), and skips the write entirely when nothing changed.
+  // Returns { tournamentId, status, ... } where status is one of
+  // updated | unchanged | skipped-unmatched | skipped-complete | error.
+  refreshRegularSeasonMilestoneForTournament: async (tournament) => {
+    const tournamentId = tournament.id;
+    try {
+      const preview = await TournamentService.previewRegularSeasonDividends(tournamentId);
+
+      if (preview.unmatchedTeamNames && preview.unmatchedTeamNames.length > 0) {
+        return {
+          tournamentId,
+          status: 'skipped-unmatched',
+          unmatchedTeamNames: preview.unmatchedTeamNames
+        };
+      }
+
+      if (preview.totalLeagueWins >= preview.slotCount) {
+        return { tournamentId, status: 'skipped-complete', totalLeagueWins: preview.totalLeagueWins };
+      }
+
+      const tournamentTeams = await TournamentTeam.findAll({ where: { tournamentId } });
+      const savedWinsByTt = new Map();
+      for (const tt of tournamentTeams) {
+        const m1 = (tt.milestoneData || [])[0];
+        savedWinsByTt.set(tt.id, m1 && typeof m1.wins === 'number' ? m1.wins : null);
+      }
+      const changed = preview.teams.some(pt => savedWinsByTt.get(pt.tournamentTeamId) !== pt.wins);
+      if (!changed) {
+        return { tournamentId, status: 'unchanged' };
+      }
+
+      const teamResults = preview.teams.map(pt => ({
+        tournamentTeamId: pt.tournamentTeamId,
+        wins: pt.wins,
+        losses: pt.losses,
+        ties: pt.ties,
+        achieved: false
+      }));
+      await TournamentService.saveMilestoneResults(tournamentId, '1', 'Reg Season Wins', teamResults);
+      return { tournamentId, status: 'updated', totalLeagueWins: preview.totalLeagueWins };
+    } catch (err) {
+      console.error(`refreshRegularSeasonMilestoneForTournament ${tournamentId} error:`, err.message);
+      return { tournamentId, status: 'error', message: err.message };
+    }
+  },
+  // Scheduled entry point (see refreshMilestonesHandler + serverless.yml).
+  // Refreshes every active tournament that opted in via
+  // settings.autoRefreshRegularSeason.
+  autoRefreshRegularSeasonMilestones: async () => {
+    const tournaments = await Tournament.findAll();
+    const eligible = tournaments.filter(t =>
+      t.status === 'active' &&
+      t.settings && t.settings.autoRefreshRegularSeason === true
+    );
+
+    const results = [];
+    for (const t of eligible) {
+      results.push(await TournamentService.refreshRegularSeasonMilestoneForTournament(t));
+    }
+    return { checked: eligible.length, results };
+  },
+  // Manual trigger for one tournament - ignores the opt-in flag and the
+  // schedule window, but still honors the unmatched-team guard.
+  runRegularSeasonAutoRefresh: async (tournamentId) => {
+    const tournament = await Tournament.findByPk(tournamentId);
+    if (!tournament) {
+      throw new Error(`tournament not found for id: ${tournamentId}`);
+    }
+    return await TournamentService.refreshRegularSeasonMilestoneForTournament(tournament);
+  },
+  setTournamentAutoRefresh: async (tournamentId, enabled) => {
+    const tournament = await Tournament.findByPk(tournamentId);
+    if (!tournament) {
+      throw new Error(`tournament not found for id: ${tournamentId}`);
+    }
+    tournament.settings = {
+      ...tournament.settings,
+      autoRefreshRegularSeason: !!enabled
+    };
+    tournament.changed('settings', true);
+    await tournament.save();
+    return tournament;
+  },
   createOrUpdateMilestoneData: async (id, milestoneInput) => {
     const tournamentTeam = await TournamentTeam.findByPk(id);
     if(!tournamentTeam) {

@@ -101,6 +101,12 @@ const Tournament = {
       const tournament = await TournamentService.updateMilestoneConfig(tournamentId, milestoneId, { poolPercent, slotCount });
       return tournament;
     },
+    setTournamentAutoRefresh: async (_, input) => {
+      return await TournamentService.setTournamentAutoRefresh(input.tournamentId, input.enabled);
+    },
+    runRegularSeasonAutoRefresh: async (_, input) => {
+      return await TournamentService.runRegularSeasonAutoRefresh(input.tournamentId);
+    },
     toggleIsIpoOpen: async (_, input) => {
       const tournamentId = input.tournamentId;
       const isIpoOpen = input.isIpoOpen;
