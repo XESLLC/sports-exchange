@@ -82,9 +82,11 @@ functions:
   # billed and the invocations sit well inside the Lambda free tier.
   refreshRegSeason:
     handler: src/server/refreshMilestonesHandler.handler
-    # provider.runtime is still nodejs14.x for the existing graphql function;
-    # AWS no longer allows creating new functions on 14.x, so pin this one.
-    runtime: nodejs20.x
+    # provider.runtime is still nodejs14.x for the existing graphql function
+    # (upgrading that one is deliberately deferred until after the NFL
+    # season - see memory). nodejs20.x reached Lambda end-of-support
+    # 2026-04-30; bumped to 22.x 2026-09-12 for this small, low-risk function.
+    runtime: nodejs22.x
     timeout: 120
     package:
       individually: true
