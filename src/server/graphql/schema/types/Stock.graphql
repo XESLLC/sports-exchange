@@ -83,6 +83,7 @@ type Transaction {
   quantity: Int!
   cost: Float!
   stockId: ID!
+  groupId: ID!
   createdAt: String!
 }
 
