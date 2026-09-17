@@ -806,14 +806,14 @@ const EntryService = {
       namesByEntryId.get(ue.entryId).push(`${user.firstname} ${user.lastname}`);
     }
 
-    // Pre-compute dividend earned per stock owned for each team (same for all entries)
+    // Pre-compute dividend earned per stock owned for each team (same for all entries).
+    // Kept at full precision here - moneyWonToDate below floors to the cent once, after
+    // summing across every share a portfolio owns, not per share before the sum.
     const dividendPerStock = new Map();
     for (const team of tournamentTeams) {
       const totalStocks = teamStockCount[team.id] || 1;
       const milestones = team.milestoneData || [];
-      const earned = milestones.reduce((sum, m) => {
-        return sum + (m.dividendPrice ? Math.floor((m.dividendPrice / totalStocks) * 100) / 100 : 0);
-      }, 0);
+      const earned = milestones.reduce((sum, m) => sum + (m.dividendPrice ? m.dividendPrice / totalStocks : 0), 0);
       dividendPerStock.set(team.id, earned);
     }
 
