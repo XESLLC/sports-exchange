@@ -59,6 +59,7 @@ type EntryBid {
 }
 
 type PortfolioSummary {
+  entryId: ID!,
   ownerName: String!,
   entryName: String!,
   totalInitialInvestment: Float!, # initial ipo investment

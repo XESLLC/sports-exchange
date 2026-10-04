@@ -857,6 +857,7 @@ const EntryService = {
         ? Math.round(stockEntriesRemainingMoney / totalCashInvested * 10000) / 100 : 0;
 
       return {
+        entryId: entry.id,
         ownerName,
         entryName: entry.name,
         totalInitialInvestment: ipoCashSpent,
