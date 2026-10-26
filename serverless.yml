@@ -27,6 +27,9 @@ provider:
     # address on it works. Replies are directed elsewhere via Reply-To
     # (see EmailService.js REPLY_TO_EMAILS).
     SES_FROM_EMAIL: commissioner@fantasysportsstockexchange.com
+    # S3 bucket for email blast attachments + inline images (presigned
+    # uploads from EmailBlastForm.vue). Managed outside this stack.
+    EMAIL_ATTACHMENTS_BUCKET: fsse-email-attachments-dev
 
     #APP_DIST_URL: ${self:custom.distBucketUrl.${self:provider.region}, self:custom.distBucketUrl.default}
     #APP_PUBLIC_URL: ${self:custom.distBucketUrl.${self:provider.region}, self:custom.distBucketUrl.default}
