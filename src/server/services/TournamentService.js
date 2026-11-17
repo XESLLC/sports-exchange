@@ -190,7 +190,39 @@ const TournamentService = {
     tournament.changed('settings', true);
     await tournament.save();
 
+    // Dollar amounts are baked into each team's saved milestoneData, so a
+    // pool%/slot change must reprice results already saved for this
+    // milestone - otherwise they stay at the old rate until the next save.
+    await TournamentService.repriceSavedMilestone(tournamentId, milestoneId);
+
     return tournament;
+  },
+  // Re-runs saveMilestoneResults for a milestone using the results already
+  // saved on each team (wins/losses/ties/achieved), so dividendPrice picks
+  // up the current pot, poolPercent and slotCount. No-op if nothing saved.
+  repriceSavedMilestone: async (tournamentId, milestoneId) => {
+    const index = parseInt(milestoneId, 10) - 1;
+    const tournamentTeams = await TournamentTeam.findAll({ where: { tournamentId } });
+    let milestoneName = null;
+    const teamResults = [];
+    for (const tt of tournamentTeams) {
+      let data = tt.milestoneData;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch { data = []; }
+      }
+      const saved = (data || [])[index];
+      if (!saved || String(saved.milestoneId) !== String(milestoneId)) continue;
+      milestoneName = milestoneName || saved.milestoneName;
+      teamResults.push({
+        tournamentTeamId: tt.id,
+        wins: saved.wins || 0,
+        losses: saved.losses || 0,
+        ties: saved.ties || 0,
+        achieved: !!saved.achieved
+      });
+    }
+    if (teamResults.length === 0) return;
+    await TournamentService.saveMilestoneResults(tournamentId, milestoneId, milestoneName, teamResults);
   },
   // Back-compat wrapper - older callers that only set the pool percent.
   updateMilestonePoolPercent: async (tournamentId, milestoneId, poolPercent) => {
